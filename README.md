@@ -6,3 +6,8 @@ Visualization of your favorite movies :) project for Visualization for Data Scie
 ## Run
 1. `npm i`
 2. `npm start`
+
+## Data Used
+- https://www.imdb.com/interfaces/
+- https://www.kaggle.com/datasets/danielgrijalvas/movies
+- https://www.kaggle.com/datasets/stefanoleone992/rotten-tomatoes-movies-and-critic-reviews-dataset
