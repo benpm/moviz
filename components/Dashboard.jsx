@@ -1,7 +1,11 @@
+import Scatterplot from './Scatterplot';
+
 const Dashboard = () => {
   return (
-    <div id="dashboard" className="w-full h-full">
-      <h1>Dashboard</h1>
+    <div id="dashboard" className="p-2 w-full h-full grid grid-cols-2 grid-rows-2 gap-2">
+      <div className="bg-slate-200 col-span-2"><Scatterplot /></div>
+      <div className="bg-slate-200"></div>
+      <div className="bg-slate-200"></div>
     </div>
   );
 }
