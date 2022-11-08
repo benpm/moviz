@@ -24,6 +24,7 @@ export default function CScatterplot({data}) {
             innerWidth: w - margin.left - margin.right,
             innerHeight: h - margin.top - margin.bottom
         });
+        console.debug("resize");
     }, [size]);
     
     // Render chart function
@@ -67,7 +68,7 @@ export default function CScatterplot({data}) {
             <div className="absolute top-0 right-0">
                 <CDropdown options={yAxes} value={yAxis} onChange={setYAxis} />
             </div>
-            <svg ref={ref} width={bounds.width} height={bounds.height}>
+            <svg ref={ref} className="w-full h-full">
                 <g className="plot-area"></g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
