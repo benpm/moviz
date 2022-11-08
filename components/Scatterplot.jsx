@@ -2,12 +2,18 @@ import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 import useD3 from "../hooks/useD3";
 import useSize from "../hooks/useSize";
+import CDropdown from "./Dropdown";
 
 export default function CScatterplot({data}) {
     const margin = {top: 20, right: 20, bottom: 20, left: 30};
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
+    const [xAxis, setXAxis] = useState("released");
+    const [yAxis, setYAxis] = useState("score");
+    const yAxes = ["score", "audience_rating", "tomatometer_rating"];
+    var xScales = null;
+    var yScales = null;
 
     useEffect(() => {
         const w = size ? size.width : bounds.width;
@@ -20,32 +26,45 @@ export default function CScatterplot({data}) {
     }, [size]);
     
     const ref = useD3(svg => {
-        const xScale = d3.scaleTime()
-            .domain(d3.extent(data, d => d.released))
-            .rangeRound([margin.left, bounds.innerWidth]);
-        const yScale = d3.scaleLinear()
-            .domain([0, 10])
-            .rangeRound([bounds.innerHeight, margin.top]);
+        if (xScale == null) {
+            xScales = {
+                released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
+            };
+            yScales = {
+                score: d3.scaleLinear().domain([0, 10]),
+                tomatometer_rating: d3.scaleLinear().domain([0, 100]),
+                audience_rating: d3.scaleLinear().domain([0, 100]),
+                nominations: d3.scaleLinear(),
+                gross: d3.scaleLinear(),
+                budget: d3.scaleLinear(),
+            };
+        }
+
+        const xScale = xScales[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]);
         
         svg.select(".x-axis")
-            .attr("transform", `translate(0, ${bounds.innerHeight})`)
-            .call(d3.axisBottom(xScale));
+            .call(d3.axisBottom(xScale))
+            .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
         svg.select(".y-axis")
-            .attr("transform", `translate(${margin.left}, 0)`)
-            .call(d3.axisLeft(yScale));
+            .call(d3.axisLeft(yScale))
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
         svg.select(".plot-area")
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
             .selectAll("circle")
             .data(data)
             .join("circle")
-            .attr("cx", d => xScale(d.released))
-            .attr("cy", d => yScale(d.score))
-            .attr("r", 3);
-    }, [size, data]);
+            .attr("cx", d => xScale(d[xAxis]))
+            .attr("cy", d => yScale(d[yAxis]))
+            .attr("r", 2);
+    }, [size, data, yAxis, xAxis]);
 
     return (
-        <div id="scatterplot" className="w-full h-full bg-violet-200" ref={target}>
+        <div id="scatterplot" className="relative w-full h-full bg-violet-200" ref={target}>
+            <div className="absolute top-0 right-0">
+                <CDropdown options={yAxes} value={yAxis} onChange={setYAxis} />
+            </div>
             <svg ref={ref} width={bounds.width} height={bounds.height}>
                 <g className="plot-area"></g>
                 <g className="x-axis"></g>
