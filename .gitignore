@@ -42,3 +42,5 @@ sw.js.map
 package-lock.json
 
 raw_data
+
+*.csv#
