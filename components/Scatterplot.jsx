@@ -15,6 +15,7 @@ export default function CScatterplot({data}) {
     var xScales = null;
     var yScales = null;
 
+    // Set bounds on resize
     useEffect(() => {
         const w = size ? size.width : bounds.width;
         const h = size ? size.height : bounds.height;
@@ -25,6 +26,7 @@ export default function CScatterplot({data}) {
         });
     }, [size]);
     
+    // Render chart function
     const ref = useD3(svg => {
         if (xScale == null) {
             xScales = {
@@ -58,7 +60,7 @@ export default function CScatterplot({data}) {
             .attr("cx", d => xScale(d[xAxis]))
             .attr("cy", d => yScale(d[yAxis]))
             .attr("r", 2);
-    }, [size, data, yAxis, xAxis]);
+    }, [bounds, data, yAxis, xAxis]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full bg-violet-200" ref={target}>
