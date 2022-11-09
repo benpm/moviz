@@ -2,6 +2,7 @@ import * as d3 from "d3";
 import useD3 from "../hooks/useD3";
 import { useEffect, useRef, useState } from "react";
 import useSize from "../hooks/useSize";
+import * as hb from "d3-hexbin";
 
 export default function CHeatMap({data}) {
     const margin = {top: 20, right: 20, bottom: 20, left: 30};
@@ -54,6 +55,29 @@ export default function CHeatMap({data}) {
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
         svg.select(".y-axis").call(yAxisObj)
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+        //draw a hexagonal heatmap of the data draw empty hexagons
+        const hexbin = hb.hexbin()
+            .x(d => xScale(d.released))
+            .y(d => yScale(d.score))
+            .radius(15)
+            .extent([[0, 0], [bounds.innerWidth, bounds.innerHeight]]);
+        const bins = hexbin(data);
+        const colorScale = d3.scaleSequential(d3.interpolateMagma)
+            .domain([0, d3.max(bins, d => d.length)]);
+        svg.selectAll(".hexagon")
+            .data(bins)
+            .join("path")
+            .attr("class", "hexagon")
+            .attr("d", hexbin.hexagon())
+            .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
+            .attr("fill", d => colorScale(d.length))
+            .attr("stroke", "white")
+            .attr("stroke-width", 1)
+            .append("title")
+            .text(d => `${d.length} movies released in ${d.x} and scored ${d.y}`);
+
+        
     }, [bounds, data, yAxis, xAxis]);
 
     return (
