@@ -18,7 +18,7 @@ const Dashboard = () => {
       <div className="bg-slate-200 col-span-2"><CScatterplot data={data}/></div>
       <div className="bg-slate-200"></div>
       <div className="bg-slate-200"></div>
-      <CTooltip text="tooltip"/>
+      <CTooltip />
     </div>
   );
 }
