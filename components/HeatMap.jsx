@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import useSize from "../hooks/useSize";
 import * as hb from "d3-hexbin";
 
-export default function CHeatMap({data}) {
-    const margin = {top: 20, right: 20, bottom: 20, left: 30};
-    const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
+export default function CHeatMap({ data }) {
+    const margin = { top: 20, right: 20, bottom: 20, left: 30 };
+    const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
 
@@ -27,7 +27,6 @@ export default function CHeatMap({data}) {
             innerWidth: w - margin.left - margin.right,
             innerHeight: h - margin.top - margin.bottom
         });
-        console.debug("resize");
     }, [size]);
 
     // Render chart function
@@ -52,20 +51,23 @@ export default function CHeatMap({data}) {
         xAxisObj = d3.axisBottom(xScale);
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
-            .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
+            .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+            .attr("stroke", "white");
         svg.select(".y-axis").call(yAxisObj)
-            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+            .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            .attr("stroke", "white");
 
         //draw a hexagonal heatmap of the data draw empty hexagons
+        const RADIUS = 20;
         const hexbin = hb.hexbin()
             .x(d => xScale(d.released))
             .y(d => yScale(d.score))
-            .radius(15)
-            .extent([[0, 0], [bounds.innerWidth, bounds.innerHeight]]);
+            .radius(RADIUS)
+            .extent([[0, 0], [bounds.innerWidth + margin.right, bounds.innerHeight + margin.bottom]]);
         const bins = hexbin(data);
-        const colorScale = d3.scaleSequential(d3.interpolateMagma)
+        const colorScale = d3.scaleSequential(d3.interpolateInferno)
             .domain([0, d3.max(bins, d => d.length)]);
-        svg.selectAll(".hexagon")
+        svg.selectAll(".hexagons")
             .data(bins)
             .join("path")
             .attr("class", "hexagon")
@@ -77,13 +79,31 @@ export default function CHeatMap({data}) {
             .append("title")
             .text(d => `${d.length} movies released in ${d.x} and scored ${d.y}`);
 
-        
+        //draw empty hexagons from hb.hexbin().centers()
+        svg.selectAll(".hexagon-center")
+            .data(hexbin.centers())
+            .join("path")
+            .attr("d", hexbin.hexagon())
+            .attr("transform", d => `translate(${d[0] + margin.left}, ${d[1] + margin.top})`)
+            .attr("fill", "none")
+            .attr("stroke", "white")
+            .attr("stroke-width", 1)
+            .append("title")
+            .text(d => `center of hexagon at ${d.x}, ${d.y}`);
+
     }, [bounds, data, yAxis, xAxis]);
 
     return (
-        <div id="heatmap" className="relative w-full h-full bg-violet-200" ref={target}>
+        <div id="heatmap" className="relative w-full h-full bg-black" ref={target}>
             <svg ref={ref} className="w-full h-full">
-                <g className="plot-area"></g>
+                <defs>
+                    <clipPath id="plot-clip">
+                        <rect fill="white" x={margin.left} y={margin.top} width={bounds.innerWidth} height={bounds.innerHeight} />
+                    </clipPath>
+                </defs>
+                <g style={{ clipPath: "url(#plot-clip)" }}>
+                    <g className="hexagons"></g>
+                </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
             </svg>
