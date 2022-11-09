@@ -1,11 +1,13 @@
 # moviz (CS6630)
-Visualization of your favorite movies :) project for Visualization for Data Science Fall 2022
+Visualization of your favorite movies :) project for Visualization for Data Science Fall 2022. Benjamin Mastripolito and Alper Sahistan
 
-- [feedback exercise](feedback_exercise.md)
+- [Feedback exercise](feedback_exercise.md)
+- [Process book](wiki)
+- [Trello board](https://trello.com/b/SGrGik4Z/moviz)
 
-## Run
+## Run for Development
 1. `npm i`
-2. `npm start`
+2. `npm run dev`
 
 ## Data Used
 - https://www.imdb.com/interfaces/
