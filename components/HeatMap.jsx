@@ -3,6 +3,7 @@ import useD3 from "../hooks/useD3";
 import { useEffect, useRef, useState } from "react";
 import useSize from "../hooks/useSize";
 import * as hb from "d3-hexbin";
+import useGlobalState from "../hooks/useGlobalState";
 
 export default function CHeatMap({ data }) {
     const margin = { top: 20, right: 20, bottom: 20, left: 30 };
@@ -12,6 +13,9 @@ export default function CHeatMap({ data }) {
 
     const [xAxis, setXAxis] = useState("released");
     const [yAxis, setYAxis] = useState("audience_rating");
+    const [setHoverItem] = useGlobalState(state => [
+        state.setHoverItem
+    ]);
     var xScales = null;
     var yScales = null;
     var xAxisObj = null;
@@ -79,8 +83,23 @@ export default function CHeatMap({ data }) {
             .attr("fill", d => colorScale(d.length))
             .attr("stroke", "white")
             .attr("stroke-width", 1)
-            .append("title")
-            .text(d => `${d.length} movies released in ${d.x} and scored ${d.y}`);
+            .attr("bin-value", d => d.length)
+
+        //attach mouseover events to the hexagons
+        svg.selectAll(".hexagon")
+            .on("mouseover", function (event, d) {
+                //highlight the hexagon by making it brighter
+                //make it brighter
+                d3.select(this).transition().duration(10)
+                    .attr("fill", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5));
+                setHoverItem({datum: d, x: event.pageX, y: event.pageY});
+            })
+            .on("mouseout", function () {
+                //make it darker
+                d3.select(this).transition().duration(1000)
+                    .attr("fill", colorScale(d3.select(this).attr("bin-value")));
+                setHoverItem({datum: null, x: 0, y: 0});
+            });
 
         //draw empty hexagons from hb.hexbin().centers()
         svg.select(".hexagons")
