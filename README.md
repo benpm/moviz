@@ -2,7 +2,7 @@
 Visualization of your favorite movies :) project for Visualization for Data Science Fall 2022. Benjamin Mastripolito and Alper Sahistan
 
 - [Feedback exercise](feedback_exercise.md)
-- [Process book](wiki)
+- [Process book](https://github.com/benpm/moviz/wiki)
 - [Trello board](https://trello.com/b/SGrGik4Z/moviz)
 
 ## Run for Development
