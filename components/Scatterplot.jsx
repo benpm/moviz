@@ -26,10 +26,12 @@ export default function CScatterplot({data}) {
     var yScales = null;
     var xAxisObj = null;
     var yAxisObj = null;
+    var initialized = false;
     const baseDotSize = 4;
     const [dotSize, setDotSize] = useState(baseDotSize);
 
-    const zoom = d3.zoom().on("zoom", ({transform}) => {
+    const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
+    const onZoom = ({transform}) => {
         if (xAxisObj && yAxisObj) {
             const plotArea = d3.select(ref.current).select(".plot-area");
             plotArea.attr("transform", transform);
@@ -41,7 +43,11 @@ export default function CScatterplot({data}) {
             // Update circle radius
             setDotSize(baseDotSize / transform.k);
         }
-    });
+    };
+    const zoom = d3.zoom()
+        .on("zoom", onZoom)
+        .scaleExtent([0.9, 10])
+        .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
 
     // Set bounds on resize
     useEffect(() => {
@@ -54,25 +60,29 @@ export default function CScatterplot({data}) {
         });
         console.debug("resize");
     }, [size]);
+
+    // Initial layout function
+    const initLayout = svg => {
+        xScales = {
+            released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
+        };
+        yScales = {
+            score: d3.scaleLinear().domain([0, 10]),
+            tomatometer_rating: d3.scaleLinear().domain([0, 100]),
+            audience_rating: d3.scaleLinear().domain([0, 100]),
+            nominations: d3.scaleLinear(),
+            gross: d3.scaleLinear(),
+            budget: d3.scaleLinear(),
+        };
+    };
     
     // Render chart function
     const ref = useD3(svg => {
-        if (xScale == null) {
-            xScales = {
-                released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
-            };
-            yScales = {
-                score: d3.scaleLinear().domain([0, 10]),
-                tomatometer_rating: d3.scaleLinear().domain([0, 100]),
-                audience_rating: d3.scaleLinear().domain([0, 100]),
-                nominations: d3.scaleLinear(),
-                gross: d3.scaleLinear(),
-                budget: d3.scaleLinear(),
-            };
+        if (!initialized) {
+            initLayout(svg);
         }
 
         // Initialize zoom and scales
-        svg.call(zoom);
         const xScale = xScales[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]);
         xAxisObj = d3.axisBottom(xScale);
@@ -99,6 +109,15 @@ export default function CScatterplot({data}) {
                 setHoverItem({datum: null, x: 0, y: 0})
                 d3.select(e.target).attr("fill", "black");
             });
+        
+        // Set zoom
+        svg.call(zoom);
+        if (!initialized) {
+            svg.call(zoom.transform, initTransform);
+            onZoom({transform: initTransform});
+        }
+        
+        initialized = true;
     }, [bounds, data, yAxis, xAxis]);
 
     return (
