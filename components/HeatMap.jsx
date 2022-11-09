@@ -11,6 +11,10 @@ export default function CHeatMap({data}) {
 
     const [xAxis, setXAxis] = useState("released");
     const [yAxis, setYAxis] = useState("score");
+    var xScales = null;
+    var yScales = null;
+    var xAxisObj = null;
+    var yAxisObj = null;
 
     //draw a hexagonal heatmap of the data
 
@@ -42,7 +46,6 @@ export default function CHeatMap({data}) {
         }
 
         // Initialize zoom and scales
-        svg.call(zoom);
         const xScale = xScales[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]);
         xAxisObj = d3.axisBottom(xScale);
@@ -51,24 +54,6 @@ export default function CHeatMap({data}) {
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
         svg.select(".y-axis").call(yAxisObj)
             .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
-        // Draw points
-        svg.select(".plot-area")
-            .attr("transform", `translate(${margin.left}, ${margin.top})`)
-            .selectAll("circle")
-            .data(data)
-            .join("circle")
-            .attr("cx", d => xScale(d[xAxis]))
-            .attr("cy", d => yScale(d[yAxis]))
-            .attr("r", 3)
-            .on("mouseover", (e, d) => {
-                setHoverItem({datum: d, x: e.pageX, y: e.pageY});
-                d3.select(e.target).attr("fill", "red");
-            })
-            .on("mouseout", (e, d) => {
-                setHoverItem({datum: null, x: 0, y: 0})
-                d3.select(e.target).attr("fill", "black");
-            });
     }, [bounds, data, yAxis, xAxis]);
 
     return (

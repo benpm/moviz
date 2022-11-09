@@ -26,6 +26,8 @@ export default function CScatterplot({data}) {
     var yScales = null;
     var xAxisObj = null;
     var yAxisObj = null;
+    const baseDotSize = 4;
+    const [dotSize, setDotSize] = useState(baseDotSize);
 
     const zoom = d3.zoom().on("zoom", ({transform}) => {
         if (xAxisObj && yAxisObj) {
@@ -35,6 +37,9 @@ export default function CScatterplot({data}) {
             // Update axes
             d3.select(ref.current).select(".x-axis").call(xAxisObj.scale(transform.rescaleX(xScales[xAxis])));
             d3.select(ref.current).select(".y-axis").call(yAxisObj.scale(transform.rescaleY(yScales[yAxis])))
+
+            // Update circle radius
+            setDotSize(baseDotSize / transform.k);
         }
     });
 
@@ -85,7 +90,7 @@ export default function CScatterplot({data}) {
             .join("circle")
             .attr("cx", d => xScale(d[xAxis]))
             .attr("cy", d => yScale(d[yAxis]))
-            .attr("r", 3)
+            .classed("dot", true)
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY});
                 d3.select(e.target).attr("fill", "red");
@@ -102,9 +107,13 @@ export default function CScatterplot({data}) {
                 <CDropdown options={yAxes} value={yAxis} onChange={setYAxis} />
             </div>
             <svg ref={ref} className="w-full h-full">
+                <style>
+                    circle.dot {'{'}
+                        r: {dotSize};
+                    {'}'}
+                </style>
                 <defs>
                     <clipPath id="plot-area-clip">
-                        {/* <rect fill="black" x="0" y="0" width={bounds.width} height={bounds.height} /> */}
                         <rect fill="white" x={margin.left} y={margin.top} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>

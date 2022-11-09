@@ -8,6 +8,7 @@ const Main = () => {
 
   useEffect(() => {
     window.addEventListener("resize", () => setViewSize({w: window.innerWidth, h: window.innerHeight}));
+    setViewSize({w: window.innerWidth, h: window.innerHeight});
   }, []);
 
   return (
