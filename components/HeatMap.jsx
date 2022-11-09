@@ -11,7 +11,7 @@ export default function CHeatMap({ data }) {
     const size = useSize(target);
 
     const [xAxis, setXAxis] = useState("released");
-    const [yAxis, setYAxis] = useState("score");
+    const [yAxis, setYAxis] = useState("audience_rating");
     var xScales = null;
     var yScales = null;
     var xAxisObj = null;
@@ -47,27 +47,30 @@ export default function CHeatMap({ data }) {
 
         // Initialize zoom and scales
         const xScale = xScales[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]);
+        const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
         xAxisObj = d3.axisBottom(xScale);
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-            .attr("stroke", "white");
+            .attr("stroke", "white")
+            .attr("color", "white");
         svg.select(".y-axis").call(yAxisObj)
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            .attr("color", "white")
             .attr("stroke", "white");
 
         //draw a hexagonal heatmap of the data draw empty hexagons
-        const RADIUS = 20;
+        const RADIUS = 15;
         const hexbin = hb.hexbin()
             .x(d => xScale(d.released))
-            .y(d => yScale(d.score))
+            .y(d => yScale(d.audience_rating))
             .radius(RADIUS)
             .extent([[0, 0], [bounds.innerWidth + margin.right, bounds.innerHeight + margin.bottom]]);
         const bins = hexbin(data);
         const colorScale = d3.scaleSequential(d3.interpolateInferno)
             .domain([0, d3.max(bins, d => d.length)]);
-        svg.selectAll(".hexagons")
+        svg.select(".hexagons")
+            .selectAll(".hexagon")
             .data(bins)
             .join("path")
             .attr("class", "hexagon")
@@ -80,9 +83,11 @@ export default function CHeatMap({ data }) {
             .text(d => `${d.length} movies released in ${d.x} and scored ${d.y}`);
 
         //draw empty hexagons from hb.hexbin().centers()
-        svg.selectAll(".hexagon-center")
+        svg.select(".hexagons")
+            .selectAll(".hexagon-empty")
             .data(hexbin.centers())
             .join("path")
+            .attr("class", "hexagon-empty")
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d[0] + margin.left}, ${d[1] + margin.top})`)
             .attr("fill", "none")
