@@ -27,7 +27,7 @@ export default function CScatterplot({data}) {
         state.setHoverItem
     ]);
     // Valid X axis labels
-    const xAxes = ["released", "budget", "runtime"];
+    const xAxes = ["released", "budget", "gross"];
     // Valid Y axis labels
     const yAxes = ["score", "audience_rating", "tomatometer_rating"];
     
@@ -74,6 +74,8 @@ export default function CScatterplot({data}) {
     const initLayout = svg => {
         xScales = {
             released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
+            budget: d3.scaleLinear().domain(d3.extent(data, d => d.budget)),
+            gross: d3.scaleLinear().domain(d3.extent(data, d => d.gross)),
         };
         yScales = {
             score: d3.scaleLinear().domain([0, 10]),
@@ -135,7 +137,8 @@ export default function CScatterplot({data}) {
     return (
         <div id="scatterplot" className="relative w-full h-full bg-slate-900" ref={target}>
             <div className="absolute top-0 right-0">
-                <CDropdown options={yAxes} value={yAxis} onChange={setYAxis} />
+                <CDropdown label="Y Axis" options={yAxes} value={yAxis} onChange={setYAxis} />
+                <CDropdown label="X Axis" options={xAxes} value={xAxis} onChange={setXAxis} />
             </div>
             <svg ref={ref} className="w-full h-full">
                 <style>
