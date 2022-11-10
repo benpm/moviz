@@ -10,7 +10,8 @@ const OSCAR_COLORS = {
     "winner": "#D4AF33",
     "nominee": "#FBD555",
     "best winner": "#214ED3",
-    "best nominee": "#90A8EE"
+    "best nominee": "#90A8EE",
+    "none": "#606060"
 };
 
 export default function CScatterplot({data}) {
@@ -96,9 +97,11 @@ export default function CScatterplot({data}) {
         xAxisObj = d3.axisBottom(xScale);
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
-            .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
+            .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+            .classed("plot-axis", true);
         svg.select(".y-axis").call(yAxisObj)
-            .attr("transform", `translate(${margin.left}, ${margin.top})`);
+            .attr("transform", `translate(${margin.left}, ${margin.top})`)
+            .classed("plot-axis", true);
 
         // Draw points
         svg.select(".plot-area")
@@ -112,7 +115,7 @@ export default function CScatterplot({data}) {
             .attr("fill", d => OSCAR_COLORS[d.oscar])
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
-                d3.select(e.target).attr("fill", "red");
+                d3.select(e.target).attr("fill", "white");
             })
             .on("mouseout", (e, d) => {
                 setHoverItem({datum: null, x: 0, y: 0, caller: null})
@@ -130,7 +133,7 @@ export default function CScatterplot({data}) {
     }, [bounds, data, yAxis, xAxis]);
 
     return (
-        <div id="scatterplot" className="relative w-full h-full bg-violet-200" ref={target}>
+        <div id="scatterplot" className="relative w-full h-full bg-slate-900" ref={target}>
             <div className="absolute top-0 right-0">
                 <CDropdown options={yAxes} value={yAxis} onChange={setYAxis} />
             </div>

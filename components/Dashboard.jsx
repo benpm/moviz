@@ -16,9 +16,9 @@ const Dashboard = () => {
   }, []);
   return (
     <div id="dashboard" className="p-2 grow grid grid-cols-2 grid-rows-2 gap-2">
-      <div className="bg-slate-200 col-span-2"><CScatterplot data={data}/></div>
-      <div className="bg-slate-200"></div>
-      <div className="bg-slate-200"><CHeatMap data={data}/></div>
+      <div className="bg-slate-900 col-span-2"><CScatterplot data={data}/></div>
+      <div className="bg-slate-900"></div>
+      <div className="bg-slate-900"><CHeatMap data={data}/></div>
       <CTooltip />
     </div>
   );

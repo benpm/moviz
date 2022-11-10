@@ -16,39 +16,39 @@ function ScatterplotToolTip(d) {
     const runtimeFormat = d3.timeFormat("%Hh %Mm");
 
     return (
-        <div className="tooltip">
+        <div className="tooltip bg-slate-700 text-slate-100">
             <div className="font-bold">{d.name}</div>
             <div className="tooltip-body">
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Released:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Released:</div>
                     <div className="p-1">{dateFormat(d.released)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Country:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Country:</div>
                     <div className="p-1">{d.country}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Company:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Company:</div>
                     <div className="p-1">{d.company}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Budget:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Budget:</div>
                     <div className="p-1">{dollarFormat(d.budget)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">IMDB Score:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">IMDB Score:</div>
                     <div className="p-1">{d.score}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Tomatometer:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Tomatometer:</div>
                     <div className="p-1">{d.tomatometer_rating}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Audience:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Audience:</div>
                     <div className="p-1">{d.audience_rating}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Run Time:</div>
+                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
+                    <div className="p-1 bg-slate-800 rounded-sm">Run Time:</div>
                     <div className="p-1">{runtimeFormat(d.runtime)}</div>
                 </div>
             </div>

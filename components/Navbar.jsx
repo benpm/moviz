@@ -1,6 +1,6 @@
 export default function CNavBar() {
     return (
-        <div className="bg-slate-200 flex flex-row">
+        <div className="bg-slate-700 flex flex-row text-slate-100">
             <div className="flex flex-row">
                 <div className="p-2 font-bold">Moviz</div>
                 <div className="p-2">menu1</div>

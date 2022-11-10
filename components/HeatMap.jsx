@@ -56,12 +56,10 @@ export default function CHeatMap({ data }) {
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-            .attr("stroke", "white")
-            .attr("color", "white");
+            .classed("plot-axis", true);
         svg.select(".y-axis").call(yAxisObj)
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
-            .attr("color", "white")
-            .attr("stroke", "white");
+            .classed("plot-axis", true);
 
         //draw a hexagonal heatmap of the data draw empty hexagons
         const RADIUS = 15;
@@ -81,7 +79,7 @@ export default function CHeatMap({ data }) {
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
             .attr("fill", d => colorScale(d.length))
-            .attr("stroke", "white")
+            .attr("stroke", "black")
             .attr("stroke-width", 1)
             .attr("bin-value", d => d.length)
 
@@ -113,13 +111,13 @@ export default function CHeatMap({ data }) {
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d[0] + margin.left}, ${d[1] + margin.top})`)
             .attr("fill", "none")
-            .attr("stroke", "white")
+            .attr("stroke", "black")
             .attr("stroke-width", 1)
 
     }, [bounds, data, yAxis, xAxis]);
 
     return (
-        <div id="heatmap" className="relative w-full h-full bg-black" ref={target}>
+        <div id="heatmap" className="relative w-full h-full bg-slate-900" ref={target}>
             <svg ref={ref} className="w-full h-full">
                 <defs>
                     <clipPath id="plot-clip">

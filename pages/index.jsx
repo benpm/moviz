@@ -12,7 +12,7 @@ const Main = () => {
   }, []);
 
   return (
-    <div className="w-screen h-screen overflow-hidden flex flex-col">
+    <div className="w-screen h-screen overflow-hidden flex flex-col bg-black">
       <CNavBar />
       <Dashboard />
     </div>
