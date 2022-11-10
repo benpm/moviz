@@ -87,18 +87,21 @@ export default function CHeatMap({ data }) {
 
         //attach mouseover events to the hexagons
         svg.selectAll(".hexagon")
+            .on("mousemove", function (event, d) {
+                setHoverItem({ datum: d, x: event.pageX-5, y: event.pageY-5, caller: "heatmap" });
+            })
             .on("mouseover", function (event, d) {
                 //highlight the hexagon by making it brighter
-                //make it brighter
                 d3.select(this).transition().duration(10)
-                    .attr("fill", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5));
-                setHoverItem({datum: d, x: event.pageX, y: event.pageY});
+                    .attr("fill", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5))
+                    .attr("stroke-width", 2.5);
             })
             .on("mouseout", function () {
                 //make it darker
                 d3.select(this).transition().duration(1000)
-                    .attr("fill", colorScale(d3.select(this).attr("bin-value")));
-                setHoverItem({datum: null, x: 0, y: 0});
+                    .attr("fill", colorScale(d3.select(this).attr("bin-value")))
+                    .attr("stroke-width", 1);
+                setHoverItem({ datum: null, x: 0, y: 0, caller: null });
             });
 
         //draw empty hexagons from hb.hexbin().centers()
@@ -112,8 +115,6 @@ export default function CHeatMap({ data }) {
             .attr("fill", "none")
             .attr("stroke", "white")
             .attr("stroke-width", 1)
-            .append("title")
-            .text(d => `center of hexagon at ${d.x}, ${d.y}`);
 
     }, [bounds, data, yAxis, xAxis]);
 

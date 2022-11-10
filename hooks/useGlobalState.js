@@ -4,7 +4,7 @@ import create from "zustand";
 const useGlobalState = create((set) => ({
     // Currently hovered data item
     //  {datum, x, y}
-    hoverItem: {datum: null, x: 0, y: 0},
+    hoverItem: {datum: null, x: 0, y: 0, caller: null},
     viewSize: {w: 1920, h: 1080},
 
     setHoverItem: x => set({ hoverItem: x }),
