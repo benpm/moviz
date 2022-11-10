@@ -102,11 +102,11 @@ export default function CScatterplot({data}) {
             .attr("cy", d => yScale(d[yAxis]))
             .classed("dot", true)
             .on("mouseover", (e, d) => {
-                setHoverItem({datum: d, x: e.pageX, y: e.pageY});
+                setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
                 d3.select(e.target).attr("fill", "red");
             })
             .on("mouseout", (e, d) => {
-                setHoverItem({datum: null, x: 0, y: 0})
+                setHoverItem({datum: null, x: 0, y: 0, caller: null})
                 d3.select(e.target).attr("fill", "black");
             });
         
