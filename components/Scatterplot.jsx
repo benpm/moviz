@@ -4,6 +4,7 @@ import useD3 from "../hooks/useD3";
 import useSize from "../hooks/useSize";
 import CDropdown from "./Dropdown";
 import useGlobalState from "../hooks/useGlobalState";
+import useDelayWait from "../hooks/useDelayWait";
 
 
 const OSCAR_COLORS = {
@@ -38,19 +39,25 @@ export default function CScatterplot({data}) {
     var initialized = false;
     const baseDotSize = 4;
     const [dotSize, setDotSize] = useState(baseDotSize);
-
     const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
+    const [plotTransform, setPlotTransform] = useState(initTransform);
+
+    useDelayWait(() => {
+        // Update circle radius
+        setDotSize(baseDotSize / plotTransform.k);
+    }, 150, [plotTransform]);
+
     const onZoom = ({transform}) => {
         if (xAxisObj && yAxisObj) {
+            setPlotTransform(transform);
             const plotArea = d3.select(ref.current).select(".plot-area");
             plotArea.attr("transform", transform);
     
             // Update axes
-            d3.select(ref.current).select(".x-axis").call(xAxisObj.scale(transform.rescaleX(xScales[xAxis])));
-            d3.select(ref.current).select(".y-axis").call(yAxisObj.scale(transform.rescaleY(yScales[yAxis])))
-
-            // Update circle radius
-            setDotSize(baseDotSize / transform.k);
+            d3.select(ref.current).select(".x-axis")
+                .call(xAxisObj.scale(transform.rescaleX(xScales[xAxis])));
+            d3.select(ref.current).select(".y-axis")
+                .call(yAxisObj.scale(transform.rescaleY(yScales[yAxis])));
         }
     };
     const zoom = d3.zoom()
