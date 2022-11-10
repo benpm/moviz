@@ -5,6 +5,14 @@ import useSize from "../hooks/useSize";
 import CDropdown from "./Dropdown";
 import useGlobalState from "../hooks/useGlobalState";
 
+
+const OSCAR_COLORS = {
+    "winner": "#D4AF33",
+    "nominee": "#FBD555",
+    "best winner": "#214ED3",
+    "best nominee": "#90A8EE"
+};
+
 export default function CScatterplot({data}) {
     const margin = {top: 20, right: 20, bottom: 20, left: 30};
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
@@ -101,13 +109,14 @@ export default function CScatterplot({data}) {
             .attr("cx", d => xScale(d[xAxis]))
             .attr("cy", d => yScale(d[yAxis]))
             .classed("dot", true)
+            .attr("fill", d => OSCAR_COLORS[d.oscar])
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
                 d3.select(e.target).attr("fill", "red");
             })
             .on("mouseout", (e, d) => {
                 setHoverItem({datum: null, x: 0, y: 0, caller: null})
-                d3.select(e.target).attr("fill", "black");
+                d3.select(e.target).attr("fill", d => OSCAR_COLORS[d.oscar]);
             });
         
         // Set zoom

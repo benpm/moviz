@@ -88,7 +88,7 @@ export default function CHeatMap({ data }) {
         //attach mouseover events to the hexagons
         svg.selectAll(".hexagon")
             .on("mousemove", function (event, d) {
-                setHoverItem({ datum: d, x: event.pageX, y: event.pageY, caller: "heatmap" });
+                setHoverItem({ datum: d, x: event.pageX-5, y: event.pageY-5, caller: "heatmap" });
             })
             .on("mouseover", function (event, d) {
                 //highlight the hexagon by making it brighter
