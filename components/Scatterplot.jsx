@@ -8,8 +8,8 @@ import useDelayWait from "../hooks/useDelayWait";
 
 
 const OSCAR_COLORS = {
-    "winner": "#D4AF33",
-    "nominee": "#FBD555",
+    "winner": "#fce603",
+    "nominee": "#caa825",
     "best_picture_winner": "#214ED3",
     "best_picture_nominee": "#90A8EE",
     "none": "#606060",
