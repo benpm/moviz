@@ -93,7 +93,7 @@ export default function CHeatMap({ data }) {
                 d3.select(this)
                     .transition().duration(10)
                     .attr("fill", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5))
-                    .attr("stroke", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5))
+                    .attr("stroke", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1))
                     .attr("stroke-width", 2.5);
             })
             .on("mouseout", function () {
