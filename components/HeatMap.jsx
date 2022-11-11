@@ -90,14 +90,17 @@ export default function CHeatMap({ data }) {
             })
             .on("mouseover", function (event, d) {
                 //highlight the hexagon by making it brighter
-                d3.select(this).transition().duration(10)
+                d3.select(this)
+                    .transition().duration(10)
                     .attr("fill", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5))
+                    .attr("stroke", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5))
                     .attr("stroke-width", 2.5);
             })
             .on("mouseout", function () {
                 //make it darker
                 d3.select(this).transition().duration(1000)
                     .attr("fill", colorScale(d3.select(this).attr("bin-value")))
+                    .attr("stroke", "black")
                     .attr("stroke-width", 1);
                 setHoverItem({ datum: null, x: 0, y: 0, caller: null });
             });

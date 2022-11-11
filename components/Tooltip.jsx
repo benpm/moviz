@@ -13,42 +13,46 @@ function makeTooltip(d,caller) {
 function ScatterplotToolTip(d) {
     const dateFormat = d3.timeFormat("%b %d, %Y");
     const dollarFormat = d3.format("$,.0f");
-    const runtimeFormat = d3.timeFormat("%Hh %Mm");
+    const runtimeFormat = m => `${m/60|0}h ${m%60}m`;
 
     return (
-        <div className="tooltip bg-slate-700 text-slate-100">
-            <div className="font-bold">{d.name}</div>
-            <div className="tooltip-body">
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Released:</div>
+        <div className="tooltip bg-dark">
+            <div className="font-bold text-lightest">{d.name}</div>
+            <div className="tooltip-body bg-dark text-dark">
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Released:</div>
                     <div className="p-1">{dateFormat(d.released)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Country:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Country:</div>
                     <div className="p-1">{d.country}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Company:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Company:</div>
                     <div className="p-1">{d.company}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Budget:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Budget:</div>
                     <div className="p-1">{dollarFormat(d.budget)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">IMDB Score:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Profit:</div>
+                    <div className="p-1">{dollarFormat(d.gross)}</div>
+                </div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">IMDB Score:</div>
                     <div className="p-1">{d.score}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Tomatometer:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Tomatometer:</div>
                     <div className="p-1">{d.tomatometer_rating}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Audience:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Audience:</div>
                     <div className="p-1">{d.audience_rating}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-700 rounded-sm m-1">
-                    <div className="p-1 bg-slate-800 rounded-sm">Run Time:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Run Time:</div>
                     <div className="p-1">{runtimeFormat(d.runtime)}</div>
                 </div>
             </div>
@@ -77,31 +81,31 @@ function HeatmapToolTip(d) {
     //find average audience
     const avgAudience = d3.mean(d, (d) => d.audience_rating);
     return (
-        <div className="tooltip">
-            <div className="font-bold"># of movies: {d.length}</div>
-            <div className="tooltip-body" style={{backgroundColor: 'rgba(255,255,255,0.0)'}}>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Years:</div>
+        <div className="tooltip bg-dark">
+            <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.length}</span></div>
+            <div className="tooltip-body">
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Years:</div>
                     <div className="p-1">{dateFormat(minDate)}-{dateFormat(maxDate)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Avg. Budget:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Avg. Budget:</div>
                     <div className="p-1">{dollarFormat(avgBudget)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Avg. IMDB Score:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Avg. IMDB Score:</div>
                     <div className="p-1">{imdbFormat(avgScore)}</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Tomatometer:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Tomatometer:</div>
                     <div className="p-1">{tomatometerFormat(avgTomatometer)}%</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Audience:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Audience:</div>
                     <div className="p-1">{tomatometerFormat(avgAudience)}%</div>
                 </div>
-                <div className="grid grid-cols-2 bg-slate-200 rounded-sm m-1">
-                    <div className="p-1 bg-slate-300 rounded-sm">Run Time:</div>
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Run Time:</div>
                     <div className="p-1">{runtimeFormat(avgRuntime)}</div>
                 </div>
             </div>
@@ -131,7 +135,7 @@ export default function CTooltip() {
 
     return (
         <div
-            className={`absolute bg-gray-100 rounded p-2 text-sm text-gray-800 pointer-events-none
+            className={`absolute bg-dark rounded p-2 text-sm text-gray-800 pointer-events-none
                 ${hoverItem.datum ? "" : "hidden"}`}
             style={positionTooltip(hoverItem, viewSize)} >
             {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller) : ""}

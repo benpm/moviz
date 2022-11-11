@@ -10,9 +10,9 @@ import useDelayWait from "../hooks/useDelayWait";
 const OSCAR_COLORS = {
     "winner": "#D4AF33",
     "nominee": "#FBD555",
-    "best winner": "#214ED3",
-    "best nominee": "#90A8EE",
-    "none": "#606060"
+    "best_picture_winner": "#214ED3",
+    "best_picture_nominee": "#90A8EE",
+    "none": "#606060",
 };
 
 export default function CScatterplot({data}) {
@@ -142,7 +142,7 @@ export default function CScatterplot({data}) {
     }, [bounds, data, yAxis, xAxis]);
 
     return (
-        <div id="scatterplot" className="relative w-full h-full bg-slate-900" ref={target}>
+        <div id="scatterplot" className="relative w-full h-full" ref={target}>
             <div className="absolute top-0 right-0">
                 <CDropdown label="Y Axis" options={yAxes} value={yAxis} onChange={setYAxis} />
                 <CDropdown label="X Axis" options={xAxes} value={xAxis} onChange={setXAxis} />
