@@ -52,6 +52,9 @@ export default function CScatterplot({data}) {
             setPlotTransform(transform);
             const plotArea = d3.select(ref.current).select(".plot-area");
             plotArea.attr("transform", transform);
+
+            plotArea.selectAll("circle")
+                .attr("stroke-width", 1/transform.k);
     
             // Update axes
             d3.select(ref.current).select(".x-axis")
@@ -107,6 +110,8 @@ export default function CScatterplot({data}) {
             .attr("cy", d => yScale(d[yAxis]))
             .classed("dot", true)
             .attr("fill", d => OSCAR_COLORS[d.oscar])
+            .attr("stroke", "#828da3")
+            .attr("stroke-width", 0.6)
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
                 d3.select(e.target).attr("fill", "white");
