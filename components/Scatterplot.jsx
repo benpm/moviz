@@ -5,7 +5,7 @@ import useSize from "../hooks/useSize";
 import CDropdown from "./Dropdown";
 import useGlobalState from "../hooks/useGlobalState";
 import useDelayWait from "../hooks/useDelayWait";
-
+import copyScales from "../scripts/copyScales";
 
 const OSCAR_COLORS = {
     "winner": "#fce603",
@@ -20,20 +20,20 @@ export default function CScatterplot({data}) {
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
-    // X and Y axis property labels
-    const [xAxis, setXAxis] = useState("released");
-    const [yAxis, setYAxis] = useState("score");
-    // Hovered data item using global state
-    const [setHoverItem] = useGlobalState(state => [
-        state.setHoverItem
+    let [setHoverItem, xAxis, yAxis, setXAxis, setYAxis, gScales] = useGlobalState(state => [
+        state.setHoverItem,
+        state.scatterXAxis,
+        state.scatterYAxis,
+        state.setScatterXAxis,
+        state.setScatterYAxis,
+        state.scales
     ]);
+    let scales = null;
     // Valid X axis labels
     const xAxes = ["released", "budget", "gross"];
     // Valid Y axis labels
     const yAxes = ["score", "audience_rating", "tomatometer_rating"];
     
-    var xScales = null;
-    var yScales = null;
     var xAxisObj = null;
     var yAxisObj = null;
     var initialized = false;
@@ -55,9 +55,9 @@ export default function CScatterplot({data}) {
     
             // Update axes
             d3.select(ref.current).select(".x-axis")
-                .call(xAxisObj.scale(transform.rescaleX(xScales[xAxis])));
+                .call(xAxisObj.scale(transform.rescaleX(scales.x[xAxis])));
             d3.select(ref.current).select(".y-axis")
-                .call(yAxisObj.scale(transform.rescaleY(yScales[yAxis])));
+                .call(yAxisObj.scale(transform.rescaleY(scales.y[yAxis])));
         }
     };
     const zoom = d3.zoom()
@@ -76,33 +76,18 @@ export default function CScatterplot({data}) {
         });
         console.debug("resize");
     }, [size]);
-
-    // Initial layout function
-    const initLayout = svg => {
-        xScales = {
-            released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
-            budget: d3.scaleLinear().domain(d3.extent(data, d => d.budget)),
-            gross: d3.scaleLinear().domain(d3.extent(data, d => d.gross)),
-        };
-        yScales = {
-            score: d3.scaleLinear().domain([0, 10]),
-            tomatometer_rating: d3.scaleLinear().domain([0, 100]),
-            audience_rating: d3.scaleLinear().domain([0, 100]),
-            nominations: d3.scaleLinear(),
-            gross: d3.scaleLinear(),
-            budget: d3.scaleLinear(),
-        };
-    };
     
     // Render chart function
     const ref = useD3(svg => {
-        if (!initialized) {
-            initLayout(svg);
+        if (!gScales) {
+            return;
+        } else if (!scales) {
+            scales = copyScales(gScales);
         }
 
         // Initialize zoom and scales
-        const xScale = xScales[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]);
+        const xScale = scales.x[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = scales.y[yAxis].rangeRound([bounds.innerHeight, 0]);
         xAxisObj = d3.axisBottom(xScale);
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
@@ -139,7 +124,7 @@ export default function CScatterplot({data}) {
         }
         
         initialized = true;
-    }, [bounds, data, yAxis, xAxis]);
+    }, [bounds, scales, yAxis, xAxis]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>

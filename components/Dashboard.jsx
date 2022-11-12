@@ -1,15 +1,32 @@
+import * as d3 from "d3";
 import CScatterplot from './Scatterplot';
 import loadMovieData from '../scripts/loadData';
 import { useEffect, useState } from 'react';
 import CTooltip from './Tooltip';
 import CHeatMap from './HeatMap';
+import useGlobalState from '../hooks/useGlobalState';
 
 const Dashboard = () => {
   const [data, setData] = useState([]);
+  const [setScales] = useGlobalState(s => [s.setScales]);
   useEffect(() => {
     if (data.length == 0) {
       loadMovieData().then((data) => {
-        console.log(data);
+        setScales({
+          x: {
+            released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
+            budget: d3.scaleLinear().domain(d3.extent(data, d => d.budget)),
+            gross: d3.scaleLinear().domain(d3.extent(data, d => d.gross)),
+          },
+          y: {
+            score: d3.scaleLinear().domain([0, 10]),
+            tomatometer_rating: d3.scaleLinear().domain([0, 100]),
+            audience_rating: d3.scaleLinear().domain([0, 100]),
+            nominations: d3.scaleLinear(),
+            gross: d3.scaleLinear(),
+            budget: d3.scaleLinear(),
+          }
+        });
         setData(data);
       });
     }

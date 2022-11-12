@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import useSize from "../hooks/useSize";
 import * as hb from "d3-hexbin";
 import useGlobalState from "../hooks/useGlobalState";
+import copyScales from "../scripts/copyScales";
 
 export default function CHeatMap({ data }) {
     const margin = { top: 20, right: 20, bottom: 20, left: 30 };
@@ -11,18 +12,18 @@ export default function CHeatMap({ data }) {
     const target = useRef(null);
     const size = useSize(target);
 
-    const [xAxis, setXAxis] = useState("released");
-    const [yAxis, setYAxis] = useState("audience_rating");
-    const [setHoverItem] = useGlobalState(state => [
-        state.setHoverItem
+    
+    let [setHoverItem, xAxis, yAxis, gScales] = useGlobalState(state => [
+        state.setHoverItem,
+        state.scatterXAxis,
+        state.scatterYAxis,
+        state.scales
     ]);
-    var xScales = null;
-    var yScales = null;
+    let scales = null;
     var xAxisObj = null;
     var yAxisObj = null;
 
     //draw a hexagonal heatmap of the data
-
     useEffect(() => {
         const w = size ? size.width : bounds.width;
         const h = size ? size.height : bounds.height;
@@ -35,23 +36,15 @@ export default function CHeatMap({ data }) {
 
     // Render chart function
     const ref = useD3(svg => {
-        if (xScale == null) {
-            xScales = {
-                released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
-            };
-            yScales = {
-                score: d3.scaleLinear().domain([0, 10]),
-                tomatometer_rating: d3.scaleLinear().domain([0, 100]),
-                audience_rating: d3.scaleLinear().domain([0, 100]),
-                nominations: d3.scaleLinear(),
-                gross: d3.scaleLinear(),
-                budget: d3.scaleLinear(),
-            };
+        if (!gScales) {
+            return;
+        } else if (!scales) {
+            scales = copyScales(gScales);
         }
 
         // Initialize zoom and scales
-        const xScale = xScales[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = yScales[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
+        const xScale = scales.x[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = scales.y[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
         xAxisObj = d3.axisBottom(xScale);
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
@@ -64,8 +57,8 @@ export default function CHeatMap({ data }) {
         //draw a hexagonal heatmap of the data draw empty hexagons
         const RADIUS = 15;
         const hexbin = hb.hexbin()
-            .x(d => xScale(d.released))
-            .y(d => yScale(d.audience_rating))
+            .x(d => xScale(d[xAxis]))
+            .y(d => yScale(d[yAxis]))
             .radius(RADIUS)
             .extent([[0, 0], [bounds.innerWidth + margin.right, bounds.innerHeight + margin.bottom]]);
         const bins = hexbin(data);
@@ -85,21 +78,21 @@ export default function CHeatMap({ data }) {
 
         //attach mouseover events to the hexagons
         svg.selectAll(".hexagon")
-            .on("mousemove", function (event, d) {
+            .on("mousemove", (event, d) => {
                 setHoverItem({ datum: d, x: event.pageX-5, y: event.pageY-5, caller: "heatmap" });
             })
-            .on("mouseover", function (event, d) {
+            .on("mouseover", (event, d) => {
                 //highlight the hexagon by making it brighter
-                d3.select(this)
+                d3.select(event.target)
                     .transition().duration(10)
-                    .attr("fill", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1.5))
-                    .attr("stroke", d3.color(colorScale(d3.select(this).attr("bin-value"))).brighter(1))
+                    .attr("fill", d3.color(colorScale(d.length)).brighter(1.5))
+                    .attr("stroke", d3.color(colorScale(d.length)).brighter(1))
                     .attr("stroke-width", 2.5);
             })
-            .on("mouseout", function () {
+            .on("mouseout", (event, d) => {
                 //make it darker
-                d3.select(this).transition().duration(1000)
-                    .attr("fill", colorScale(d3.select(this).attr("bin-value")))
+                d3.select(event.target).transition().duration(1000)
+                    .attr("fill", colorScale(d.length))
                     .attr("stroke", "black")
                     .attr("stroke-width", 1);
                 setHoverItem({ datum: null, x: 0, y: 0, caller: null });
@@ -117,7 +110,7 @@ export default function CHeatMap({ data }) {
             .attr("stroke", "black")
             .attr("stroke-width", 1)
 
-    }, [bounds, data, yAxis, xAxis]);
+    }, [bounds, scales, yAxis, xAxis]);
 
     return (
         <div id="heatmap" className="relative w-full h-full bg-slate-900" ref={target}>
