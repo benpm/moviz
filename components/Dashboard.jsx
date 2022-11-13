@@ -25,6 +25,19 @@ const Dashboard = () => {
             nominations: d3.scaleLinear(),
             gross: d3.scaleLinear(),
             budget: d3.scaleLinear(),
+          },
+          xFormat: {
+            released: d3.timeFormat("%b %d, %Y"),
+            budget: d3.format("$,.1s"),
+            gross: d3.format("$,.1s"),
+          },
+          yFormat: {
+            score: d => d,
+            tomatometer_rating: d => d,
+            audience_rating: d => d,
+            nominations: d3.format("~s"),
+            gross: d3.format("$,.1s"),
+            budget: d3.format("$,.1s"),
           }
         });
         setData(data);

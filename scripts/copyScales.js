@@ -7,5 +7,7 @@ export default function copyScales(scales) {
     for (let k in scales.y) {
         out.y[k] = scales.y[k].copy();
     }
+    out.xFormat = scales.xFormat;
+    out.yFormat = scales.yFormat;
     return out;
 }
