@@ -36,7 +36,7 @@ function ScatterplotToolTip(d) {
                     <div className="p-1">{dollarFormat(d.budget)}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">Profit:</div>
+                    <div className="p-1 bg-mid2 rounded-sm">Revenue:</div>
                     <div className="p-1">{dollarFormat(d.gross)}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">

@@ -31,8 +31,10 @@ export default function CScatterplot({data}) {
     let scales = null;
     // Valid X axis labels
     const xAxes = ["released", "budget", "gross"];
+    const xAxisTitles = ["Release Date", "Budget", "Revenue"];
     // Valid Y axis labels
     const yAxes = ["score", "audience_rating", "tomatometer_rating"];
+    const yAxisTitles = ["IMDb Score", "RT Audience Rating", "RT Tomatometer Rating"];
     
     var xAxisObj = null;
     var yAxisObj = null;
@@ -101,7 +103,6 @@ export default function CScatterplot({data}) {
 
         // Draw points
         svg.select(".plot-area")
-            .attr("transform", `translate(${margin.left}, ${margin.top})`)
             .selectAll("circle")
             .data(data)
             .join("circle")
@@ -131,23 +132,24 @@ export default function CScatterplot({data}) {
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>
             <div className="absolute top-0 right-0">
-                <CDropdown label="Y Axis" options={yAxes} value={yAxis} onChange={setYAxis} />
-                <CDropdown label="X Axis" options={xAxes} value={xAxis} onChange={setXAxis} />
+                <CDropdown label="Y Axis" options={yAxes} optionTitles={yAxisTitles} value={yAxis} onChange={setYAxis} />
+                <CDropdown label="X Axis" options={xAxes} optionTitles={xAxisTitles} value={xAxis} onChange={setXAxis} />
             </div>
             <svg ref={ref} className="w-full h-full">
                 <style>
                     circle.dot {'{'}
                         r: {dotSize};
                         stroke-width: {dotStroke};
-                        stroke: #828da3;
+                        stroke: #202020;
                     {'}'}
                 </style>
                 <defs>
                     <clipPath id="plot-area-clip">
-                        <rect fill="white" x={margin.left} y={margin.top} width={bounds.innerWidth} height={bounds.innerHeight} />
+                        <rect fill="white" x={0} y={0} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
-                <g style={{clipPath: "url(#plot-area-clip)"}}>
+                <g className="plot-area-container" style={{clipPath: "url(#plot-area-clip)"}}
+                    transform={`translate(${margin.left},${margin.right})`}>
                     <g className="plot-area"></g>
                 </g>
                 <g className="x-axis"></g>
