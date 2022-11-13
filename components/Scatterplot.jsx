@@ -39,12 +39,14 @@ export default function CScatterplot({data}) {
     var initialized = false;
     const baseDotSize = 4;
     const [dotSize, setDotSize] = useState(baseDotSize);
+    const [dotStroke, setDotStroke] = useState(1);
     const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
     const [plotTransform, setPlotTransform] = useState(initTransform);
 
     useDelayWait(() => {
         // Update circle radius
         setDotSize(baseDotSize / plotTransform.k);
+        setDotStroke(1 / plotTransform.k);
     }, 150, [plotTransform]);
 
     const onZoom = ({transform}) => {
@@ -52,9 +54,6 @@ export default function CScatterplot({data}) {
             setPlotTransform(transform);
             const plotArea = d3.select(ref.current).select(".plot-area");
             plotArea.attr("transform", transform);
-
-            plotArea.selectAll("circle")
-                .attr("stroke-width", 1/transform.k);
     
             // Update axes
             d3.select(ref.current).select(".x-axis")
@@ -110,8 +109,6 @@ export default function CScatterplot({data}) {
             .attr("cy", d => yScale(d[yAxis]))
             .classed("dot", true)
             .attr("fill", d => OSCAR_COLORS[d.oscar])
-            .attr("stroke", "#828da3")
-            .attr("stroke-width", 0.6)
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
                 d3.select(e.target).attr("fill", "white");
@@ -129,7 +126,7 @@ export default function CScatterplot({data}) {
         }
         
         initialized = true;
-    }, [bounds, scales, yAxis, xAxis]);
+    }, [bounds, scales, yAxis, xAxis, data]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>
@@ -141,6 +138,8 @@ export default function CScatterplot({data}) {
                 <style>
                     circle.dot {'{'}
                         r: {dotSize};
+                        stroke-width: {dotStroke};
+                        stroke: #828da3;
                     {'}'}
                 </style>
                 <defs>

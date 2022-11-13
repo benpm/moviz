@@ -110,7 +110,7 @@ export default function CHeatMap({ data }) {
             .attr("stroke", "black")
             .attr("stroke-width", 1)
 
-    }, [bounds, scales, yAxis, xAxis]);
+    }, [bounds, scales, yAxis, xAxis, data]);
 
     return (
         <div id="heatmap" className="relative w-full h-full bg-slate-900" ref={target}>
