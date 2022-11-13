@@ -37,12 +37,13 @@ movies.set_index(["name", "year"], inplace=True)
 # For each movie, set the overall oscar status
 movies["oscar"] = "none"
 def set_oscar(row):
-    if row["ceremony"] in ["BEST PICTURE", "BEST MOTION PICTURE"]:
-        label = "best_picture_winner" if row["winner"] else "best_picture_nominee"
-    else:
-        label = "winner" if row["winner"] else "nominee"
     idx = (row["film"], row["year_film"])
     if idx in movies.index:
+        if row["category"] == "BEST MOTION PICTURE":
+            label = "best_picture_winner" if row["winner"] else "best_picture_nominee"
+            print(row["film"], row["year_film"], label)
+        else:
+            label = "winner" if row["winner"] else "nominee"
         movies.loc[idx, "oscar"] = label
 oscars.apply(set_oscar, axis=1)
 
@@ -51,4 +52,6 @@ nomcounts = oscars["film"].value_counts()
 movies["nominations"] = movies.index.map(lambda x: nomcounts[x[0]] if x[0] in nomcounts else 0)
 
 # Save to csv
-movies.to_csv("../public/movies.csv", index=True)
+OUT_PATH = "../public/movies.csv"
+movies.to_csv(OUT_PATH, index=True)
+print("Saved to", OUT_PATH)
