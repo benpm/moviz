@@ -1,10 +1,10 @@
+import { default as logo } from '../logo.svg';
+
 export default function CNavBar() {
+    //console.log(Logo);
     return (
         <div className="bg-slate-700 flex flex-row text-slate-100">
-            <div className="flex flex-row">
-                <div className="p-2 font-bold">Moviz</div>
-                <div className="p-2">menu1</div>
-            </div>
+            <img src={logo} alt="logo" />
             <div className="flex flex-row">
                 <div className="p-2">menu2</div>
                 <div className="p-2">menu3</div>
