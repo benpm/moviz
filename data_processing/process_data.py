@@ -35,18 +35,18 @@ movies = movies.drop_duplicates(subset=["name", "year"])
 movies.set_index(["name", "year"], inplace=True)
 
 # For each movie, set the overall oscar status
+oscar_ranking = ["none", "nominee", "winner", "best_picture_nominee", "best_picture_winner"]
 movies["oscar"] = "none"
 def set_oscar(row):
     idx = (row["film"], row["year_film"])
     if idx in movies.index:
-        if row["category"] == "BEST MOTION PICTURE":
+        if row["category"] in ["BEST MOTION PICTURE", "BEST PICTURE"]:
             label = "best_picture_winner" if row["winner"] else "best_picture_nominee"
-            print(row["film"], row["year_film"], label)
         else:
             label = "winner" if row["winner"] else "nominee"
-        movies.loc[idx, "oscar"] = label
+        if oscar_ranking.index(label) > oscar_ranking.index(movies.loc[idx, "oscar"]):
+            movies.loc[idx, "oscar"] = label
 oscars.apply(set_oscar, axis=1)
-
 # Count each occurence of name and assign that count to a new column nominations
 nomcounts = oscars["film"].value_counts()
 movies["nominations"] = movies.index.map(lambda x: nomcounts[x[0]] if x[0] in nomcounts else 0)
