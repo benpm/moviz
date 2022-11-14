@@ -6,13 +6,27 @@ import * as hb from "d3-hexbin";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 
+function ramp(scale, n = 256) {
+    const color = scale.copy().domain(d3.quantize(d3.interpolate(0, n), n));
+    const canvas = document.createElement("canvas");
+    canvas.width = n;
+    canvas.height = 1;
+    const context = canvas.getContext("2d");
+    for (let i = 0; i < n; ++i) {
+      context.fillStyle = color(i / (n - 1));
+      context.fillRect(i, 0, 1, 1);
+    }
+    return canvas;
+}
+
 export default function CHeatMap({ data }) {
     const margin = { top: 20, right: 20, bottom: 20, left: 30 };
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
+    const [legendImage, setLegendImage] = useState("");
 
-    
+
     let [setHoverItem, xAxis, yAxis, gScales] = useGlobalState(state => [
         state.setHoverItem,
         state.scatterXAxis,
@@ -79,7 +93,7 @@ export default function CHeatMap({ data }) {
         //attach mouseover events to the hexagons
         svg.selectAll(".hexagon")
             .on("mousemove", (event, d) => {
-                setHoverItem({ datum: d, x: event.pageX-5, y: event.pageY-5, caller: "heatmap" });
+                setHoverItem({ datum: d, x: event.pageX - 5, y: event.pageY - 5, caller: "heatmap" });
             })
             .on("mouseover", (event, d) => {
                 //highlight the hexagon by making it brighter
@@ -108,7 +122,11 @@ export default function CHeatMap({ data }) {
             .attr("transform", d => `translate(${d[0] + margin.left}, ${d[1] + margin.top})`)
             .attr("fill", "none")
             .attr("stroke", "black")
-            .attr("stroke-width", 1)
+            .attr("stroke-width", 1);
+        let x;
+        
+        x = colorScale.copy().rangeRound(d3.quantize(d3.interpolate(0, 40), 40));
+        setLegendImage(ramp(colorScale).toDataURL());
 
     }, [bounds, scales, yAxis, xAxis, data]);
 
@@ -122,6 +140,9 @@ export default function CHeatMap({ data }) {
                 </defs>
                 <g style={{ clipPath: "url(#plot-clip)" }}>
                     <g className="hexagons"></g>
+                </g>
+                <g className="legend" transform="translate(295,120) rotate(-90 170 0)">
+                    <image width={120} height={10} preserveAspectRatio="none" xlinkHref={legendImage}></image>
                 </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
