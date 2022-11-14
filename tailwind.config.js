@@ -14,7 +14,7 @@ module.exports = {
         "oscar-best-picture-nominee": "#90A8EE",
         "oscar-none": "#606060",
         "darkest": "#000000",
-        "dark": "#202020",
+        "dark": "rgb(15 23 42)",
         "mid": "#AF9164",
         "mid2": "#8a7453",
         "light": "#B3B6B7",

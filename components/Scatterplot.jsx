@@ -9,7 +9,7 @@ import copyScales from "../scripts/copyScales";
 
 const OSCAR_COLORS = {
     "winner": "#fce603",
-    "nominee": "#caa825",
+    "nominee": "#947b1b",
     "best_picture_winner": "#214ED3",
     "best_picture_nominee": "#90A8EE",
     "none": "#606060",
