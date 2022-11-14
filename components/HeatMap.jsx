@@ -19,8 +19,20 @@ function ramp(scale, n = 256) {
     return canvas;
 }
 
+//https://stackoverflow.com/questions/63842169/i-have-min-and-max-number-how-can-i-generate-n-number-of-array
+function generateArrayMinMax(min, max, n) {
+    let list = [min],
+        interval = (max - min) / (n - 1);
+ 
+    for (let i = 1; i < n - 1; i++) {
+       list.push(Number.parseInt(min + interval * i));
+    }
+    list.push(Number.parseInt(max));                        // prevent floating point arithmetic errors
+    return list;
+ }
+
 export default function CHeatMap({ data }) {
-    const margin = { top: 20, right: 20, bottom: 20, left: 30 };
+    const margin = { top: 20, right: 35, bottom: 20, left: 25 };
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
@@ -123,10 +135,16 @@ export default function CHeatMap({ data }) {
             .attr("fill", "none")
             .attr("stroke", "black")
             .attr("stroke-width", 1);
-        let x;
-        
-        x = colorScale.copy().rangeRound(d3.quantize(d3.interpolate(0, 40), 40));
+
         setLegendImage(ramp(colorScale).toDataURL());
+
+        //access legend-ticks group under legend group and select all text elements
+        svg.select(".legend-ticks")
+            .selectAll("text")
+            .data(generateArrayMinMax(0, d3.max(bins, d => d.length), 4))
+            .join("text")
+            .text(d => d)
+            .attr("fill", "white")
 
     }, [bounds, scales, yAxis, xAxis, data]);
 
@@ -141,8 +159,21 @@ export default function CHeatMap({ data }) {
                 <g style={{ clipPath: "url(#plot-clip)" }}>
                     <g className="hexagons"></g>
                 </g>
-                <g className="legend" transform="translate(295,120) rotate(-90 170 0)">
-                    <image width={120} height={10} preserveAspectRatio="none" xlinkHref={legendImage}></image>
+                <g className="legend" transform={`translate(${bounds.width - margin.right/3},${bounds.height-margin.bottom}) rotate(-90 0,0)`}>
+                    <image width={bounds.height-margin.bottom-margin.top} height={margin.right/3} preserveAspectRatio="none" xlinkHref={legendImage}></image>
+                    <g className="legend-ticks">
+                        <text x={margin.bottom-margin.top} y={-margin.right/2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                        <line x1={0} y1={0} x2={0} y2={margin.right/3} stroke="white" strokeWidth={2} />
+
+                        <text x={(bounds.height-margin.bottom-margin.top)/3} y={-margin.right/2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                        <line x1={(bounds.height-margin.bottom-margin.top)/3} y1={0} x2={(bounds.height-margin.bottom-margin.top)/3} y2={margin.right/3} stroke="white" strokeWidth={2} />
+
+                        <text x={(bounds.height-margin.bottom-margin.top)*2/3} y={-margin.right/2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                        <line x1={(bounds.height-margin.bottom-margin.top)*2/3} y1={0} x2={(bounds.height-margin.bottom-margin.top)*2/3} y2={margin.right/3} stroke="white" strokeWidth={2} />
+
+                        <text x={(bounds.height-margin.bottom-margin.top)} y={-margin.right/2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                        <line x1={(bounds.height-margin.bottom-margin.top)} y1={0} x2={(bounds.height-margin.bottom-margin.top)} y2={margin.right/3} stroke="white" strokeWidth={2} />
+                    </g>
                 </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>

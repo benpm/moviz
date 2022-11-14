@@ -45,11 +45,11 @@ function ScatterplotToolTip(d) {
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
                     <div className="p-1 bg-mid2 rounded-sm">Tomatometer:</div>
-                    <div className="p-1">{d.tomatometer_rating}</div>
+                    <div className="p-1">{d.tomatometer_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
                     <div className="p-1 bg-mid2 rounded-sm">Audience:</div>
-                    <div className="p-1">{d.audience_rating}</div>
+                    <div className="p-1">{d.audience_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
                     <div className="p-1 bg-mid2 rounded-sm">Run Time:</div>
