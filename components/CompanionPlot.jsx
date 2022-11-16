@@ -47,15 +47,15 @@ export default function CCompanionPlot({ data }) {
         let oscarData = data.filter(d => d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0);
         //bin the data by year and genre and count the number of movies in each bin
         let oscarDataByYear = d3.group(oscarData, d=>d.year, d=>d.genre);
+        //sort by year
+        oscarDataByYear = new Map([...oscarDataByYear.entries()].sort());
 
 
-        // Initialize zoom and scales
-        const xScale = scales.x["released"].rangeRound([0, bounds.innerWidth]);
-        const countScale = d3.scaleLinear().domain([0, 9]).range([0, 1]);
+        const xScale = d3.scaleBand().domain([...oscarDataByYear.keys()]).rangeRound([0, bounds.innerWidth]);
+        const countScale = d3.scaleLinear().domain([0, 9]).range([0, 9]);
         const yScale = countScale.rangeRound([bounds.innerHeight, 0]).nice();
-        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.xFormat[xAxis]);
-        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.yFormat[yAxis]);
-        
+        xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d,i)=>i%5==0));
+        yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
             .classed("plot-axis", true);
@@ -63,8 +63,32 @@ export default function CCompanionPlot({ data }) {
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
             .classed("plot-axis", true);
 
+        //create a categorical color scale for every genre from oscarData
+        let colorScale = d3.scaleOrdinal().domain([...new Set(oscarData.map(d=>d.genre))]).range(d3.schemeCategory10);
+
+
         // draw stacked bar chart
-        let stack = d3.select
+        let stack = svg.select(".bars")
+            .selectAll("rect")
+            .data(oscarDataByYear, d => d)
+            .join("rect")
+            .attr("x", d => xScale(d[0]) + margin.left)
+            .attr("y", d => 
+                {
+                    let sum = 0;
+                    d[1].forEach(d=>sum+=1);
+                    return yScale(sum);
+                }
+            )
+            .attr("width", xScale.bandwidth())
+            .attr("height", d => 
+                {
+                    let sum = 0;
+                    d[1].forEach(d=>sum+=1);
+                    return yScale(sum);
+                })
+            .attr("fill", d => colorScale(d[1].genre))
+
 
         
     }, [bounds, scales, yAxis, xAxis, data]);
@@ -80,6 +104,8 @@ export default function CCompanionPlot({ data }) {
                 <g style={{ clipPath: "url(#plot-clip)" }}>
                     <g className="bars"></g>
                 </g>
+                <g className="x-axis"></g>
+                <g className="y-axis"></g>
             </svg>
         </div>
     );
