@@ -65,29 +65,22 @@ export default function CCompanionPlot({ data }) {
 
         //create a categorical color scale for every genre from oscarData
         let colorScale = d3.scaleOrdinal().domain([...new Set(oscarData.map(d=>d.genre))]).range(d3.schemeCategory10);
-
+        console.log(oscarDataByYear);
 
         // draw stacked bar chart
         let stack = svg.select(".bars")
-            .selectAll("rect")
+            .selectAll("g")
             .data(oscarDataByYear, d => d)
+            .join("g")
+            .attr("transform", d => `translate(${xScale(d[0]) + margin.left}, ${margin.top})`)
+            .selectAll("rect")
+            .data(d => d[1])
             .join("rect")
-            .attr("x", d => xScale(d[0]) + margin.left)
-            .attr("y", d => 
-                {
-                    let sum = 0;
-                    d[1].forEach(d=>sum+=1);
-                    return yScale(sum);
-                }
-            )
+            .attr("x", 0)
+            .attr("y", d => yScale(d[1].length))
             .attr("width", xScale.bandwidth())
-            .attr("height", d => 
-                {
-                    let sum = 0;
-                    d[1].forEach(d=>sum+=1);
-                    return yScale(sum);
-                })
-            .attr("fill", d => colorScale(d[1].genre))
+            .attr("height", d => yScale(0) - yScale(d[1].length))
+            .attr("fill", d => colorScale(d[0]))
 
 
         
