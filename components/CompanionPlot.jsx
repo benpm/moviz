@@ -47,7 +47,7 @@ export default function CCompanionPlot({ data }) {
         //filter movies with oscar wins
         let oscarData = data.filter(d => d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0);
         //bin the data by year and genre and count the number of movies in each bin
-        let oscarDataByYear = d3.group(oscarData, d=>d.year, d=>d.genre);
+        let oscarDataByYear = d3.group(oscarData, d => d.year, d => d.genre);
         //sort by year
         oscarDataByYear = new Map([...oscarDataByYear.entries()].sort());
         //sort by genre
@@ -68,11 +68,11 @@ export default function CCompanionPlot({ data }) {
             let m = new Map();
             value.forEach((v, k) => {
                 sum += v.length;
-                m.set(k, {sum, v});
-            }); 
+                m.set(k, { sum, v });
+            });
             prefixSum.set(key, m);
         });
-        
+
         prefixSum.forEach((value, key) => {
             let m = new Map();
             //iterate over values in reversed order
@@ -92,7 +92,7 @@ export default function CCompanionPlot({ data }) {
         const xScale = d3.scaleBand().domain([...oscarDataByYear.keys()]).rangeRound([0, bounds.innerWidth]);
         const countScale = d3.scaleLinear().domain([0, max]).range([0, 1]).nice();
         const yScale = countScale.rangeRound([bounds.innerHeight, 0]).nice();
-        xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d,i)=>i%5==0));
+        xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d, i) => i % 5 == 0));
         yAxisObj = d3.axisLeft(yScale);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
@@ -102,7 +102,7 @@ export default function CCompanionPlot({ data }) {
             .classed("plot-axis", true);
 
         //create a categorical color scale for every genre from oscarData
-        let colorScale = d3.scaleOrdinal([...d3.schemeDark2, "#17bed0"]).domain([...new Set(oscarData.map(d=>d.genre))]);
+        let colorScale = d3.scaleOrdinal([...d3.schemeDark2, "#17bed0"]).domain([...new Set(oscarData.map(d => d.genre))]);
 
         // draw stacked bar chart
         svg.select(".bars")
@@ -113,7 +113,12 @@ export default function CCompanionPlot({ data }) {
             .selectAll("rect")
             .data(d => prefixSum.get(d[0]))
             .join("rect")
-            .classed("stacked-bar", true).transition().duration(1000)
+            .classed("stacked-bar", true).transition(
+                //disable pointer events until transition is done
+                svg.selectAll(".stacked-bar").style("pointer-events", "none")
+                //enable pointer events after transition is done
+            ).on("end", () => svg.selectAll(".stacked-bar").style("pointer-events", "auto"))
+            .duration(1000)
             .attr("x", 0)
             .attr("y", d => yScale(d[1].sum))
             .attr("width", xScale.bandwidth())
@@ -122,25 +127,26 @@ export default function CCompanionPlot({ data }) {
             .attr("stroke-width", 0.5)
             .attr("rx", "2")
             .attr("ry", "2")
-            svg.selectAll(".stacked-bar").on("mouseover", (e, d) => {
-                //get year of the bar
-                setHoverItem({datum: {genre:d[0], movies:d[1].v, date: d3.select(e.target.parentNode).datum()[0]}, caller: "companion"});
-                setHoverPos({x: e.pageX, y: e.pageY});
-                d3.select(e.target)
-                .transition().duration(10)
-                    .attr("fill", d3.color(colorScale(d[0])).brighter(1.5))
-                    .attr("stroke", d3.color(colorScale(d[0])).brighter(1))
-                    .attr("stroke-width", 2.5);
-            })
+        svg.selectAll(".stacked-bar").on("mouseover", (e, d) => {
+            //get year of the bar
+            setHoverItem({ datum: { genre: d[0], movies: d[1].v, date: d3.select(e.target.parentNode).datum()[0] }, caller: "companion" });
+            setHoverPos({ x: e.pageX, y: e.pageY });
+            d3.select(e.target)
+                .transition()
+                .duration(10)
+                .attr("fill", d3.color(colorScale(d[0])).brighter(1.5))
+                .attr("stroke", d3.color(colorScale(d[0])).brighter(1))
+                .attr("stroke-width", 2.5);
+        })
             .on("mousemove", (e, d) => {
-                setHoverPos({x: e.pageX, y: e.pageY});
+                setHoverPos({ x: e.pageX, y: e.pageY });
             })
             .on("mouseout", (e, d) => {
                 d3.select(e.target).transition().duration(100)
                     .attr("fill", colorScale(d[0]))
                     .attr("stroke", "black")
                     .attr("stroke-width", 1);
-                setHoverItem({datum: null, caller: "companion"});
+                setHoverItem({ datum: null, caller: "companion" });
                 d3.select(e.target).attr("stroke", "black");
             });
 
@@ -148,14 +154,14 @@ export default function CCompanionPlot({ data }) {
         let title = svg.select(".plot-title");
         //set title 
         title.text("Number of Oscar Wins and Nominations for Genres over the Years")
-            .attr("x", bounds.innerWidth/2 + margin.left)
+            .attr("x", bounds.innerWidth / 2 + margin.left)
             .attr("y", margin.top + bounds.innerHeight * 0.06)
             .attr("text-anchor", "middle")
             .attr("font-size", "1.2em")
             .attr("font-weight", "bold")
             .attr("fill", "white");
 
-        
+
     }, [bounds, scales, yAxis, xAxis, data]);
 
     return (
@@ -167,7 +173,7 @@ export default function CCompanionPlot({ data }) {
                     </clipPath>
                 </defs>
                 <g style={{ clipPath: "url(#plot-clip)" }}>
-                    <text className="plot-title"/>
+                    <text className="plot-title" />
                     <g className="bars"></g>
                 </g>
                 <g className="x-axis"></g>

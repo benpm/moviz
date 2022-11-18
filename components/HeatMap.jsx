@@ -89,8 +89,9 @@ export default function CHeatMap({ data }) {
             .radius(RADIUS)
             .extent([[0, 0], [bounds.innerWidth + margin.right, bounds.innerHeight + margin.bottom]]);
         const bins = hexbin(data);
+        const binMax = d3.max(bins, d => d.length);
         const colorScale = d3.scaleSequential(d3.interpolateInferno)
-            .domain([0, d3.max(bins, d => d.length)]);
+            .domain([0, binMax]);
         svg.select(".hexagons")
             .selectAll(".hexagon")
             .data(bins)
@@ -115,7 +116,12 @@ export default function CHeatMap({ data }) {
                     .attr("stroke-width", 1);
                 setHoverItem({ datum: null, caller: null });
             })
-            .attr("class", "hexagon").transition().duration(1000)
+            .attr("class", "hexagon").transition(
+                //disable pointer events until the transition is complete
+                d3.select(".hexagons").style("pointer-events", "none")
+                //enable pointer events after the transition is complete
+            ).on("end", () => d3.select(".hexagons").style("pointer-events", "auto"))
+             .duration(1000)
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
             .attr("fill", d => colorScale(d.length))
@@ -140,7 +146,7 @@ export default function CHeatMap({ data }) {
         //access legend-ticks group under legend group and select all text elements
         svg.select(".legend-ticks")
             .selectAll("text")
-            .data(generateArrayMinMax(0, d3.max(bins, d => d.length), 4))
+            .data(generateArrayMinMax(0, binMax, 4))
             .join("text")
             .text(d => d)
             .attr("fill", "white")
