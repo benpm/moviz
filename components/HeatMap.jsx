@@ -94,17 +94,7 @@ export default function CHeatMap({ data }) {
         svg.select(".hexagons")
             .selectAll(".hexagon")
             .data(bins)
-            .join("path").transition().duration(1000)
-            .attr("class", "hexagon")
-            .attr("d", hexbin.hexagon())
-            .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
-            .attr("fill", d => colorScale(d.length))
-            .attr("stroke", "black")
-            .attr("stroke-width", 1)
-            .attr("bin-value", d => d.length)
-
-        //attach mouseover events to the hexagons
-        svg.selectAll(".hexagon")
+            .join("path")
             .on("mousemove", (event, d) => {
                 setHoverPos({ x: event.pageX - 5, y: event.pageY - 5 });
             })
@@ -124,7 +114,14 @@ export default function CHeatMap({ data }) {
                     .attr("stroke", "black")
                     .attr("stroke-width", 1);
                 setHoverItem({ datum: null, caller: null });
-            });
+            })
+            .attr("class", "hexagon").transition().duration(1000)
+            .attr("d", hexbin.hexagon())
+            .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
+            .attr("fill", d => colorScale(d.length))
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .attr("bin-value", d => d.length)
 
         //draw empty hexagons from hb.hexbin().centers()
         svg.select(".hexagons")
