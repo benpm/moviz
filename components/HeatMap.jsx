@@ -94,7 +94,7 @@ export default function CHeatMap({ data }) {
         svg.select(".hexagons")
             .selectAll(".hexagon")
             .data(bins)
-            .join("path")
+            .join("path").transition().duration(1000)
             .attr("class", "hexagon")
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)

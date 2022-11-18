@@ -114,7 +114,7 @@ export default function CCompanionPlot({ data }) {
             .selectAll("rect")
             .data(d => prefixSum.get(d[0]))
             .join("rect")
-            .classed("stacked-bar", true)
+            .classed("stacked-bar", true).transition().duration(1000)
             .attr("x", 0)
             .attr("y", d => yScale(d[1]))
             .attr("width", xScale.bandwidth())
@@ -123,7 +123,7 @@ export default function CCompanionPlot({ data }) {
             .attr("stroke-width", 0.5)
             .attr("rx", "2")
             .attr("ry", "2")
-            .on("mouseover", (e, d) => {
+            svg.selectAll(".stacked-bar").on("mouseover", (e, d) => {
                 setHoverItem({datum: d, caller: "companion"});
                 setHoverPos({x: e.pageX, y: e.pageY});
                 d3.select(e.target)
