@@ -5,34 +5,35 @@ movies = pd.read_csv("raw_data/movies.csv")
 scores = pd.read_csv("raw_data/rotten_tomatoes_movies.csv")
 oscars = pd.read_csv("raw_data/the_oscar_award.csv")
 
-# Create new dataframe from movies only with movies found in scores and oscars, matching by title
-movies = movies[movies["name"].isin(scores["movie_title"])]
+# Create a new column for the RT scores which is the release year
+scores = scores.dropna(subset=["original_release_date", "tomatometer_rating", "audience_rating"])
+scores = scores.assign(year=scores["original_release_date"].str.extract(r"(\d{4})-\d{2}-\d{2}"))
 
-# Get tomatometer_rating and audience_rating from scores and merge with movies
-scores = scores[["movie_title", "tomatometer_rating", "audience_rating"]]
+# Rename RT movie_title to name to match with the convention for movies
 scores = scores.rename(columns={"movie_title": "name"})
-movies = movies.merge(scores, on="name")
 
-# # Get year_ceremony, ceremony, category, winner from oscars and merge with movies
-# oscars = oscars[["film", "year_ceremony", "ceremony", "winner", "year_film"]]
-# oscars = oscars.rename(columns={"film": "name"})
+# Convert year column to int64
+scores["year"] = scores["year"].astype("int64")
+movies["year"] = movies["year"].astype("int64")
 
-# # Remove rows with same name and year
-# movies = movies.drop_duplicates(subset=["name", "year"])
-
-# Remove unused columns
+# Remove unused fields from movies
 remove_fields = ["rating", "star", "writer", "director"]
 movies = movies.drop(remove_fields, axis=1)
 
 # Remove rows missing important info
-movies = movies.dropna(subset=["released", "budget", "gross", "score", "year", "genre", "company"])
+movies = movies.dropna(subset=["released", "budget", "gross", "score", "genre", "company"])
+
+# Remove all columns from scores except for tomatometer_rating and audience_rating
+scores = scores[["tomatometer_rating", "audience_rating", "name", "year"]]
+
+# Combine scores and movies by their indices
+movies = movies.merge(scores, on=["name", "year"])
+
+# Set the index for both movies and scores to be name and year
+movies.set_index(["name", "year"], inplace=True)
 
 # Remove country from release date
 movies["released"] = movies["released"].apply(lambda x: re.sub(r" \(.*\)", "", x).strip())
-
-# Remove duplicates by name and year
-movies = movies.drop_duplicates(subset=["name", "year"])
-movies.set_index(["name", "year"], inplace=True)
 
 # For each movie, set the overall oscar status
 oscar_ranking = ["none", "nominee", "winner", "best_picture_nominee", "best_picture_winner"]
