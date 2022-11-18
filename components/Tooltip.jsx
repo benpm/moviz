@@ -129,15 +129,15 @@ function positionTooltip({ x, y }, { w, h }) {
 }
 
 export default function CTooltip() {
-    const [hoverItem, viewSize] = useGlobalState(state => [
-        state.hoverItem, state.viewSize
+    const [hoverItem, hoverPos, viewSize] = useGlobalState(state => [
+        state.hoverItem, state.hoverPos, state.viewSize
     ]);
 
     return (
         <div
             className={`absolute bg-dark rounded p-2 text-sm text-gray-800 pointer-events-none
                 ${hoverItem.datum ? "" : "hidden"}`}
-            style={positionTooltip(hoverItem, viewSize)} >
+            style={positionTooltip(hoverPos, viewSize)} >
             {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller) : ""}
         </div>
     );

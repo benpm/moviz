@@ -39,8 +39,9 @@ export default function CHeatMap({ data }) {
     const [legendImage, setLegendImage] = useState("");
 
 
-    let [setHoverItem, xAxis, yAxis, gScales] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales] = useGlobalState(state => [
         state.setHoverItem,
+        state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
         state.scales
@@ -105,9 +106,10 @@ export default function CHeatMap({ data }) {
         //attach mouseover events to the hexagons
         svg.selectAll(".hexagon")
             .on("mousemove", (event, d) => {
-                setHoverItem({ datum: d, x: event.pageX - 5, y: event.pageY - 5, caller: "heatmap" });
+                setHoverPos({ x: event.pageX - 5, y: event.pageY - 5 });
             })
             .on("mouseover", (event, d) => {
+                setHoverItem({ datum: d, caller: "heatmap" });
                 //highlight the hexagon by making it brighter
                 d3.select(event.target)
                     .transition().duration(10)
@@ -121,7 +123,7 @@ export default function CHeatMap({ data }) {
                     .attr("fill", colorScale(d.length))
                     .attr("stroke", "black")
                     .attr("stroke-width", 1);
-                setHoverItem({ datum: null, x: 0, y: 0, caller: null });
+                setHoverItem({ datum: null, caller: null });
             });
 
         //draw empty hexagons from hb.hexbin().centers()

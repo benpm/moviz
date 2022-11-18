@@ -20,8 +20,9 @@ export default function CScatterplot({data}) {
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
-    let [setHoverItem, xAxis, yAxis, setXAxis, setYAxis, gScales] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales] = useGlobalState(state => [
         state.setHoverItem,
+        state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
         state.setScatterXAxis,
@@ -113,6 +114,9 @@ export default function CScatterplot({data}) {
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
                 d3.select(e.target).attr("fill", "white");
+            })
+            .on("mousemove", (e, d) => {
+                setHoverPos({x: e.pageX, y: e.pageY});
             })
             .on("mouseout", (e, d) => {
                 setHoverItem({datum: null, x: 0, y: 0, caller: null})

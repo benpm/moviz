@@ -3,7 +3,8 @@ import create from "zustand";
 // Global state storing information shared among all charts
 const useGlobalState = create((set) => ({
     // Currently hovered data item
-    hoverItem: {datum: null, x: 0, y: 0, caller: null},
+    hoverItem: {datum: null, caller: null},
+    hoverPos: {x: 0, y: 0},
 
     viewSize: {w: 1920, h: 1080},
 
@@ -13,6 +14,7 @@ const useGlobalState = create((set) => ({
 
     scales: null,
 
+    setHoverPos: x => set({ hoverPos: x }),
     setHoverItem: x => set({ hoverItem: x }),
     setViewSize: x => set({ viewSize: x }),
     setScatterXAxis: x => set({ scatterXAxis: x }),
