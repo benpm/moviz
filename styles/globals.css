@@ -6,3 +6,8 @@
     stroke: #D0D0D0;
     color: #D0D0D0;
 }
+
+.stacked-bar {
+    stroke: black;
+    stroke-width: 1px;
+}

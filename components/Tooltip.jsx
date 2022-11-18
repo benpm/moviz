@@ -7,6 +7,8 @@ function makeTooltip(d,caller) {
             return ScatterplotToolTip(d);
         case "heatmap":
             return HeatmapToolTip(d);
+        case "companion":
+            return CompanionToolTip(d);
     }
 }
 
@@ -16,9 +18,9 @@ function ScatterplotToolTip(d) {
     const runtimeFormat = m => `${m/60|0}h ${m%60}m`;
 
     return (
-        <div className="tooltip bg-dark">
+        <div className="tooltip bg-navbar">
             <div className="font-bold text-lightest">{d.name}</div>
-            <div className="tooltip-body bg-dark text-dark">
+            <div className="tooltip-body bg-navbar text-dark">
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
                     <div className="p-1 bg-mid2 rounded-sm">Released:</div>
                     <div className="p-1">{dateFormat(d.released)}</div>
@@ -112,6 +114,27 @@ function HeatmapToolTip(d) {
         </div>
     );
 }
+
+function CompanionToolTip(d) {
+    const dateFormat = d3.timeFormat("%b %d, %Y");
+    const dollarFormat = d3.format("$,.0f");
+    const runtimeFormat = m => `${m/60|0}h ${m%60}m`;
+
+    console.log(d)
+
+    return (
+        <div className="tooltip bg-navbar">
+            <div className="font-bold text-lightest">{d.name}</div>
+            <div className="tooltip-body bg-navbar text-dark">
+                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                    <div className="p-1 bg-mid2 rounded-sm">Something:</div>
+                    <div className="p-1">something</div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 
 function positionTooltip({ x, y }, { w, h }) {
     let pos = {};
