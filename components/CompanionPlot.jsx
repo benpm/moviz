@@ -68,7 +68,7 @@ export default function CCompanionPlot({ data }) {
             let m = new Map();
             value.forEach((v, k) => {
                 sum += v.length;
-                m.set(k, sum);
+                m.set(k, {sum, v});
             }); 
             prefixSum.set(key, m);
         });
@@ -81,14 +81,14 @@ export default function CCompanionPlot({ data }) {
             }
             prefixSum.set(key, m);
         });
-        console.log(prefixSum);
 
         // find max value in prefix sum usinf d3.max
         let max = d3.max(prefixSum, (d) => {
             return d3.max(d[1], (d) => {
-                return d[1];
+                return d[1].sum;
             });
         });
+
         const xScale = d3.scaleBand().domain([...oscarDataByYear.keys()]).rangeRound([0, bounds.innerWidth]);
         const countScale = d3.scaleLinear().domain([0, max]).range([0, 1]).nice();
         const yScale = countScale.rangeRound([bounds.innerHeight, 0]).nice();
@@ -103,10 +103,9 @@ export default function CCompanionPlot({ data }) {
 
         //create a categorical color scale for every genre from oscarData
         let colorScale = d3.scaleOrdinal([...d3.schemeDark2, "#17bed0"]).domain([...new Set(oscarData.map(d=>d.genre))]);
-        //let colorScale = d3.scaleOrdinal().domain([...new Set(oscarData.map(d=>d.genre))]).range(d3.schemeDark2);
 
         // draw stacked bar chart
-        let stack = svg.select(".bars")
+        svg.select(".bars")
             .selectAll("g")
             .data(oscarDataByYear, d => d)
             .join("g")
@@ -116,15 +115,16 @@ export default function CCompanionPlot({ data }) {
             .join("rect")
             .classed("stacked-bar", true).transition().duration(1000)
             .attr("x", 0)
-            .attr("y", d => yScale(d[1]))
+            .attr("y", d => yScale(d[1].sum))
             .attr("width", xScale.bandwidth())
-            .attr("height", d => yScale(0) - yScale(d[1]))
+            .attr("height", d => yScale(0) - yScale(d[1].sum))
             .attr("fill", d => colorScale(d[0]))
             .attr("stroke-width", 0.5)
             .attr("rx", "2")
             .attr("ry", "2")
             svg.selectAll(".stacked-bar").on("mouseover", (e, d) => {
-                setHoverItem({datum: d, caller: "companion"});
+                //get year of the bar
+                setHoverItem({datum: {genre:d[0], movies:d[1].v, date: d3.select(e.target.parentNode).datum()[0]}, caller: "companion"});
                 setHoverPos({x: e.pageX, y: e.pageY});
                 d3.select(e.target)
                 .transition().duration(10)

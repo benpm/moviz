@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import useGlobalState from "../hooks/useGlobalState";
 
-function makeTooltip(d,caller) {
+function makeTooltip(d, caller) {
     switch (caller) {
         case "scatterplot":
             return ScatterplotToolTip(d);
@@ -15,7 +15,7 @@ function makeTooltip(d,caller) {
 function ScatterplotToolTip(d) {
     const dateFormat = d3.timeFormat("%b %d, %Y");
     const dollarFormat = d3.format("$,.0f");
-    const runtimeFormat = m => `${m/60|0}h ${m%60}m`;
+    const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
 
     return (
         <div className="tooltip bg-navbar">
@@ -68,7 +68,7 @@ function HeatmapToolTip(d) {
     const runtimeFormat = d3.timeFormat("%Hh %Mm");
     const imdbFormat = d3.format(".1f");
     const tomatometerFormat = d3.format(".0f");
-    
+
     //find the min and max values for data release date
     const minDate = d3.min(d, (d) => d.released);
     const maxDate = d3.max(d, (d) => d.released);
@@ -115,21 +115,32 @@ function HeatmapToolTip(d) {
     );
 }
 
-function CompanionToolTip(d) {
-    const dateFormat = d3.timeFormat("%b %d, %Y");
-    const dollarFormat = d3.format("$,.0f");
-    const runtimeFormat = m => `${m/60|0}h ${m%60}m`;
+const OSCAR_INFO = {
+    "winner": ["#fce603", "Won"],
+    "nominee": ["#947b1b", "Nominated"],
+    "best_picture_winner": ["#214ED3", "Won Best Picture"],
+    "best_picture_nominee": ["#90A8EE", "Nominated for Best Picture"],
+    "none": "#606060",
+};
 
-    console.log(d)
+function CompanionToolTip(d) {
+    const dateFormat = d3.timeFormat("%Y");
+    const dollarFormat = d3.format("$,.0f");
+    const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
 
     return (
         <div className="tooltip bg-navbar">
-            <div className="font-bold text-lightest">{d.name}</div>
-            <div className="tooltip-body bg-navbar text-dark">
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">Something:</div>
-                    <div className="p-1">something</div>
-                </div>
+            <div className="font-bold text-light"> <span className="text-xl text-lightest">{d.movies.length} {d.genre}
+            </span> movies were nominated for <span className="text-xl text-lightest">{d.date}</span> Oscars</div>
+            <div className="tooltip-body">
+                {d.movies.map((m, i) => (
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1"style={{
+                        backgroundColor: OSCAR_INFO[m.oscar][0]
+                      }}>
+                        <div className="p-1 bg-mid rounded-sm" style={{fontWeight:"bold"}}>{m.name}</div>
+                        <div className="p-1" style={{fontWeight:"bold"}}>{OSCAR_INFO[m.oscar][1]}</div>
+                    </div>
+                ))}
             </div>
         </div>
     );
