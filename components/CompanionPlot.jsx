@@ -90,7 +90,7 @@ export default function CCompanionPlot({ data }) {
             });
         });
         const xScale = d3.scaleBand().domain([...oscarDataByYear.keys()]).rangeRound([0, bounds.innerWidth]);
-        const countScale = d3.scaleLinear().domain([0, max]).range([0, 1]);
+        const countScale = d3.scaleLinear().domain([0, max]).range([0, 1]).nice();
         const yScale = countScale.rangeRound([bounds.innerHeight, 0]).nice();
         xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d,i)=>i%5==0));
         yAxisObj = d3.axisLeft(yScale);
@@ -121,6 +121,8 @@ export default function CCompanionPlot({ data }) {
             .attr("height", d => yScale(0) - yScale(d[1]))
             .attr("fill", d => colorScale(d[0]))
             .attr("stroke-width", 0.5)
+            .attr("rx", "2")
+            .attr("ry", "2")
             .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, caller: "companion"});
                 setHoverPos({x: e.pageX, y: e.pageY});
