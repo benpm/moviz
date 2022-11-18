@@ -1,5 +1,8 @@
 import * as d3 from "d3";
 import useGlobalState from "../hooks/useGlobalState";
+import { FaImdb } from 'react-icons/fa';
+import { SiRottentomatoes } from 'react-icons/si';
+import {GiPopcorn, GiSandsOfTime} from 'react-icons/gi';
 
 function makeTooltip(d, caller) {
     switch (caller) {
@@ -42,19 +45,19 @@ function ScatterplotToolTip(d) {
                     <div className="p-1">{dollarFormat(d.gross)}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">IMDB Score:</div>
+                    <div className="p-1 bg-mid2 rounded-sm">IMDB Score:<FaImdb/></div>
                     <div className="p-1">{d.score}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">Tomatometer:</div>
+                    <div className="p-1 bg-mid2 rounded-sm">Tomatometer:<SiRottentomatoes/></div>
                     <div className="p-1">{d.tomatometer_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">Audience:</div>
+                    <div className="p-1 bg-mid2 rounded-sm">Audience:<GiPopcorn/></div>
                     <div className="p-1">{d.audience_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">Run Time:</div>
+                    <div className="p-1 bg-mid2 rounded-sm">Run Time:<GiSandsOfTime/></div>
                     <div className="p-1">{runtimeFormat(d.runtime)}</div>
                 </div>
             </div>
