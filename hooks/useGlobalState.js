@@ -7,6 +7,7 @@ const useGlobalState = create((set) => ({
     hoverPos: {x: 0, y: 0},
 
     viewSize: {w: 1920, h: 1080},
+    viewMode: "Ratings_Oscars",
 
     //State of the scatterplot
     scatterXAxis: "released",

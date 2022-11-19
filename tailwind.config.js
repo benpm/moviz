@@ -20,6 +20,8 @@ module.exports = {
         "light": "#B3B6B7",
         "lightest": "#F7F3E3",
         "navbar" : "#2F3D49",
+        "sandy-brown" : "#D89660",
+        "straw" : "#DDDD7F",
       }
     },
   },
