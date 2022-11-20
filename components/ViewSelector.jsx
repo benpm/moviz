@@ -1,29 +1,30 @@
-
-
+import React from "react";
 
 export default function CViewSelector({ }) {
-    //Create a rounded rectange with a border
-    return (
-        <div className="">
-            <div className="text-center">Select View</div>
-            <div className="items-center bg-straw text-darkest" style={{
-                border: '0px solid black', borderRadius: '15px', flex: 1, height: '50%',
-                boxSizing: "border-box", boxShadow:"inset 3px 4px 10px rgba(0,0,0,0.99)"
-            }}>
-                <div className="flex flex-row justify-center items-center" style={{ height: '100%', boxSizing: "border-box" }}>
-                    <div className="text-center hover:bg-sandy-brown" style={{ width: '33%'}}>
-                        Quality
-                    </div>
-                    <div className="w-px h-full bg-black grow-0"></div>
-                    <div className="text-center" style={{ width: '33%' }}>
-                        Movie Economy
-                    </div>
-                    <div className="w-px h-full bg-black grow-0"></div>
-                    <div className="text-center" style={{ width: '33%' }}>
-                        Bang for the Buck
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
+  //Create a rounded rectange with a border
+  return (
+    <>
+      <div className="text-center text-l w-full">Select View</div>
+      <div className="grid grid-cols-3 w-full rounded-md shadow-sm" role="group">
+        <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-l-3xl border-l-2 border-t border-black/50
+          shadow-inner focus:shadow-black shadow-teal-100/60 focus:border-gray-800
+        hover:text-white focus:z-4 focus:bg-gray-900 focus:text-black 
+          dark:text-black dark:hover:text-white hover:bg-straw dark:focus:bg-tealBlue-dark">
+          <p className="text-sm">Ratings & Oscars</p>
+        </button>
+        <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue border-t border-black/50 
+         shadow-inner focus:shadow-black shadow-teal-100/60 focus:border-gray-800
+        hover:text-white focus:z-4 focus:bg-gray-900 focus:text-black 
+          dark:text-black dark:hover:text-white hover:bg-straw dark:focus:bg-tealBlue-dark">
+           <p className="text-sm">Movie Economy</p>
+        </button>
+        <button type="button" class="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-r-3xl border-r-2 border-t border-black/50
+          shadow-inner focus:shadow-black shadow-teal-100/60 focus:border-gray-800
+        hover:text-white focus:z-4 focus:bg-gray-900 focus:text-black 
+          dark:text-black dark:hover:text-white hover:bg-straw dark:focus:bg-tealBlue-dark">
+         <p className="text-sm">Cost vs Quality</p>
+        </button>
+      </div>
+    </>
+  );
 }
