@@ -68,7 +68,7 @@ function ScatterplotToolTip(d) {
 function HeatmapToolTip(d) {
     const dateFormat = d3.timeFormat("%Y");
     const dollarFormat = d3.format("$,.0f");
-    const runtimeFormat = d3.timeFormat("%Hh %Mm");
+    const runtimeFormat = m => `${m / 60 | 0}h ${m % 60 | 0}m`;
     const imdbFormat = d3.format(".1f");
     const tomatometerFormat = d3.format(".0f");
 
@@ -110,7 +110,7 @@ function HeatmapToolTip(d) {
                     <div className="p-1">{tomatometerFormat(avgAudience)}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-mid2 rounded-sm">Run Time:</div>
+                    <div className="p-1 bg-mid2 rounded-sm">Avg. Run Time:</div>
                     <div className="p-1">{runtimeFormat(avgRuntime)}</div>
                 </div>
             </div>
