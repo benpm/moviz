@@ -1,5 +1,24 @@
 import React from "react";
 
+//an event handler function that disables the button and enables the other buttons in the group
+function disableButton(event) {
+  console.log(event.target);
+  //get the button that was clicked
+  let button = event.target;
+  //get the parent element of the button
+  let parent = button.parentElement;
+  //get the children of the parent element
+  let children = parent.children;
+  //loop through the children and enable the buttons
+  for (let i = 0; i < children.length; i++) {
+    if (children[i].tagName == "BUTTON")
+      children[i].disabled = false;
+  }
+  //disable the button that was clicked
+  button.disabled = true;
+}
+
+
 export default function CViewSelector({ }) {
   //Create a rounded rectange with a border
   return (
@@ -7,22 +26,22 @@ export default function CViewSelector({ }) {
       <div className="text-center text-l w-full">Select View</div>
       <div className="grid grid-cols-3 w-full rounded-md shadow-sm" role="group">
         <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-l-3xl border-l-2 border-t border-black/50
-          shadow-inner focus:shadow-black shadow-teal-100/60 focus:border-gray-800
-        hover:text-white focus:z-4 focus:bg-gray-900 focus:text-black 
-          dark:text-black dark:hover:text-white hover:bg-straw dark:focus:bg-tealBlue-dark">
-          <p className="text-sm">Ratings & Oscars</p>
+          shadow-inner disabled:shadow-black shadow-teal-100/60 disabled:border-gray-800
+        hover:text-white disabled:z-4 disabled:bg-gray-900 disabled:text-black 
+          dark:text-black dark:hover:text-white hover:bg-straw dark:disabled:bg-tealBlue-dark" onClick={disableButton}>
+          Ratings & Oscars
         </button>
         <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue border-t border-black/50 
-         shadow-inner focus:shadow-black shadow-teal-100/60 focus:border-gray-800
-        hover:text-white focus:z-4 focus:bg-gray-900 focus:text-black 
-          dark:text-black dark:hover:text-white hover:bg-straw dark:focus:bg-tealBlue-dark">
-           <p className="text-sm">Movie Economy</p>
+         shadow-inner disabled:shadow-black shadow-teal-100/60 disabled:border-gray-800
+        hover:text-white disabled:z-4 disabled:bg-gray-900 disabled:text-black 
+          dark:text-black dark:hover:text-white hover:bg-straw dark:disabled:bg-tealBlue-dark" onClick={disableButton}>
+          Movie Economy
         </button>
-        <button type="button" class="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-r-3xl border-r-2 border-t border-black/50
-          shadow-inner focus:shadow-black shadow-teal-100/60 focus:border-gray-800
-        hover:text-white focus:z-4 focus:bg-gray-900 focus:text-black 
-          dark:text-black dark:hover:text-white hover:bg-straw dark:focus:bg-tealBlue-dark">
-         <p className="text-sm">Cost vs Quality</p>
+        <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-r-3xl border-r-2 border-t border-black/50
+          shadow-inner disabled:shadow-black shadow-teal-100/60 disabled:border-gray-800
+        hover:text-white disabled:z-4 disabled:bg-gray-900 disabled:text-black 
+          dark:text-black dark:hover:text-white hover:bg-straw dark:disabled:bg-tealBlue-dark" onClick={disableButton}>
+          Cost vs Quality
         </button>
       </div>
     </>
