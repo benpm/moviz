@@ -112,7 +112,14 @@ export default function CCompanionPlot({ data }) {
             .attr("transform", d => `translate(${xScale(d[0]) + margin.left}, ${margin.top})`)
             .selectAll("rect")
             .data(d => prefixSum.get(d[0]))
-            .join("rect")
+            .join(
+                enter => enter.append("rect")
+                    .attr("y", d => yScale(0))
+                    .attr("height", 0)
+                    .attr("width", xScale.bandwidth()),
+                update => update,
+                exit => exit.remove()
+            )
             .classed("stacked-bar", true).transition(
                 //disable pointer events until transition is done
                 svg.selectAll(".stacked-bar").style("pointer-events", "none")

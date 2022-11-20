@@ -5,7 +5,7 @@ export default function CNavBar() {
         <div className="bg-navbar flex flex-row text-slate-100 h-16">
             <img src="logo-white.svg" alt="logo" className="h-full ml-4" />
             <div className="flex-grow text-center basis">Left Panel </div>
-            <div className="flex-grow basis-1/4">
+            <div className="flex-grow basis-1/12">
                 <CViewSelector/>
             </div>
             <div className ="flex-grow text-center basis">Right Panel </div>
