@@ -1,0 +1,4 @@
+tables
+pymunk
+numpy
+pandas

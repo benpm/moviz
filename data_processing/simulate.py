@@ -17,9 +17,6 @@ The rows of the scatterplot.csv file are circles. The columns are:
 import pandas as pd
 import pymunk
 from pymunk.vec2d import Vec2d
-import math
-from collections import defaultdict
-from itertools import combinations
 from datetime import datetime
 
 class Scale:
@@ -52,20 +49,20 @@ SIM_BOUNDS = (-1000, 1000)
 X_AXES = ["released"]
 Y_AXES = ["budget", "gross", "score", "nominations", "tomatometer_rating", "audience_rating"]
 # Radius of deepest zoom level dots
-BASE_RADIUS = 25
+BASE_RADIUS = 1
 # Number of steps for simulations
-SIM_STEPS = 100
+SIM_STEPS = 20
 # Delta time per simulation step
 SIM_DT = 0.1
 # Distance past dot radius to consider for grouping
 GROUPING_BIAS = 0.1
 # Multiplier for force applied to dots
 FORCE_MULTIPLIER = 0.1
-# Max group size to create a new coalesced dot for
-MAX_GROUP_SIZE = 25
+# Max group radius to create a new coalesced dot for (multiplied by level)
+MAX_GROUP_RADIUS = 25
 
 class Dot(pymunk.Circle):
-    def __init__(self, data_idx: list[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
+    def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
         body = pymunk.Body()
         body.position = pos
         super().__init__(body, radius)
@@ -77,12 +74,12 @@ class Dot(pymunk.Circle):
         space.add(self.body, self)
     
     def pre_step(self):
-        self.body.velocity *= 0.05
+        self.body.velocity *= 0.01
         self.body.apply_force_at_local_point(
             (self.body.position - self.init_pos).normalized() * FORCE_MULTIPLIER, (0, 0))
 
 # Combine dots by finding connected groups of dots
-def coalesce(space: pymunk.Space, dots: list[Dot]) -> tuple[pymunk.Space, list[Dot]]:
+def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[pymunk.Space, list[Dot]]:
     out_space = pymunk.Space()
     out_space.threads = 4
     out_space.gravity = 0, 0
@@ -95,6 +92,8 @@ def coalesce(space: pymunk.Space, dots: list[Dot]) -> tuple[pymunk.Space, list[D
             continue
         group = set()
         queue = [source_dot]
+        radius = 0
+        center = 0
 
         # Attempt to construct a new group by finding near dots to source_dot
         while queue:
@@ -103,39 +102,56 @@ def coalesce(space: pymunk.Space, dots: list[Dot]) -> tuple[pymunk.Space, list[D
             # Find all dots within GROUPING_BIAS * radius of dot
             query = space.point_query(dot.body.position, dot.radius + GROUPING_BIAS, pymunk.ShapeFilter())
             query = [q.shape for q in query if q.shape is not dot]
-            
+
             # Add all dots to group and queue if not already in a group
-            for q in query:
-                if q not in grouped_dots:
-                    group.add(q)
-                    grouped_dots.add(q)
-                    queue.append(q)
+            added = 0
+            for qdot in query:
+                if qdot not in grouped_dots:
+                    group.add(qdot)
+                    grouped_dots.add(qdot)
+                    queue.append(qdot)
+                    added += 1
             
-            # Stop growing group if it is too large
-            if len(group) > MAX_GROUP_SIZE:
-                break
+            # Compute new group properties
+            if added > 0:
+                # Find the center of mass of the group
+                center = Vec2d(0, 0)
+                for dot in group:
+                    center += dot.body.position
+                center /= len(group)
+
+                # Find the radius of the group
+                radius = 0
+                for dot in group:
+                    radius = max(radius, (center - dot.body.position).length + dot.radius)
+            
+                # Stop growing group if it is too large
+                if radius > max_radius:
+                    break
+
+        # Create a new dot for the group
+        if group:
+            # Add all dots inside group radius to group, if they are not already in a group
+            for qi in space.point_query(center, radius, pymunk.ShapeFilter()):
+                if qi.shape not in grouped_dots:
+                    group.add(qi.shape)
+                    grouped_dots.add(qi.shape)
+            
+            data_idx = set()
+            for dot in group:
+                data_idx.update(dot.data_idx)
+            out_dots.append(Dot(data_idx, radius, center, out_space))
         
         # If group is not empty, create a new dot for the group
         if group:
-            # Find the center of mass of the group
-            center = Vec2d(0, 0)
-            for dot in group:
-                center += dot.body.position
-            center /= len(group)
-
-            # Find the radius of the group
-            radius = 0
-            for dot in group:
-                radius = max(radius, (center - dot.body.position).length + dot.radius)
-
             # Create a new dot for the group
-            out_dots.append(Dot([dot.data_idx for dot in group], radius, center, out_space))
+            out_dots.append(Dot(set().union(*[dot.data_idx for dot in group]), radius, center, out_space))
 
     if len(grouped_dots) < len(dots):
         # Create a new dot for any dots that were not grouped
         for dot in dots:
             if dot not in grouped_dots:
-                out_dots.append(Dot([dot.data_idx], dot.radius, dot.body.position, out_space))
+                out_dots.append(Dot(dot.data_idx, dot.radius, dot.body.position, out_space))
 
     return out_space, out_dots
 
@@ -175,8 +191,10 @@ def main():
 
     for x_axis in X_AXES:
         for y_axis in Y_AXES:
+            print(f"\nsimulating on {x_axis} / {y_axis}")
+
             # Initialize zoom level 0 space
-            lvls = []
+            lvls: list[tuple[pymunk.Space, list[Dot]]] = []
             space = pymunk.Space(True)
             space.threads = 4
             space.gravity = 0, 0
@@ -184,19 +202,22 @@ def main():
             
             # Zoom level 0 (deepest): create a Dot object for each row in the scatterplot.csv file
             for i, row in movies.iterrows():
-                lvls[0][1].append(Dot([i], BASE_RADIUS,
+                lvls[0][1].append(Dot(set([i]), BASE_RADIUS,
                     Vec2d(x_scales[x_axis](row[x_axis]), y_scales[y_axis](row[y_axis])), space))
 
             # Run the simulation for zoom level 0
+            print(f"running initial simulation of {len(lvls[0][1])} dots...")
             simulate(lvls[0], SIM_STEPS)
             
             # Progressively coalesce the dots into larger circles, and run the simulation for each level
             for lvl in range(1, ZOOM_LEVELS):
-                lvls[lvl] = coalesce(*lvls[lvl - 1])
+                print(f"coalescing dots for zoom level {lvl}...")
+                lvls.append(coalesce(*lvls[lvl - 1], max_radius=MAX_GROUP_RADIUS * lvl))
+                print(f"running lvl {lvl} simulation of {len(lvls[lvl][1])} dots...")
                 simulate(lvls[lvl], SIM_STEPS)
                 # For each dot, insert a new row into the dataframe
                 for dot in lvls[lvl][1]:
-                    df = df.append({
+                    df = pd.concat([df, pd.DataFrame({
                         "lvl": lvl,
                         "x_axis": x_axis,
                         "y_axis": y_axis,
@@ -204,11 +225,19 @@ def main():
                         "y": dot.body.position.y,
                         "r": dot.radius,
                         "movies": list(dot.data_idx)
-                    }, ignore_index=True)
+                    })])
                     
-    # Save the generated DataFrame to the scatterplot.csv file
-    df.to_csv("../public/scatterplot.csv", index=False)
+    # Save the generated DataFrame to the scatterplot.parquet file
+    df.to_parquet("../public/scatterplot.parquet", index=False)
 
+# Just load public/scatterplot.csv and generate scatterplot.h5
+def convert():
+    df = pd.read_csv("../public/scatterplot.csv")
+    df.to_parquet("../public/scatterplot.parquet", index=False)
 
 if __name__ == "__main__":
-    main()
+    from sys import argv
+    if argv[-1] == "convert":
+        convert()
+    else:
+        main()
