@@ -1,5 +1,6 @@
 import pandas as pd
 import re
+from datetime import datetime
 
 movies = pd.read_csv("raw_data/movies.csv")
 scores = pd.read_csv("raw_data/rotten_tomatoes_movies.csv")
@@ -51,6 +52,14 @@ oscars.apply(set_oscar, axis=1)
 # Count each occurence of name and assign that count to a new column nominations
 nomcounts = oscars["film"].value_counts()
 movies["nominations"] = movies.index.map(lambda x: nomcounts[x[0]] if x[0] in nomcounts else 0)
+
+# Modify all release dates in the format of "YYYY" to "January 1, YYYY"
+movies["released"] = movies["released"].apply(
+    lambda x: re.sub(r"(\d{4})", r"January 01, \1", x) if re.match(r"^\d{4}", x) else x)
+
+# Modify all release dates in the format of "Month YYYY" to "Month 1, YYYY"
+movies["released"] = movies["released"].apply(
+    lambda x: re.sub(r"(\w+) (\d{4})", r"\1 01, \2", x) if re.match(r"^\w+ \d{4}", x) else x)
 
 # Save to csv
 OUT_PATH = "../public/movies.csv"
