@@ -137,10 +137,25 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //sum budget of the movies and group them by studio for each data month
     let studioBudgetByMonth = d3.rollup(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company);
 
+    //create axes scales
+    const xScale = d3.scaleLinear().domain(d3.extent(data, d => d.year)).rangeRound([0, bounds.innerWidth]);
+    const yScale = d3.scaleLinear().domain([0, d3.max(data, d => d.budget)]).rangeRound([bounds.innerHeight, 0]).nice();
+
+    //create axes
+    xAxisObj = d3.axisBottom(xScale).tickValues(d3.range(1980, 2021, 5)).tickFormat(d3.format("d"));
+    yAxisObj = d3.axisLeft(yScale).tickFormat(d3.format("$.0s"));
+    svg.select(".x-axis").call(xAxisObj)
+        .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+        .classed("plot-axis", true);
+    svg.select(".y-axis").call(yAxisObj)
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+        .classed("plot-axis", true);
+
 }
 
 export default function CCompanionPlot({ data }) {
-    const margin = { top: 20, right: 35, bottom: 20, left: 25 };
+    let test = false;
+    const margin = { top: 20, right: 35, bottom: 20, left: ( test ? 35 : 45) };
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
@@ -177,9 +192,9 @@ export default function CCompanionPlot({ data }) {
             scales = copyScales(gScales);
         }
 
-        drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+        //drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
 
-        //drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+        drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
 
 
     }, [bounds, scales, yAxis, xAxis, data]);
