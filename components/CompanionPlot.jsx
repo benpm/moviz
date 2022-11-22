@@ -135,11 +135,18 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //create a categorical color scale for every studio from the data
     let colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain([...new Set(data.map(d => d.company))]);
     //sum budget of the movies and group them by studio for each data month
-    let studioBudgetByMonth = d3.rollup(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company);
+    let studioBudgetByYear = d3.rollup(data, v => d3.sum(v, d => d.budget), d => d.company, d => d.year);
+
+    //get maximum budget overall
+    const maxBudget = d3.max(studioBudgetByYear, (d) => {
+        return d3.max(d[1], (d) => {
+            return d[1];
+        });
+    });
 
     //create axes scales
     const xScale = d3.scaleLinear().domain(d3.extent(data, d => d.year)).rangeRound([0, bounds.innerWidth]);
-    const yScale = d3.scaleLinear().domain([0, d3.max(data, d => d.budget)]).rangeRound([bounds.innerHeight, 0]).nice();
+    const yScale = d3.scaleLinear().domain([0, maxBudget]).rangeRound([bounds.innerHeight, 0]).nice();
 
     //create axes
     xAxisObj = d3.axisBottom(xScale).tickValues(d3.range(1980, 2021, 5)).tickFormat(d3.format("d"));
@@ -151,11 +158,36 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .classed("plot-axis", true);
 
+    console.log("first", studioBudgetByYear);
+    //Process the data to stacked line chart
+    
+    console.log("second", studioBudgetByYear);
+
+    //Line generator
+    let lineGen = d3.line()
+        .x(d => xScale(d[0]))
+        .y(d => yScale(d[1]))
+
+    //draw line chart
+    svg.select(".lines")
+        .selectAll("g")
+        .data(studioBudgetByYear)
+        .join("g")
+        .attr("transform",`translate(${margin.left}, ${margin.top})`)
+        .selectAll("path")
+        .data(d => d)
+        .join("path")
+        .attr("d", d => lineGen(d))
+        .attr("fill", "none")
+        .attr("stroke", d => colorScale(d))
+        .attr("stroke-width", 2)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
 }
 
 export default function CCompanionPlot({ data }) {
     let test = false;
-    const margin = { top: 20, right: 35, bottom: 20, left: ( test ? 35 : 45) };
+    const margin = { top: 20, right: 35, bottom: 20, left: (test ? 35 : 45) };
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
