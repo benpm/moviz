@@ -47,13 +47,13 @@ def extent(data: pd.DataFrame, field: str, conv: callable = lambda x: x):
 
 # Number of zoom levels. Level 0 is deepest zoom
 ZOOM_LEVELS = 5
-SIM_BOUNDS = (-1000, 1000)
+SIM_BOUNDS = ((-1000, 1000), (-300, 300))
 X_AXES = ["released"]
 Y_AXES = ["budget", "gross", "score", "nominations", "tomatometer_rating", "audience_rating"]
 # Radius of deepest zoom level dots
 BASE_RADIUS = 1.5
 # Number of steps for simulations
-SIM_STEPS = 20
+SIM_STEPS = 50
 # Delta time per simulation step
 SIM_DT = 0.1
 # Distance past dot radius to consider for grouping
@@ -175,17 +175,17 @@ def main():
     movies = pd.read_csv("../public/movies.csv")
 
     x_scales = {
-        "released": Scale(extent(movies, "released", parse_date), SIM_BOUNDS, conv_range=parse_date, conv_range_inv=lambda x: x.strftime("%B %d, %Y")),
-        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS)
+        "released": Scale(extent(movies, "released", parse_date), SIM_BOUNDS[0], conv_range=parse_date, conv_range_inv=lambda x: x.strftime("%B %d, %Y")),
+        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[0]),
+        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[0])
     }
     y_scales = {
-        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS),
-        "score": Scale((0, 10), SIM_BOUNDS),
-        "nominations": Scale(extent(movies, "nominations"), SIM_BOUNDS),
-        "tomatometer_rating": Scale((0, 100), SIM_BOUNDS),
-        "audience_rating": Scale((0, 100), SIM_BOUNDS)
+        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[1]),
+        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[1]),
+        "score": Scale((0, 10), SIM_BOUNDS[1]),
+        "nominations": Scale(extent(movies, "nominations"), SIM_BOUNDS[1]),
+        "tomatometer_rating": Scale((0, 100), SIM_BOUNDS[1]),
+        "audience_rating": Scale((0, 100), SIM_BOUNDS[1])
     }
 
     # Load scatterplot.csv data from /public into a pandas DataFrame

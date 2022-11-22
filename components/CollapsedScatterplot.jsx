@@ -41,16 +41,19 @@ export default function CCollapsedScatterplot() {
     
     var xAxisObj = null;
     var yAxisObj = null;
-    var initialized = false;
+
+    // Make sure these parameters match the parameters in data_processing/simulate.py
+    const simBounds = {x:[-1000, 1000], y:[-300, 300]};
     const maxZoomLevel = 4;
+
     const [dotStroke, setDotStroke] = useState(1);
     const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
     const [plotTransform, setPlotTransform] = useState(initTransform);
     const [intZoomLevel, setIntZoomLevel] = useState(maxZoomLevel);
+    const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
         if (data == null) {
-            console.debug("loading scatterplot data...");
             loadScatterPlotData().then(setData);
         }
     }, []);
@@ -59,7 +62,9 @@ export default function CCollapsedScatterplot() {
         // Update circle radius
         setDotStroke(1 / plotTransform.k);
         // Update zoom level
-        setIntZoomLevel(Math.min(maxZoomLevel, Math.max(0, maxZoomLevel + Math.ceil(Math.log2(1/plotTransform.k)))));
+        const newZoomLevel = Math.min(maxZoomLevel, Math.max(0,
+            maxZoomLevel + Math.ceil(Math.log2(0.5/plotTransform.k))));
+        setIntZoomLevel(newZoomLevel);
     }, 150, [plotTransform]);
 
     const onZoom = ({transform}) => {
@@ -89,16 +94,16 @@ export default function CCollapsedScatterplot() {
             innerWidth: w - margin.left - margin.right,
             innerHeight: h - margin.top - margin.bottom
         });
-        console.debug("resize");
     }, [size]);
     
     // Render chart function
     const ref = useD3(svg => {
         if (!gScales || !data) {
             return;
-        } else if (!scales) {
-            scales = copyScales(gScales);
         }
+
+        const dataSubset = data.get(intZoomLevel).get(xAxis).get(yAxis);
+        scales = copyScales(gScales);
 
         // Initialize zoom and scales
         const xScale = scales.x[xAxis].rangeRound([0, bounds.innerWidth]);
@@ -113,17 +118,17 @@ export default function CCollapsedScatterplot() {
             .classed("plot-axis", true);
 
         // Inverse scales that transform simulation coordinates to plot coordinates
-        const iXScale = xScale.copy().domain([-1000, 1000]);
-        const iYScale = yScale.copy().domain([-1000, 1000]);
+        const iXScale = xScale.copy().domain(simBounds.x);
+        const iYScale = yScale.copy().domain(simBounds.y);
 
         // Draw points
         svg.select(".plot-area")
             .selectAll("circle")
-            .data(data.get(intZoomLevel).get(xAxis).get(yAxis))
+            .data(dataSubset)
             .join("circle")
             .attr("cx", d => iXScale(d.x))
             .attr("cy", d => iYScale(d.y))
-            .attr("r", d => d.r)
+            .attr("r", d => Math.max(2, d.r * 0.65))
             .classed("dot", true)
             /* .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
@@ -144,8 +149,8 @@ export default function CCollapsedScatterplot() {
             onZoom({transform: initTransform});
         }
         
-        initialized = true;
-    }, [bounds, scales, yAxis, xAxis, data, intZoomLevel]);
+        setInitialized(true);
+    }, [bounds, gScales, yAxis, xAxis, data, intZoomLevel]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>

@@ -14,5 +14,5 @@ export default function useDelayWait(callback, delay, dependencies) {
     return () => {
       clearTimeout(timeoutRef.current);
     }
-  }, [callback, delay, ...dependencies])
+  }, dependencies)
 }
