@@ -137,8 +137,71 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //sum budget of the movies and group them by studio for each data month
     let studioBudgetByYear = d3.rollup(data, v => d3.sum(v, d => d.budget), d => d.company, d => d.year);
 
+    //Find avg budget for each studio over all years
+    let avgBudgetByStudio = [];
+    for (let [key, value] of studioBudgetByYear) {
+        let sum = 0;
+        for (let [key2, value2] of value) {
+            sum += value2;
+        }
+        avgBudgetByStudio.push([key, sum / value.size]);
+    }
+    //sort studios by avg budget
+    avgBudgetByStudio.sort((a, b) => b[1] - a[1]);
+    //get top n studios
+    const TOP_N = 25;
+    let top15Studios = avgBudgetByStudio.slice(0, TOP_N);
+    //accumilate the studios that are not in the top TOP_N into "Other" for all years
+    let otherStudios = [];
+    for (let [key, value] of studioBudgetByYear) {
+        if (!top15Studios.some(d => d[0] === key)) {
+            otherStudios.push([key, value]);
+        }
+    }
+    //get the sum of all other studios for each year
+    let otherStudiosByYear = new Map();
+    for (let [key, value] of otherStudios) {
+        for (let [key2, value2] of value) {
+            if (otherStudiosByYear.has(key2)) {
+                otherStudiosByYear.set(key2, otherStudiosByYear.get(key2) + value2);
+            } else {
+                otherStudiosByYear.set(key2, value2);
+            }
+        }
+    }
+    //remove studios that are not in the top TOP_N
+    studioBudgetByYear = new Map([...studioBudgetByYear].filter(d => top15Studios.some(d2 => d2[0] === d[0])));
+    //sort other studios by year
+    otherStudiosByYear = new Map([...otherStudiosByYear].sort((a, b) => a[0] - b[0]));
+    //add "Other" to the top TOP_N studios
+    top15Studios.push(["Other", 0]);
+    //add "Other" to the studioBudgetByYear map
+    studioBudgetByYear.set("Other", otherStudiosByYear);
+
+    
+    let prefixSum = new Map();
+    //for all the years in the data
+    for (let year of d3.range(1980, 2021, 1)) {
+        let sum =0;
+        //prefix sum of the studios for the current year
+        let currentYearPrefixSum = new Map();
+        //for all the studios in the studioBudgetByYear
+        for (let [key, value] of studioBudgetByYear) {
+            //if the current year is in the studioBudgetByYear
+            if (value.has(year)) {
+                //add the current year's budget to the sum
+                sum += value.get(year);
+            }
+            //add the current studio and the sum to the currentYearPrefixSum
+            currentYearPrefixSum.set(year, sum);
+            //append the current studio and the sum to the prefixSum withouy overriding the previous values
+            prefixSum.set(key, new Map([...(prefixSum.get(key) || new Map()), ...currentYearPrefixSum]));
+        }
+        //add the current year and the currentYearPrefixSum to the prefixSum
+    }
+
     //get maximum budget overall
-    const maxBudget = d3.max(studioBudgetByYear, (d) => {
+    const maxBudget = d3.max(prefixSum, (d) => {
         return d3.max(d[1], (d) => {
             return d[1];
         });
@@ -158,28 +221,31 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .classed("plot-axis", true);
 
-    console.log("first", studioBudgetByYear);
-    //Process the data to stacked line chart
-    
-    console.log("second", studioBudgetByYear);
 
-    //Line generator
-    let lineGen = d3.line()
+    //area generator
+    let areaGen = d3.area()
         .x(d => xScale(d[0]))
-        .y(d => yScale(d[1]))
-
+        .y0((d) => {
+           
+            return yScale(0);
+        })
+        .y1(d => yScale(d[1]));
+    
+    
     //draw line chart
     svg.select(".lines")
         .selectAll("g")
-        .data(studioBudgetByYear)
+        .data(prefixSum)
         .join("g")
-        .attr("transform",`translate(${margin.left}, ${margin.top})`)
+        .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .selectAll("path")
         .data(d => d)
         .join("path")
-        .attr("d", d => lineGen(d))
-        .attr("fill", "none")
+        .attr("d", d => areaGen(d))
+        .attr("fill", d=>colorScale(d))
+        .attr("fill-opacity", 0.1)
         .attr("stroke", d => colorScale(d))
+        .attr("stroke-opacity", 1)
         .attr("stroke-width", 2)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round")
