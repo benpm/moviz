@@ -59,12 +59,11 @@ export default function CCollapsedScatterplot() {
     }, []);
 
     useDelayWait(() => {
+        const k = plotTransform.k;
         // Update circle radius
-        setDotStroke(1 / plotTransform.k);
+        setDotStroke(1/k);
         // Update zoom level
-        const newZoomLevel = Math.min(maxZoomLevel, Math.max(0,
-            maxZoomLevel + Math.ceil(Math.log2(0.5/plotTransform.k))));
-        setIntZoomLevel(newZoomLevel);
+        setIntZoomLevel(zoomScale(k));
     }, 150, [plotTransform]);
 
     const onZoom = ({transform}) => {
@@ -80,10 +79,15 @@ export default function CCollapsedScatterplot() {
                 .call(yAxisObj.scale(transform.rescaleY(scales.y[yAxis])));
         }
     };
+    const zoomBounds = [0.9, 10];
     const zoom = d3.zoom()
         .on("zoom", onZoom)
-        .scaleExtent([0.9, 10])
+        .scaleExtent(zoomBounds)
         .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
+    const zoomScale = d3.scaleLinear()
+        .domain([0.5, zoomBounds[1] * 0.5])
+        .rangeRound([maxZoomLevel, 0])
+        .clamp(true);
 
     // Set bounds on resize
     useEffect(() => {
@@ -128,7 +132,7 @@ export default function CCollapsedScatterplot() {
             .join("circle")
             .attr("cx", d => iXScale(d.x))
             .attr("cy", d => iYScale(d.y))
-            .attr("r", d => Math.max(2, d.r * 0.65))
+            .attr("r", d => Math.max(2, d.r * 0.85))
             .classed("dot", true)
             /* .on("mouseover", (e, d) => {
                 setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});

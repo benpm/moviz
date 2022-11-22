@@ -51,21 +51,23 @@ SIM_BOUNDS = ((-1000, 1000), (-300, 300))
 X_AXES = ["released"]
 Y_AXES = ["budget", "gross", "score", "nominations", "tomatometer_rating", "audience_rating"]
 # Radius of deepest zoom level dots
-BASE_RADIUS = 1.5
+BASE_RADIUS = 4
 # Number of steps for simulations
 SIM_STEPS = 50
 # Delta time per simulation step
 SIM_DT = 0.1
 # Distance past dot radius to consider for grouping
-GROUPING_BIAS = 2.0
+GROUPING_BIAS = 0.5
 # Multiplier for force applied to dots
 FORCE_MULTIPLIER = 0.1
 # Max group radius to create a new coalesced dot for (multiplied by level)
-MAX_GROUP_RADIUS = 25
+MAX_GROUP_RADIUS = 15
+# Absolute max radius
+MAX_RADIUS = 60
 # Number of threads to create simulations with
 SIM_THREADS = 8
 # Minimum fullness for a group to be considered for coalescing
-MIN_FULLNESS = 0.15
+MIN_FULLNESS = 0.25
 
 class Dot(pymunk.Circle):
     def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
@@ -218,7 +220,7 @@ def main():
             # Progressively coalesce the dots into larger circles, and run the simulation for each level
             for lvl in range(1, ZOOM_LEVELS):
                 print(f"coalescing dots for zoom level {lvl}...")
-                lvls.append(coalesce(*lvls[lvl - 1], max_radius=MAX_GROUP_RADIUS * lvl))
+                lvls.append(coalesce(*lvls[lvl - 1], max_radius=min(MAX_RADIUS, MAX_GROUP_RADIUS * lvl)))
                 print(f"running lvl {lvl} simulation of {len(lvls[lvl][1])} dots...")
                 simulate(lvls[lvl], SIM_STEPS)
             
