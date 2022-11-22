@@ -1,11 +1,11 @@
 import * as d3 from "d3";
-import CScatterplot from './Scatterplot';
-import loadMovieData from '../scripts/loadData';
+import { loadMovieData, loadScatterPlotData } from '../scripts/loadData';
 import { useEffect, useState } from 'react';
 import CTooltip from './Tooltip';
 import CHeatMap from './HeatMap';
 import CCompanionPlot from "./CompanionPlot";
 import useGlobalState from '../hooks/useGlobalState';
+import CCollapsedScatterplot from "./CollapsedScatterplot";
 
 const Dashboard = () => {
   const [data, setData] = useState([]);
@@ -47,7 +47,7 @@ const Dashboard = () => {
   }, []);
   return (
     <div id="dashboard" className="p-2 grow grid grid-cols-2 grid-rows-2 gap-2">
-      <div className="bg-dark col-span-2"><CScatterplot data={data}/></div>
+      <div className="bg-dark col-span-2"><CCollapsedScatterplot data={data}/></div>
       <div className="bg-dark"><CCompanionPlot data={data}></CCompanionPlot></div>
       <div className="bg-dark"><CHeatMap data={data}/></div>
       <CTooltip />

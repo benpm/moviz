@@ -18,6 +18,8 @@ import pandas as pd
 import pymunk
 from pymunk.vec2d import Vec2d
 from datetime import datetime
+from random import uniform
+import math
 
 class Scale:
     def __init__(self, _range, domain, conv_range=None, conv_range_inv=None):
@@ -49,22 +51,26 @@ SIM_BOUNDS = (-1000, 1000)
 X_AXES = ["released"]
 Y_AXES = ["budget", "gross", "score", "nominations", "tomatometer_rating", "audience_rating"]
 # Radius of deepest zoom level dots
-BASE_RADIUS = 1
+BASE_RADIUS = 1.5
 # Number of steps for simulations
 SIM_STEPS = 20
 # Delta time per simulation step
 SIM_DT = 0.1
 # Distance past dot radius to consider for grouping
-GROUPING_BIAS = 0.1
+GROUPING_BIAS = 2.0
 # Multiplier for force applied to dots
 FORCE_MULTIPLIER = 0.1
 # Max group radius to create a new coalesced dot for (multiplied by level)
 MAX_GROUP_RADIUS = 25
+# Number of threads to create simulations with
+SIM_THREADS = 8
+# Minimum fullness for a group to be considered for coalescing
+MIN_FULLNESS = 0.15
 
 class Dot(pymunk.Circle):
     def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
         body = pymunk.Body()
-        body.position = pos
+        body.position = pos + Vec2d(uniform(-0.5, 0.5), uniform(-0.5, 0.5))
         super().__init__(body, radius)
         self.data_idx = data_idx
         self.elasticity = 0.0
@@ -81,7 +87,7 @@ class Dot(pymunk.Circle):
 # Combine dots by finding connected groups of dots
 def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[pymunk.Space, list[Dot]]:
     out_space = pymunk.Space()
-    out_space.threads = 4
+    out_space.threads = SIM_THREADS
     out_space.gravity = 0, 0
     out_dots = []
 
@@ -90,8 +96,8 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
     for source_dot in dots:
         if source_dot in grouped_dots:
             continue
-        group = set()
         queue = [source_dot]
+        group = set(queue)
         radius = 0
         center = 0
 
@@ -106,9 +112,8 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
             # Add all dots to group and queue if not already in a group
             added = 0
             for qdot in query:
-                if qdot not in grouped_dots:
+                if qdot not in grouped_dots and qdot not in group:
                     group.add(qdot)
-                    grouped_dots.add(qdot)
                     queue.append(qdot)
                     added += 1
             
@@ -130,25 +135,26 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
                     break
 
         # Create a new dot for the group
-        if group:
+        if len(group) > 1:
             # Add all dots inside group radius to group, if they are not already in a group
             for qi in space.point_query(center, radius, pymunk.ShapeFilter()):
-                if qi.shape not in grouped_dots:
+                if qi.shape not in grouped_dots and qi.shape not in group:
                     group.add(qi.shape)
-                    grouped_dots.add(qi.shape)
-            
-            data_idx = set()
+
+            # Reject if less than minimum fullness
+            area = 0
             for dot in group:
-                data_idx.update(dot.data_idx)
-            out_dots.append(Dot(data_idx, radius, center, out_space))
-        
-        # If group is not empty, create a new dot for the group
-        if group:
+                area += math.pi * dot.radius ** 2
+            if area / (math.pi * radius ** 2) < MIN_FULLNESS:
+                continue
+
             # Create a new dot for the group
+            for dot in group:
+                grouped_dots.add(dot)
             out_dots.append(Dot(set().union(*[dot.data_idx for dot in group]), radius, center, out_space))
 
+    # Add all ungrouped dots
     if len(grouped_dots) < len(dots):
-        # Create a new dot for any dots that were not grouped
         for dot in dots:
             if dot not in grouped_dots:
                 out_dots.append(Dot(dot.data_idx, dot.radius, dot.body.position, out_space))
@@ -196,7 +202,7 @@ def main():
             # Initialize zoom level 0 space
             lvls: list[tuple[pymunk.Space, list[Dot]]] = []
             space = pymunk.Space(True)
-            space.threads = 4
+            space.threads = SIM_THREADS
             space.gravity = 0, 0
             lvls.append((space, []))
             
@@ -215,20 +221,20 @@ def main():
                 lvls.append(coalesce(*lvls[lvl - 1], max_radius=MAX_GROUP_RADIUS * lvl))
                 print(f"running lvl {lvl} simulation of {len(lvls[lvl][1])} dots...")
                 simulate(lvls[lvl], SIM_STEPS)
-                # For each dot, insert a new row into the dataframe
-                for dot in lvls[lvl][1]:
-                    df = pd.concat([df, pd.DataFrame({
-                        "lvl": lvl,
-                        "x_axis": x_axis,
-                        "y_axis": y_axis,
-                        "x": dot.body.position.x,
-                        "y": dot.body.position.y,
-                        "r": dot.radius,
-                        "movies": list(dot.data_idx)
-                    })])
+            
+            # For each dot, insert a new row into the dataframe
+            print("inserting data into dataframe...")
+            for lvl, (space, dots) in enumerate(lvls):
+                df = pd.concat([df, pd.DataFrame([
+                    [lvl, x_axis, y_axis, dot.body.position.x, dot.body.position.y, dot.radius,
+                        " ".join([str(i) for i in list(dot.data_idx)])]
+                    for dot in dots
+                ], columns=["lvl", "x_axis", "y_axis", "x", "y", "r", "movies"])])
+            print(f"new dataframe length is {len(df)}")
                     
-    # Save the generated DataFrame to the scatterplot.parquet file
-    df.to_parquet("../public/scatterplot.parquet", index=False)
+    # Save the generated DataFrame to the scatterplot.csv file
+    print("saving dataframe to file...")
+    df.to_csv("../public/scatterplot.csv", index=False, float_format="%.2f")
 
 # Just load public/scatterplot.csv and generate scatterplot.h5
 def convert():
