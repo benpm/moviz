@@ -240,7 +240,13 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .selectAll("path")
         .data(d => d)
-        .join("path")
+        .join(
+            enter => enter.append("path")
+                .attr("transform", `translate(0,${yScale(0)}) scale(1, 0)`),
+            update => update,
+            exit => exit.remove())
+        .transition().duration(1000)
+        .attr("transform", 'scale(1, 1)')
         .attr("d", d => areaGen(d))
         .attr("fill", d=>colorScale(d))
         .attr("fill-opacity", 0.1)
