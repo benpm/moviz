@@ -8,11 +8,21 @@ function makeTooltip(d, caller) {
     switch (caller) {
         case "scatterplot":
             return ScatterplotToolTip(d);
+        case "scatterplot_group":
+            return ScatterplotGroupToolTip(d);
         case "heatmap":
             return HeatmapToolTip(d);
         case "companion":
             return CompanionToolTip(d);
     }
+}
+
+function ScatterplotGroupToolTip(d) {
+    return (
+        <div className="tooltip bg-navbar">
+            <div className="font-bold text-lightest">{d.movies.length} films</div>
+        </div>
+    );
 }
 
 function ScatterplotToolTip(d) {

@@ -5,7 +5,7 @@ import * as d3 from "d3";
  * 
  * @returns {Promise} A promise that resolves to the data
  */
-export default function loadMovieData() {
+function loadMovieData() {
     return d3.csv("movies.csv").then(data => {
         data.forEach(d => {
             d.year = parseInt(d.year);
@@ -22,3 +22,19 @@ export default function loadMovieData() {
         return data;
     });
 }
+
+function loadScatterPlotData() {
+    return d3.csv("scatterplot.csv").then(data => {
+        data.forEach(d => {
+            d.lvl = parseInt(d.lvl);
+            d.x = parseFloat(d.x);
+            d.y = parseFloat(d.y);
+            d.r = parseFloat(d.r);
+            d.movies = d.movies.split(" ").map(i => parseInt(i));
+        });
+        const groupedData = d3.group(data, d => d.lvl, d => d.x_axis, d => d.y_axis);
+        return groupedData;
+    });
+}
+
+export { loadMovieData, loadScatterPlotData };
