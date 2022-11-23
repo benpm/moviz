@@ -22,22 +22,33 @@ export default function CCollapsedScatterplot({movieData}) {
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
-    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
         state.setScatterXAxis,
         state.setScatterYAxis,
-        state.scales
+        state.scales,
+        state.viewMode
     ]);
     let scales = null;
     // Valid X axis labels
-    const xAxes = ["released", "budget", "gross"];
-    const xAxisTitles = ["Release Date", "Budget", "Revenue"];
+    // const xAxes = ["released", "budget", "gross"];
     // Valid Y axis labels
-    const yAxes = ["score", "audience_rating", "tomatometer_rating"];
-    const yAxisTitles = ["IMDb Score", "RT Audience Rating", "RT Tomatometer Rating"];
+    // const yAxes = ["score", "audience_rating", "tomatometer_rating"];
+
+    const axisTitles = {
+        "released": "Release Date",
+        "budget": "Budget",
+        "gross": "Revenue",
+        "score": "IMDb Score",
+        "audience_rating": "RT Audience Rating",
+        "tomatometer_rating": "RT Tomatometer Rating",
+    };
+
+    const [xAxisList, setXAxisList] = useState([]);
+    const [yAxisList, setYAxisList] = useState([]);
     
     var xAxisObj = null;
     var yAxisObj = null;
@@ -51,6 +62,29 @@ export default function CCollapsedScatterplot({movieData}) {
     const [plotTransform, setPlotTransform] = useState(initTransform);
     const [intZoomLevel, setIntZoomLevel] = useState(maxZoomLevel);
     const [initialized, setInitialized] = useState(false);
+
+    useEffect(() => {
+        switch (viewMode) {
+            case "ratings_oscars":
+                setXAxisList(null);
+                setXAxis("released");
+                setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
+                setYAxis("score");
+                break;
+            case "movie_economy":
+                setXAxisList(null);
+                setXAxis("released");
+                setYAxisList(["budget", "gross"]);
+                setYAxis("budget");
+                break;
+            case "cost_quality":
+                setXAxisList(["score", "audience_rating", "tomatometer_rating"]);
+                setXAxis("score");
+                setYAxisList(["budget", "gross"]);
+                setYAxis("budget");
+                break;
+        }
+    }, [viewMode]);
 
     useEffect(() => {
         if (data == null) {
@@ -74,9 +108,9 @@ export default function CCollapsedScatterplot({movieData}) {
     
             // Update axes
             d3.select(ref.current).select(".x-axis")
-                .call(xAxisObj.scale(transform.rescaleX(scales.x[xAxis])));
+                .call(xAxisObj.scale(transform.rescaleX(scales.f[xAxis])));
             d3.select(ref.current).select(".y-axis")
-                .call(yAxisObj.scale(transform.rescaleY(scales.y[yAxis])));
+                .call(yAxisObj.scale(transform.rescaleY(scales.f[yAxis])));
         }
     };
     const zoomBounds = [0.9, 10];
@@ -98,18 +132,25 @@ export default function CCollapsedScatterplot({movieData}) {
     
     // Render chart function
     const ref = useD3(svg => {
-        if (!gScales || !data) {
+        if (!gScales || !data || !movieData) {
             return;
         }
-
-        const dataSubset = data.get(intZoomLevel).get(xAxis).get(yAxis);
+        const dataSubset = data.get(intZoomLevel);
+        let vxAxis, vyAxis, vw, vh;
+        if (dataSubset.has(xAxis) && dataSubset.get(xAxis).has(yAxis)) {
+            [vxAxis, vyAxis, vw, vh] = [xAxis, yAxis, simBounds.x, simBounds.y];
+        } else {
+            [vxAxis, vyAxis, vw, vh] = [yAxis, xAxis, simBounds.y, simBounds.x];
+        }
+        dataSubset = dataSubset.get(vxAxis).get(vyAxis);
+        console.log(data, intZoomLevel, xAxis, yAxis)
         scales = copyScales(gScales);
 
         // Initialize zoom and scales
-        const xScale = scales.x[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = scales.y[yAxis].rangeRound([bounds.innerHeight, 0]);
-        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.xFormat[xAxis]);
-        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.yFormat[yAxis]);
+        const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
+        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.format[xAxis]);
+        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.format[yAxis]);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
             .classed("plot-axis", true);
@@ -118,8 +159,8 @@ export default function CCollapsedScatterplot({movieData}) {
             .classed("plot-axis", true);
 
         // Inverse scales that transform simulation coordinates to plot coordinates
-        const iXScale = xScale.copy().domain(simBounds.x);
-        const iYScale = yScale.copy().domain(simBounds.y);
+        const iXScale = xScale.copy().domain(vw);
+        const iYScale = yScale.copy().domain(vh);
 
         // Draw points
         svg.select(".plot-area")
@@ -164,13 +205,15 @@ export default function CCollapsedScatterplot({movieData}) {
         }
         
         setInitialized(true);
-    }, [bounds, gScales, yAxis, xAxis, data, intZoomLevel]);
+    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>
             <div className="absolute top-0 right-0">
-                <CDropdown label="Y Axis" options={yAxes} optionTitles={yAxisTitles} value={yAxis} onChange={setYAxis} />
-                <CDropdown label="X Axis" options={xAxes} optionTitles={xAxisTitles} value={xAxis} onChange={setXAxis} />
+                <CDropdown label="Y Axis" options={yAxisList} optionTitles={axisTitles} value={yAxis} onChange={setYAxis} />
+                {xAxisList != null &&
+                    <CDropdown label="X Axis" options={xAxisList} optionTitles={axisTitles} value={xAxis} onChange={setXAxis} />
+                }
             </div>
             <svg ref={ref} className="w-full h-full">
                 <style>

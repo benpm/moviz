@@ -70,10 +70,10 @@ export default function CHeatMap({ data }) {
         }
 
         // Initialize zoom and scales
-        const xScale = scales.x[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = scales.y[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
-        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.xFormat[xAxis]);
-        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.yFormat[yAxis]);
+        const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = scales.f[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
+        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.format[xAxis]);
+        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.format[yAxis]);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
             .classed("plot-axis", true);

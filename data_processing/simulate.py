@@ -20,6 +20,7 @@ from pymunk.vec2d import Vec2d
 from datetime import datetime
 from random import uniform
 import math
+from itertools import combinations
 
 class Scale:
     def __init__(self, _range, domain, conv_range=None, conv_range_inv=None):
@@ -48,8 +49,7 @@ def extent(data: pd.DataFrame, field: str, conv: callable = lambda x: x):
 # Number of zoom levels. Level 0 is deepest zoom
 ZOOM_LEVELS = 3
 SIM_BOUNDS = ((-1000, 1000), (-300, 300))
-X_AXES = ["released", "budget", "gross"]
-Y_AXES = ["score", "audience_rating", "tomatometer_rating"]
+AXES = ["released", "budget", "gross", "score", "audience_rating", "tomatometer_rating"]
 # Radius of deepest zoom level dots
 BASE_RADIUS = 4
 # Number of steps for simulations
@@ -178,12 +178,10 @@ def main():
     # Load movies.csv data from /public into a pandas DataFrame
     movies = pd.read_csv("../public/movies.csv")
 
-    x_scales = {
+    scales = {
         "released": Scale(extent(movies, "released", parse_date), SIM_BOUNDS[0], conv_range=parse_date, conv_range_inv=lambda x: x.strftime("%B %d, %Y")),
         "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[0]),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[0])
-    }
-    y_scales = {
+        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[0]),
         "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[1]),
         "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[1]),
         "score": Scale((0, 10), SIM_BOUNDS[1]),
@@ -199,42 +197,41 @@ def main():
     space = pymunk.Space()
     space.gravity = 0, 0
 
-    for x_axis in X_AXES:
-        for y_axis in Y_AXES:
-            print(f"\nsimulating on {x_axis} / {y_axis}")
+    for x_axis, y_axis in combinations(AXES, 2):
+        print(f"\nsimulating on {x_axis} / {y_axis}")
 
-            # Initialize zoom level 0 space
-            lvls: list[tuple[pymunk.Space, list[Dot]]] = []
-            space = pymunk.Space(True)
-            space.threads = SIM_THREADS
-            space.gravity = 0, 0
-            lvls.append((space, []))
-            
-            # Zoom level 0 (deepest): create a Dot object for each row in the scatterplot.csv file
-            for i, row in movies.iterrows():
-                lvls[0][1].append(Dot(set([i]), BASE_RADIUS,
-                    Vec2d(x_scales[x_axis](row[x_axis]), y_scales[y_axis](row[y_axis])), space))
+        # Initialize zoom level 0 space
+        lvls: list[tuple[pymunk.Space, list[Dot]]] = []
+        space = pymunk.Space(True)
+        space.threads = SIM_THREADS
+        space.gravity = 0, 0
+        lvls.append((space, []))
+        
+        # Zoom level 0 (deepest): create a Dot object for each row in the scatterplot.csv file
+        for i, row in movies.iterrows():
+            lvls[0][1].append(Dot(set([i]), BASE_RADIUS,
+                Vec2d(scales[x_axis](row[x_axis]), scales[y_axis](row[y_axis])), space))
 
-            # Run the simulation for zoom level 0
-            print(f"running initial simulation of {len(lvls[0][1])} dots...")
-            simulate(lvls[0], SIM_STEPS)
-            
-            # Progressively coalesce the dots into larger circles, and run the simulation for each level
-            for lvl in range(1, ZOOM_LEVELS):
-                print(f"coalescing dots for zoom level {lvl}...")
-                lvls.append(coalesce(*lvls[lvl - 1], max_radius=min(MAX_RADIUS, BASE_RADIUS + MAX_GROUP_RADIUS * lvl)))
-                print(f"running lvl {lvl} simulation of {len(lvls[lvl][1])} dots...")
-                simulate(lvls[lvl], SIM_STEPS)
-            
-            # For each dot, insert a new row into the dataframe
-            print("inserting data into dataframe...")
-            for lvl, (space, dots) in enumerate(lvls):
-                df = pd.concat([df, pd.DataFrame([
-                    [lvl, x_axis, y_axis, dot.body.position.x, dot.body.position.y, dot.radius,
-                        " ".join([str(i) for i in list(dot.data_idx)])]
-                    for dot in dots
-                ], columns=["lvl", "x_axis", "y_axis", "x", "y", "r", "movies"])])
-            print(f"new dataframe length is {len(df)}")
+        # Run the simulation for zoom level 0
+        print(f"running initial simulation of {len(lvls[0][1])} dots...")
+        simulate(lvls[0], SIM_STEPS)
+        
+        # Progressively coalesce the dots into larger circles, and run the simulation for each level
+        for lvl in range(1, ZOOM_LEVELS):
+            print(f"coalescing dots for zoom level {lvl}...")
+            lvls.append(coalesce(*lvls[lvl - 1], max_radius=min(MAX_RADIUS, BASE_RADIUS + MAX_GROUP_RADIUS * lvl)))
+            print(f"running lvl {lvl} simulation of {len(lvls[lvl][1])} dots...")
+            simulate(lvls[lvl], SIM_STEPS)
+        
+        # For each dot, insert a new row into the dataframe
+        print("inserting data into dataframe...")
+        for lvl, (space, dots) in enumerate(lvls):
+            df = pd.concat([df, pd.DataFrame([
+                [lvl, x_axis, y_axis, dot.body.position.x, dot.body.position.y, dot.radius,
+                    " ".join([str(i) for i in list(dot.data_idx)])]
+                for dot in dots
+            ], columns=["lvl", "x_axis", "y_axis", "x", "y", "r", "movies"])])
+        print(f"new dataframe length is {len(df)}")
                     
     # Save the generated DataFrame to the scatterplot.csv file
     print("saving dataframe to file...")

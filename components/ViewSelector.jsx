@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { useState } from "react";
+import useGlobalState from "../hooks/useGlobalState";
 
 export default function CViewSelector({ }) {
   const commonStyle = " h-9 py-1 px-1 text-sm font-medium border-black/50 text-black hover:border-gray-500 ";
@@ -10,27 +12,33 @@ export default function CViewSelector({ }) {
     " rounded-r-3xl border-r-2 border-t "
   ];
 
-  const [viewSelected, setViewSelected] = useState(0);
   const [buttonStyle, setButtonStyle] = useState([pressedStyle, unpressedStyle, unpressedStyle].map((s,i) => exButtonStyles[i] + s));
+  const [viewMode, setViewMode] = useGlobalState(s => [s.viewMode, s.setViewMode]);
 
-  const onClick = (view) => {
-    setViewSelected(view);
-    setButtonStyle(buttonStyle.map(
-      (_,i) => ((view == i) ? pressedStyle : unpressedStyle) + (exButtonStyles[i])));
+  const viewModes = {
+    "ratings_oscars": 0,
+    "movie_economy": 1,
+    "cost_quality": 2
   };
+
+  useEffect(() => {
+    const viewIdx = viewModes[viewMode];
+    setButtonStyle(buttonStyle.map(
+      (_,i) => ((viewIdx == i) ? pressedStyle : unpressedStyle) + (exButtonStyles[i])));
+  }, [viewMode]);
 
   //Create a rounded rectange with a border
   return (
     <>
       <div className="text-center text-l w-full">Select View</div>
       <div className="grid grid-cols-3 w-full rounded-md shadow-sm" role="group">
-        <button type="button" className={buttonStyle[0]} onClick={()=>onClick(0)}>
+        <button type="button" className={buttonStyle[0]} onClick={()=>setViewMode("ratings_oscars")}>
           Ratings & Oscars
         </button>
-        <button type="button" className={buttonStyle[1]} onClick={()=>onClick(1)}>
+        <button type="button" className={buttonStyle[1]} onClick={()=>setViewMode("movie_economy")}>
           Movie Economy
         </button>
-        <button type="button" className={buttonStyle[2]} onClick={()=>onClick(2)}>
+        <button type="button" className={buttonStyle[2]} onClick={()=>setViewMode("cost_quality")}>
           Cost vs Quality
         </button>
       </div>

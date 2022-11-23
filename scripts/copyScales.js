@@ -1,13 +1,8 @@
 export default function copyScales(scales) {
     if (scales === null) return null;
-    let out = {x:{}, y:{}};
-    for (let k in scales.x) {
-        out.x[k] = scales.x[k].copy();
+    let out = {f:{}, format: scales.format};
+    for (let k in scales.f) {
+        out.f[k] = scales.f[k].copy();
     }
-    for (let k in scales.y) {
-        out.y[k] = scales.y[k].copy();
-    }
-    out.xFormat = scales.xFormat;
-    out.yFormat = scales.yFormat;
     return out;
 }

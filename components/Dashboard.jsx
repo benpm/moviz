@@ -14,12 +14,10 @@ const Dashboard = () => {
     if (data.length == 0) {
       loadMovieData().then((data) => {
         setScales({
-          x: {
+          f: {
             released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
             budget: d3.scaleLinear().domain(d3.extent(data, d => d.budget)),
             gross: d3.scaleLinear().domain(d3.extent(data, d => d.gross)),
-          },
-          y: {
             score: d3.scaleLinear().domain([0, 10]),
             tomatometer_rating: d3.scaleLinear().domain([0, 100]),
             audience_rating: d3.scaleLinear().domain([0, 100]),
@@ -27,12 +25,10 @@ const Dashboard = () => {
             gross: d3.scaleLinear(),
             budget: d3.scaleLinear(),
           },
-          xFormat: {
+          format: {
             released: d3.timeFormat("%b %d, %Y"),
             budget: d3.format("$,.1s"),
             gross: d3.format("$,.1s"),
-          },
-          yFormat: {
             score: d => d,
             tomatometer_rating: d => d,
             audience_rating: d => d,

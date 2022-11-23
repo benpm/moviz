@@ -7,7 +7,7 @@ const useGlobalState = create((set) => ({
     hoverPos: {x: 0, y: 0},
 
     viewSize: {w: 1920, h: 1080},
-    viewMode: "Ratings_Oscars",
+    viewMode: "ratings_oscars",
 
     //State of the scatterplot
     scatterXAxis: "released",
@@ -21,6 +21,7 @@ const useGlobalState = create((set) => ({
     setScatterXAxis: x => set({ scatterXAxis: x }),
     setScatterYAxis: x => set({ scatterYAxis: x }),
     setScales: x => set({ scales: x }),
+    setViewMode: x => set({ viewMode: x }),
 }));
 
 export default useGlobalState;

@@ -250,12 +250,13 @@ export default function CCompanionPlot({ data }) {
     const [legendImage, setLegendImage] = useState("");
 
 
-    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
-        state.scales
+        state.scales,
+        state.viewMode
     ]);
     let scales = null;
     var xAxisObj = null;
@@ -280,12 +281,20 @@ export default function CCompanionPlot({ data }) {
             scales = copyScales(gScales);
         }
 
-        //drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+        switch (viewMode) {
+            case "ratings_oscars":
+                //set group named "lines" empty
+                svg.select(".lines").selectAll("*").remove();
+                drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+                break;
+            case "movie_economy":
+                svg.select(".bars").selectAll("*").remove();
+                drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+                break;
+        }
 
-        drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
 
-
-    }, [bounds, scales, yAxis, xAxis, data]);
+    }, [bounds, scales, yAxis, xAxis, data, viewMode]);
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>

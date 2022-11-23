@@ -60,9 +60,9 @@ export default function CScatterplot({data}) {
     
             // Update axes
             d3.select(ref.current).select(".x-axis")
-                .call(xAxisObj.scale(transform.rescaleX(scales.x[xAxis])));
+                .call(xAxisObj.scale(transform.rescaleX(scales.f[xAxis])));
             d3.select(ref.current).select(".y-axis")
-                .call(yAxisObj.scale(transform.rescaleY(scales.y[yAxis])));
+                .call(yAxisObj.scale(transform.rescaleY(scales.f[yAxis])));
         }
     };
     const zoom = d3.zoom()
@@ -91,10 +91,10 @@ export default function CScatterplot({data}) {
         }
 
         // Initialize zoom and scales
-        const xScale = scales.x[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = scales.y[yAxis].rangeRound([bounds.innerHeight, 0]);
-        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.xFormat[xAxis]);
-        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.yFormat[yAxis]);
+        const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
+        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.format[xAxis]);
+        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.format[yAxis]);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
             .classed("plot-axis", true);
