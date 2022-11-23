@@ -16,7 +16,7 @@ const OSCAR_COLORS = {
     "none": "#606060",
 };
 
-export default function CCollapsedScatterplot() {
+export default function CCollapsedScatterplot({movieData}) {
     const [data, setData] = useState(null);
     const margin = {top: 20, right: 20, bottom: 20, left: 30};
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
@@ -44,7 +44,7 @@ export default function CCollapsedScatterplot() {
 
     // Make sure these parameters match the parameters in data_processing/simulate.py
     const simBounds = {x:[-1000, 1000], y:[-300, 300]};
-    const maxZoomLevel = 4;
+    const maxZoomLevel = 2;
 
     const [dotStroke, setDotStroke] = useState(1);
     const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
@@ -80,10 +80,6 @@ export default function CCollapsedScatterplot() {
         }
     };
     const zoomBounds = [0.9, 10];
-    const zoom = d3.zoom()
-        .on("zoom", onZoom)
-        .scaleExtent(zoomBounds)
-        .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
     const zoomScale = d3.scaleLinear()
         .domain([0.5, zoomBounds[1] * 0.5])
         .rangeRound([maxZoomLevel, 0])
@@ -134,21 +130,35 @@ export default function CCollapsedScatterplot() {
             .attr("cy", d => iYScale(d.y))
             .attr("r", d => Math.max(2, d.r * 0.85))
             .classed("dot", true)
-            /* .on("mouseover", (e, d) => {
-                setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot"});
-                d3.select(e.target).attr("fill", "white");
+            .attr("fill", d => {
+                if (d.movies.length == 1) {
+                    return OSCAR_COLORS[movieData[d.movies[0]].oscar];
+                } else {
+                    return OSCAR_COLORS["none"];
+                }
+            })
+            .on("mouseover", (e, d) => {
+                if (d.movies.length == 1) {
+                    setHoverItem({datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot"});
+                } else {
+                    setHoverItem({datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group"});
+                }
             })
             .on("mousemove", (e, d) => {
                 setHoverPos({x: e.pageX, y: e.pageY});
             })
             .on("mouseout", (e, d) => {
-                setHoverItem({datum: null, x: 0, y: 0, caller: null})
-                d3.select(e.target).attr("fill", d => OSCAR_COLORS[d.oscar]);
-            }); */
+                setHoverItem({datum: null, x: 0, y: 0, caller: null});
+            });
         
+        const zoom = d3.zoom()
+            .on("zoom", onZoom)
+            .scaleExtent(zoomBounds)
+            .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
+        svg.call(zoom);
+
         // Set zoom
         if (!initialized) {
-            svg.call(zoom);
             svg.call(zoom.transform, initTransform);
             onZoom({transform: initTransform});
         }
@@ -167,7 +177,9 @@ export default function CCollapsedScatterplot() {
                     circle.dot {'{'}
                         stroke-width: {dotStroke};
                         stroke: #202020;
-                        fill: #606060;
+                    {'}'}
+                    circle.dot:hover {'{'}
+                        fill: white;
                     {'}'}
                 </style>
                 <defs>

@@ -47,7 +47,7 @@ const Dashboard = () => {
   }, []);
   return (
     <div id="dashboard" className="p-2 grow grid grid-cols-2 grid-rows-2 gap-2">
-      <div className="bg-dark col-span-2"><CCollapsedScatterplot data={data}/></div>
+      <div className="bg-dark col-span-2"><CCollapsedScatterplot movieData={data}/></div>
       <div className="bg-dark"><CCompanionPlot data={data}></CCompanionPlot></div>
       <div className="bg-dark"><CHeatMap data={data}/></div>
       <CTooltip />

@@ -46,10 +46,10 @@ def extent(data: pd.DataFrame, field: str, conv: callable = lambda x: x):
     return min(d), max(d)
 
 # Number of zoom levels. Level 0 is deepest zoom
-ZOOM_LEVELS = 5
+ZOOM_LEVELS = 3
 SIM_BOUNDS = ((-1000, 1000), (-300, 300))
-X_AXES = ["released"]
-Y_AXES = ["budget", "gross", "score", "nominations", "tomatometer_rating", "audience_rating"]
+X_AXES = ["released", "budget", "gross"]
+Y_AXES = ["score", "audience_rating", "tomatometer_rating"]
 # Radius of deepest zoom level dots
 BASE_RADIUS = 4
 # Number of steps for simulations
@@ -61,13 +61,13 @@ GROUPING_BIAS = 0.5
 # Multiplier for force applied to dots
 FORCE_MULTIPLIER = 0.1
 # Max group radius to create a new coalesced dot for (multiplied by level)
-MAX_GROUP_RADIUS = 15
+MAX_GROUP_RADIUS = BASE_RADIUS * 1.25
 # Absolute max radius
-MAX_RADIUS = 60
+MAX_RADIUS = BASE_RADIUS * 8
 # Number of threads to create simulations with
 SIM_THREADS = 8
 # Minimum fullness for a group to be considered for coalescing
-MIN_FULLNESS = 0.25
+MIN_FULLNESS = 0.50
 
 class Dot(pymunk.Circle):
     def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
@@ -106,6 +106,7 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
         # Attempt to construct a new group by finding near dots to source_dot
         while queue:
             dot = queue.pop()
+            last_group = group.copy()
 
             # Find all dots within GROUPING_BIAS * radius of dot
             query = space.point_query(dot.body.position, dot.radius + GROUPING_BIAS, pymunk.ShapeFilter())
@@ -134,6 +135,7 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
             
                 # Stop growing group if it is too large
                 if radius > max_radius:
+                    group = last_group
                     break
 
         # Create a new dot for the group
@@ -220,7 +222,7 @@ def main():
             # Progressively coalesce the dots into larger circles, and run the simulation for each level
             for lvl in range(1, ZOOM_LEVELS):
                 print(f"coalescing dots for zoom level {lvl}...")
-                lvls.append(coalesce(*lvls[lvl - 1], max_radius=min(MAX_RADIUS, MAX_GROUP_RADIUS * lvl)))
+                lvls.append(coalesce(*lvls[lvl - 1], max_radius=min(MAX_RADIUS, BASE_RADIUS + MAX_GROUP_RADIUS * lvl)))
                 print(f"running lvl {lvl} simulation of {len(lvls[lvl][1])} dots...")
                 simulate(lvls[lvl], SIM_STEPS)
             
