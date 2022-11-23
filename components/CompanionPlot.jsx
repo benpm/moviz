@@ -132,80 +132,73 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
 }
 
 function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos) {
-    //create a categorical color scale for every studio from the data
-    let colorScale = d3.scaleOrdinal(d3.schemeCategory10).domain([...new Set(data.map(d => d.company))]);
     //sum budget of the movies and group them by studio for each data month
-    let studioBudgetByYear = d3.rollup(data, v => d3.sum(v, d => d.budget), d => d.company, d => d.year);
+    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company);
+    studioBudgetByYear = studioBudgetByYear.map((r) => {
+        let m = new Map();
+        m.set("year", r[0]);
+        r[1].forEach(([key, value]) => {
+            m.set(key, value);
+        });
+        return m;
+    });
 
     //Find avg budget for each studio over all years
-    let avgBudgetByStudio = [];
-    for (let [key, value] of studioBudgetByYear) {
-        let sum = 0;
-        for (let [key2, value2] of value) {
-            sum += value2;
-        }
-        avgBudgetByStudio.push([key, sum / value.size]);
-    }
-    //sort studios by avg budget
-    avgBudgetByStudio.sort((a, b) => b[1] - a[1]);
-    //get top n studios
-    const TOP_N = 25;
-    let top15Studios = avgBudgetByStudio.slice(0, TOP_N);
-    //accumilate the studios that are not in the top TOP_N into "Other" for all years
-    let otherStudios = [];
-    for (let [key, value] of studioBudgetByYear) {
-        if (!top15Studios.some(d => d[0] === key)) {
-            otherStudios.push([key, value]);
-        }
-    }
-    //get the sum of all other studios for each year
-    let otherStudiosByYear = new Map();
-    for (let [key, value] of otherStudios) {
-        for (let [key2, value2] of value) {
-            if (otherStudiosByYear.has(key2)) {
-                otherStudiosByYear.set(key2, otherStudiosByYear.get(key2) + value2);
-            } else {
-                otherStudiosByYear.set(key2, value2);
+    let totalBudgetByStudio = new Map();
+    studioBudgetByYear.forEach((d) => {
+        d.forEach((v, k) => {
+            if (k != "year") {
+                if (totalBudgetByStudio.has(k)) {
+                    totalBudgetByStudio.set(k, totalBudgetByStudio.get(k) + v);
+                } else {
+                    totalBudgetByStudio.set(k, v);
+                }
             }
-        }
-    }
-    //remove studios that are not in the top TOP_N
-    studioBudgetByYear = new Map([...studioBudgetByYear].filter(d => top15Studios.some(d2 => d2[0] === d[0])));
-    //sort other studios by year
-    otherStudiosByYear = new Map([...otherStudiosByYear].sort((a, b) => a[0] - b[0]));
-    //add "Other" to the top TOP_N studios
-    top15Studios.push(["Other", 0]);
-    //add "Other" to the studioBudgetByYear map
-    studioBudgetByYear.set("Other", otherStudiosByYear);
-
-    
-    let prefixSum = new Map();
-    //for all the years in the data
-    for (let year of d3.range(1980, 2021, 1)) {
-        let sum =0;
-        //prefix sum of the studios for the current year
-        let currentYearPrefixSum = new Map();
-        //for all the studios in the studioBudgetByYear
-        for (let [key, value] of studioBudgetByYear) {
-            //if the current year is in the studioBudgetByYear
-            if (value.has(year)) {
-                //add the current year's budget to the sum
-                sum += value.get(year);
-            }
-            //add the current studio and the sum to the currentYearPrefixSum
-            currentYearPrefixSum.set(year, sum);
-            //append the current studio and the sum to the prefixSum withouy overriding the previous values
-            prefixSum.set(key, new Map([...(prefixSum.get(key) || new Map()), ...currentYearPrefixSum]));
-        }
-        //add the current year and the currentYearPrefixSum to the prefixSum
-    }
-
-    //get maximum budget overall
-    const maxBudget = d3.max(prefixSum, (d) => {
-        return d3.max(d[1], (d) => {
-            return d[1];
         });
     });
+    //sort avgBudgetByStudio by budget
+    totalBudgetByStudio = ([...totalBudgetByStudio.entries()].sort((a, b) => b[1] - a[1]));
+    //get top n studios
+    const TOP_N = 15;
+    let topNStudios = d3.group(totalBudgetByStudio.slice(0, TOP_N), d => d[0]);
+    //accumilate the studios that are not in the top TOP_N into "Other" for all years
+    let otherStudios = [];
+    for (let d of studioBudgetByYear) {
+        let sum = 0;
+        d.forEach((v, k) => {
+            if (!topNStudios.has(k) && k != "year") {
+                sum += v;
+                d.delete(k);
+            }
+        });
+        d.set("Other", sum);
+    }
+
+    let allStudios = ["Other", ...topNStudios.keys()];
+    studioBudgetByYear.forEach((d) => {
+        allStudios.forEach((s) => {
+            if (!d.has(s)) {
+                d.set(s, 0);
+            }
+        });
+    });
+    //convert studioBudgetByYear to objects
+    studioBudgetByYear = studioBudgetByYear.map((d) => {
+        let obj = {};
+        d.forEach((v, k) => {
+            obj[k] = v;
+        });
+        return obj;
+    });
+
+    let stackedStudioBudgetByYear = d3.stack().keys(allStudios)
+    stackedStudioBudgetByYear = stackedStudioBudgetByYear(studioBudgetByYear);
+    //create a categorical color scale for every studio from the top 25
+    let colorScale = d3.scaleOrdinal([...d3.schemeTableau10, "#17bed0",
+                "#292929", "#4F4F4F", "#949494", "#C4C4C4", "#CCCCCC", "#E8E8E8", "#FAFAFA"]).domain(['Other', allStudios]);
+
+    //get maximum budget overall filter out entry with key 'year'
+    let maxBudget = d3.max(stackedStudioBudgetByYear, d => d3.max(d, d => d[1]));
 
     //create axes scales
     const xScale = d3.scaleLinear().domain(d3.extent(data, d => d.year)).rangeRound([0, bounds.innerWidth]);
@@ -221,40 +214,31 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("transform", `translate(${margin.left}, ${margin.top})`)
         .classed("plot-axis", true);
 
+    var areaGen = d3.area()
+        .x((d) => xScale(d.data.year))
+        .y0((d) => yScale(d[0]))
+        .y1((d) => yScale(d[1]));
 
-    //area generator
-    let areaGen = d3.area()
-        .x(d => xScale(d[0]))
-        .y0((d) => {
-           
-            return yScale(0);
-        })
-        .y1(d => yScale(d[1]));
-    
-    
-    //draw line chart
-    svg.select(".lines")
-        .selectAll("g")
-        .data(prefixSum)
-        .join("g")
-        .attr("transform", `translate(${margin.left}, ${margin.top})`)
+    d3.select(".lines")
+        //.attr("transform", `translate(${margin.left}, ${margin.top})`)
         .selectAll("path")
-        .data(d => d)
+        .data(stackedStudioBudgetByYear)
         .join(
             enter => enter.append("path")
-                .attr("transform", `translate(0,${yScale(0)}) scale(1, 0)`),
+            .attr("transform", `translate(${margin.left} ${margin.top + bounds.innerHeight}) scale(1,0)`)
+            .transition().duration(1000)
+            .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,1)`),
             update => update,
-            exit => exit.remove())
-        .transition().duration(1000)
-        .attr("transform", 'scale(1, 1)')
-        .attr("d", d => areaGen(d))
-        .attr("fill", d=>colorScale(d))
-        .attr("fill-opacity", 0.1)
-        .attr("stroke", d => colorScale(d))
-        .attr("stroke-opacity", 1)
-        .attr("stroke-width", 2)
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round")
+            exit => exit.remove()
+        )
+        .attr("d", areaGen)
+        .attr("fill", (d) => colorScale(d.key))
+        .attr("fill-opacity", '0.7')
+        .attr("stroke", (d) => colorScale(d.key))
+        .attr("stroke-opacity", 1) 
+        .attr("stroke-width", 2) 
+        .attr("stroke-linejoin", "round") 
+        .attr("stroke-linecap", "round") 
 }
 
 export default function CCompanionPlot({ data }) {
