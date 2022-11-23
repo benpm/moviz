@@ -1,47 +1,36 @@
-import React from "react";
-
-//an event handler function that disables the button and enables the other buttons in the group
-function btnClicked(event) {
-  //get the button that was clicked
-  let button = event.target;
-  if(button.disabled)
-    return;
-  //get the parent element of the button
-  let parent = button.parentElement;
-  //get the children of the parent element
-  let children = parent.children;
-  //loop through the children and enable the buttons
-  for (let i = 0; i < children.length; i++) {
-      children[i].disabled = false;
-      //attach the event handler to the button
-      children[i].addEventListener("click", btnClicked);
-  }
-  //disable the button that was clicked
-  button.disabled = true;
-}
+import { useState } from "react";
 
 export default function CViewSelector({ }) {
+  const commonStyle = " h-9 py-1 px-1 text-sm font-medium border-black/50 text-black hover:border-gray-500 ";
+  const pressedStyle = commonStyle + " hover:text-white bg-tealBlue-dark shadow-inner shadow-black ";
+  const unpressedStyle = commonStyle + " bg-tealBlue z-4 hover:bg-straw ";
+  const exButtonStyles = [
+    " rounded-l-3xl border-l-2 border-t ",
+    " border-t ",
+    " rounded-r-3xl border-r-2 border-t "
+  ];
+
+  const [viewSelected, setViewSelected] = useState(0);
+  const [buttonStyle, setButtonStyle] = useState([pressedStyle, unpressedStyle, unpressedStyle].map((s,i) => exButtonStyles[i] + s));
+
+  const onClick = (view) => {
+    setViewSelected(view);
+    setButtonStyle(buttonStyle.map(
+      (_,i) => ((view == i) ? pressedStyle : unpressedStyle) + (exButtonStyles[i])));
+  };
+
   //Create a rounded rectange with a border
   return (
     <>
       <div className="text-center text-l w-full">Select View</div>
       <div className="grid grid-cols-3 w-full rounded-md shadow-sm" role="group">
-        <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-l-3xl border-l-2 border-t border-black/50
-          shadow-inner disabled:shadow-black shadow-teal-100/60 disabled:border-gray-800
-        hover:text-white disabled:z-4 disabled:bg-gray-900 disabled:text-black 
-          dark:text-black dark:hover:text-white hover:bg-straw dark:disabled:bg-tealBlue-dark" onClick={btnClicked} disabled>
+        <button type="button" className={buttonStyle[0]} onClick={()=>onClick(0)}>
           Ratings & Oscars
         </button>
-        <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue border-t border-black/50 
-         shadow-inner disabled:shadow-black shadow-teal-100/60 disabled:border-gray-800
-        hover:text-white disabled:z-4 disabled:bg-gray-900 disabled:text-black 
-          dark:text-black dark:hover:text-white hover:bg-straw dark:disabled:bg-tealBlue-dark" onClick={btnClicked}>
+        <button type="button" className={buttonStyle[1]} onClick={()=>onClick(1)}>
           Movie Economy
         </button>
-        <button type="button" className="h-9 py-1 px-1 text-sm font-medium text-gray-900 bg-tealBlue rounded-r-3xl border-r-2 border-t border-black/50
-          shadow-inner disabled:shadow-black shadow-teal-100/60 disabled:border-gray-800
-        hover:text-white disabled:z-4 disabled:bg-gray-900 disabled:text-black 
-          dark:text-black dark:hover:text-white hover:bg-straw dark:disabled:bg-tealBlue-dark" onClick={btnClicked}>
+        <button type="button" className={buttonStyle[2]} onClick={()=>onClick(2)}>
           Cost vs Quality
         </button>
       </div>
