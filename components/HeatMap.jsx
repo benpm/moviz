@@ -39,12 +39,13 @@ export default function CHeatMap({ data }) {
     const [legendImage, setLegendImage] = useState("");
 
 
-    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
-        state.scales
+        state.scales,
+        state.viewMode,
     ]);
     let scales = null;
     var xAxisObj = null;
@@ -151,7 +152,7 @@ export default function CHeatMap({ data }) {
             .text(d => d)
             .attr("fill", "white")
 
-    }, [bounds, scales, yAxis, xAxis, data]);
+    }, [bounds, scales, yAxis, xAxis, data, viewMode]);
 
     return (
         <div id="heatmap" className="relative w-full h-full bg-slate-900" ref={target}>
