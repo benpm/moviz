@@ -15,7 +15,8 @@ const CLeftPanel = function({ }) {
 const CRightPanel = function ({ }) {
     const [viewMode, setViewMode] = useGlobalState(s => [s.viewMode, s.setViewMode]);
     //TODO:View specific stuff
-    //TODO:if economic metrics are rendered adjust for inflation switch
+    //TODO:if economic metrics are rendered adjust for inflation switch 
+        //that also should adjust the inflation for companion plot
     //TODO:if movie economy view a checkbox to display avg trend as a line
     //TODO:story telling mode buttons we can higligth the some interesting points in the data
 

@@ -5,6 +5,13 @@ import useSize from "../hooks/useSize";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 
+function clearPlot(svg)
+{
+    svg.select(".bars").selectAll("*").remove();
+    svg.select(".lines").selectAll("*").remove();
+    svg.select(".legend").selectAll("*").remove();
+}
+
 function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos) {
     //filter movies with oscar wins
     let oscarData = data.filter(d => d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0);
@@ -239,6 +246,89 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("stroke-width", 2) 
         .attr("stroke-linejoin", "round") 
         .attr("stroke-linecap", "round");
+
+    //selecte plot title
+    let title = svg.select(".plot-title");
+    //set title 
+    title.text(`Stacked Budget of Top ${TOP_N} Studios`)
+        .attr("x", bounds.innerWidth / 2 + margin.left)
+        .attr("y", margin.top + bounds.innerHeight * 0.06)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "1.2em")
+        .attr("font-weight", "bold")
+        .attr("fill", "white");
+
+    //create legend to show which color corresponds to which studio place it top left
+    let legend = svg.select(".legend")
+        .attr("transform", `translate(${margin.left + margin.left/3}, ${margin.top * 2})`);
+        //add transparent reectangle with rounded borders to make legend stand out
+    legend.append("rect")
+        .attr("x", -margin.left/10)
+        .attr("y", -margin.top/3)
+        .attr("width", 170)
+        .attr("height", 17 * 10.5)
+        .attr("fill", "white")
+        .attr("fill-opacity", 0.1)
+        .attr("stroke", "white")
+        .attr("stroke-width", 1)
+        .attr("stroke-opacity", 0.5)
+        .attr("rx", 5)
+        .attr("ry", 5);
+
+    //create legend items
+    let legendItems = legend.selectAll(".legend-item")
+        .data(allStudios)
+        .join("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${i * 10.8})`);
+    //create legend item rectangles 
+    legendItems.append("rect")
+        .attr("width", 6)
+        .attr("height", 6)
+        .attr("fill", (d) => colorScale(d));
+    //create legend item text
+    legendItems.append("text")
+        .attr("x", 10)
+        .attr("y", 6)
+        .attr("font-size", "0.7em")
+        .attr("fill", "white")
+        .text((d) => d);
+
+    //attach mouse listener to legend items make the non selected studios transparent
+    legendItems.on("mouseover", (e, d) => {
+        //make other legend items transparent
+        legendItems.filter((s) => s != d).attr("fill-opacity", 0.2);
+        //make affiliated area brighter
+        svg.select(".lines").selectAll("path")
+            .filter((s) => s.key == d )
+            .attr("fill", (d) => d3.color(colorScale(d.key)).brighter(1.5))
+    });
+    legendItems.on("mouseout", (e, d) => {
+        legendItems.attr("fill-opacity", 1);
+        //make affiliated area original color
+        svg.select(".lines").selectAll("path")
+            //reset the fill colors
+            .attr("fill", (d) => colorScale(d.key))
+
+    });
+    
+    //attach mousehover listener to stacked areas
+    svg.select(".lines").selectAll("path")
+        .on("mouseover", function (event, d) {
+            //make are more bright and set opacity of non-corresponding legend item to 0.2
+            d3.select(event.target).attr("fill", d3.color(colorScale(d.key)).brighter(1.5))
+            d3.selectAll(".legend-item").filter((e) => e != d.key).attr("opacity", 0.2);
+    })
+        .on("mouseout", function (event, d) {
+            //set area back to original color and set opacity of non-corresponding legend item to 1
+            d3.select(event.target).attr("fill", colorScale(d.key))
+            d3.selectAll(".legend-item").attr("opacity", 1);
+    });
+
+    svg.on("mousemove", (e, d) => {
+        //TODO: draw a vertical line
+
+    });
 }
 
 export default function CCompanionPlot({ data }) {
@@ -283,13 +373,16 @@ export default function CCompanionPlot({ data }) {
 
         switch (viewMode) {
             case "ratings_oscars":
-                //set group named "lines" empty
-                svg.select(".lines").selectAll("*").remove();
+                clearPlot(svg);
                 drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
                 break;
             case "movie_economy":
-                svg.select(".bars").selectAll("*").remove();
+                //svg.select(".bars").selectAll("*").remove();
+                clearPlot(svg);
                 drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+                break;
+            case "cost_quality":
+                clearPlot(svg);
                 break;
         }
 
@@ -311,6 +404,7 @@ export default function CCompanionPlot({ data }) {
                 </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
+                <g className="legend"></g>
             </svg>
         </div>
     );
