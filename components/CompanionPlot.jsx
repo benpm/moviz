@@ -238,7 +238,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("stroke-opacity", 1) 
         .attr("stroke-width", 2) 
         .attr("stroke-linejoin", "round") 
-        .attr("stroke-linecap", "round") 
+        .attr("stroke-linecap", "round");
 }
 
 export default function CCompanionPlot({ data }) {
