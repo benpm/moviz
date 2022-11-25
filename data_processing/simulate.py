@@ -23,24 +23,19 @@ import math
 from itertools import combinations
 
 class Scale:
-    def __init__(self, _range, domain, conv_range=None, conv_range_inv=None):
-        self.range = _range
-        self.range_extent = _range[1] - _range[0]
-        self.domain = domain
-        self.domain_extent = domain[1] - domain[0]
+    def __init__(self, _range, _domain, conv_range=lambda _:_, conv_domain=lambda _:_):
+        self.range = [conv_range(r) for r in _range]
+        self.range_extent = self.range[1] - self.range[0]
+        self.domain = _domain
+        self.domain_extent = self.domain[1] - self.domain[0]
         self.conv_range = conv_range
-        self.conv_range_inv = conv_range_inv
+        self.conv_domain = conv_domain
 
     def __call__(self, v):
-        if self.conv_range:
-            v = self.conv_range(v)
-        return ((v - self.range[0]) / self.range_extent) * self.domain_extent + self.domain[0]
+        return ((self.conv_range(v) - self.range[0]) / self.range_extent) * self.domain_extent + self.domain[0]
 
     def inv(self, v):
-        out = ((v - self.domain[0]) / self.domain_extent) * self.range_extent + self.range[0]
-        if self.conv_range:
-            return self.conv_range_inv(out)
-        return out
+        return ((v - self.domain[0]) / self.domain_extent) * self.range_extent + self.range[0]
 
 def extent(data: pd.DataFrame, field: str, conv: callable = lambda x: x):
     d = [conv(v) for v in data[field].to_numpy()]
@@ -49,7 +44,19 @@ def extent(data: pd.DataFrame, field: str, conv: callable = lambda x: x):
 # Number of zoom levels. Level 0 is deepest zoom
 ZOOM_LEVELS = 3
 SIM_BOUNDS = ((-1000, 1000), (-300, 300))
-AXES = ["released", "budget", "gross", "score", "audience_rating", "tomatometer_rating"]
+AXES = [
+    ["released", "score"],
+    ["released", "audience_rating"],
+    ["released", "tomatometer_rating"],
+    ["released", "budget"],
+    ["released", "gross"],
+    ["budget", "score"],
+    ["budget", "audience_rating"],
+    ["budget", "tomatometer_rating"],
+    ["gross", "score"],
+    ["gross", "audience_rating"],
+    ["gross", "tomatometer_rating"],
+]
 # Radius of deepest zoom level dots
 BASE_RADIUS = 4
 # Number of steps for simulations
@@ -171,19 +178,26 @@ def simulate(sim: tuple[pymunk.Space, list[Dot]], steps: int):
         for dot in dots:
             dot.pre_step()
         space.step(SIM_DT)
+    
+    max_x = max(dot.body.position.x for dot in dots)
+    min_x = min(dot.body.position.x for dot in dots)
+    max_y = max(dot.body.position.y for dot in dots)
+    min_y = min(dot.body.position.y for dot in dots)
+    print(f"Simulated {len(dots)} dots in {steps} steps bounds=({min_x:.2f}, {max_x:.2f}), ({min_y:.2f}, {max_y:.2f})")
 
 def main():
     parse_date = lambda x: datetime.strptime(x, "%B %d, %Y")
+    log_safe = lambda x: math.log10(x) if x != 0 else 0
 
     # Load movies.csv data from /public into a pandas DataFrame
     movies = pd.read_csv("../public/movies.csv")
 
     scales = {
-        "released": Scale(extent(movies, "released", parse_date), SIM_BOUNDS[0], conv_range=parse_date, conv_range_inv=lambda x: x.strftime("%B %d, %Y")),
-        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[0]),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[0]),
-        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[1]),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[1]),
+        "released": Scale(extent(movies, "released"), SIM_BOUNDS[0], conv_range=parse_date, conv_domain=lambda x: x.strftime("%B %d, %Y")),
+        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[0], conv_range=log_safe),
+        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[0], conv_range=log_safe),
+        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[1], conv_range=log_safe),
+        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[1], conv_range=log_safe),
         "score": Scale((0, 10), SIM_BOUNDS[1]),
         "nominations": Scale(extent(movies, "nominations"), SIM_BOUNDS[1]),
         "tomatometer_rating": Scale((0, 100), SIM_BOUNDS[1]),
@@ -197,7 +211,7 @@ def main():
     space = pymunk.Space()
     space.gravity = 0, 0
 
-    for x_axis, y_axis in combinations(AXES, 2):
+    for x_axis, y_axis in AXES:
         print(f"\nsimulating on {x_axis} / {y_axis}")
 
         # Initialize zoom level 0 space

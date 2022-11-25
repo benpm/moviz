@@ -18,7 +18,7 @@ const OSCAR_COLORS = {
 
 export default function CCollapsedScatterplot({movieData}) {
     const [data, setData] = useState(null);
-    const margin = {top: 20, right: 20, bottom: 20, left: 30};
+    const margin = {top: 20, right: 20, bottom: 20, left: 50};
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
@@ -33,10 +33,6 @@ export default function CCollapsedScatterplot({movieData}) {
         state.viewMode
     ]);
     let scales = null;
-    // Valid X axis labels
-    // const xAxes = ["released", "budget", "gross"];
-    // Valid Y axis labels
-    // const yAxes = ["score", "audience_rating", "tomatometer_rating"];
 
     const axisTitles = {
         "released": "Release Date",
@@ -78,10 +74,10 @@ export default function CCollapsedScatterplot({movieData}) {
                 setYAxis("budget");
                 break;
             case "cost_quality":
-                setXAxisList(["score", "audience_rating", "tomatometer_rating"]);
-                setXAxis("score");
-                setYAxisList(["budget", "gross"]);
-                setYAxis("budget");
+                setXAxisList(["budget", "gross"]);
+                setXAxis("budget");
+                setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
+                setYAxis("score");
                 break;
         }
     }, [viewMode]);
@@ -135,7 +131,7 @@ export default function CCollapsedScatterplot({movieData}) {
         if (!gScales || !data || !movieData) {
             return;
         }
-        const dataSubset = data.get(intZoomLevel);
+        let dataSubset = data.get(intZoomLevel);
         let vxAxis, vyAxis, vw, vh;
         if (dataSubset.has(xAxis) && dataSubset.get(xAxis).has(yAxis)) {
             [vxAxis, vyAxis, vw, vh] = [xAxis, yAxis, simBounds.x, simBounds.y];
@@ -159,8 +155,8 @@ export default function CCollapsedScatterplot({movieData}) {
             .classed("plot-axis", true);
 
         // Inverse scales that transform simulation coordinates to plot coordinates
-        const iXScale = xScale.copy().domain(vw);
-        const iYScale = yScale.copy().domain(vh);
+        const iXScale = d3.scaleLinear().domain(vw).range(xScale.range());
+        const iYScale = d3.scaleLinear().domain(vh).range(yScale.range());
 
         // Draw points
         svg.select(".plot-area")
