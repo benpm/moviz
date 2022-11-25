@@ -10,6 +10,11 @@ function clearPlot(svg)
     svg.select(".bars").selectAll("*").remove();
     svg.select(".lines").selectAll("*").remove();
     svg.select(".legend").selectAll("*").remove();
+    svg.select(".mouse-line-group").selectAll("*").remove();
+    //disable svg event listeners
+    svg.on("mousemove", null);
+    svg.on("mouseout", null);
+    svg.on("mouseover", null);
 }
 
 function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos) {
@@ -138,7 +143,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         .attr("fill", "white");
 }
 
-function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos) {
+function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode) {
     //sum budget of the movies and group them by studio for each data month
     let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company);
     studioBudgetByYear = studioBudgetByYear.map((r) => {
@@ -326,8 +331,61 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     });
 
     svg.on("mousemove", (e, d) => {
-        //TODO: draw a vertical line
+        //get mouse position
+        let [mx, my] = d3.pointer(e);
+        //draw line on mouse x position verrtical line
+        d3.select(".mouse-line-group")
+            .selectAll("line")
+            .data([mx])
+            .join("line")
+            .attr("x1", d=> d-5)
+            .attr("x2", d=>d-5)
+            .attr("y1", margin.top)
+            .attr("y2", margin.top + bounds.innerHeight)
+            .attr("stroke", "white")
+            .attr("stroke-width", 1)
+            //.attr("stroke-opacity", 1)
+            .attr("stroke-dasharray", "5,2");
+            //get year of mouse position
+        let year = xScale.invert(mx);
+        //round year to nearest integer
+        year = Math.round(year);
+        //get year index in data
+        //TODO:render a text that shows the year and the budgets of the studios
+        let text = svg.select(".mouse-text-group")
+            .selectAll("text")
+            .data([year])
+            .join("text")
+            .attr("x", mx)
+            .attr("y", margin.top + bounds.innerHeight * 0.06)
+            .attr("font-size", "0.8em")
+            .attr("fill", "white")
+            .attr("text-anchor", "middle")
+            .text((d) => {
+                let text = d;
+                //get data for year
+                let data = allData.filter((e) => e.year == d);
+                //add budget for each studio
+                data.forEach((e) => {
+                    text += `\n${e.studio}: ${e.budget}`;
+                })
+                return text;
+            });
+        //TODO: make the legend disappear
+    });
 
+    svg.on("mouseover", (e, d) => {
+        //get mouse position
+        let [mx, my] = d3.pointer(e);
+        //draw line on mouse x position verrtical line
+        d3.select(".mouse-line-group")
+            .selectAll("line")
+            .attr("stroke-opacity", 1);
+    });
+    svg.on("mouseout", (e, d) => {
+        d3.select(".mouse-line-group")
+            .selectAll("line")
+            .attr("stroke-opacity", 0);
     });
 }
 
@@ -379,7 +437,7 @@ export default function CCompanionPlot({ data }) {
             case "movie_economy":
                 //svg.select(".bars").selectAll("*").remove();
                 clearPlot(svg);
-                drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+                drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode);
                 break;
             case "cost_quality":
                 clearPlot(svg);
@@ -401,6 +459,7 @@ export default function CCompanionPlot({ data }) {
                     <text className="plot-title" />
                     <g className="bars"></g>
                     <g className="lines"></g>
+                    <g className="mouse-line-group"></g>
                 </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
