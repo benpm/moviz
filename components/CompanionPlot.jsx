@@ -364,7 +364,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .text((d) => {
                 let text = d;
                 //get data for year
-                let data = allData.filter((e) => e.year == d);
+                let data = studioBudgetByYear.filter((e) => e.year == d);
                 //add budget for each studio
                 data.forEach((e) => {
                     text += `\n${e.studio}: ${e.budget}`;
