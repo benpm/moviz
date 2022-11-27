@@ -22,6 +22,7 @@ export default function CCollapsedScatterplot({movieData}) {
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
+    const brushContainerRef = useRef(null);
     let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode, brushMode] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -79,6 +80,7 @@ export default function CCollapsedScatterplot({movieData}) {
                 setYAxis("score");
                 break;
         }
+        clearBrush();
     }, [viewMode]);
 
     // Load data on first render 
@@ -123,17 +125,58 @@ export default function CCollapsedScatterplot({movieData}) {
                 .call(yAxisObj.scale(transform.rescaleY(scales.f[yAxis])));
         }
     };
+
+    // Brush behavior object
+    const [brushObj, setBrushObj] = useState({brush: null});
+    // Current brush selection in data coordinates
+    const [brushSel, setBrushSel] = useState(null);
+
+    // Clear brushing
+    const clearBrush = () => {
+        if (brushObj.brush && brushSel) {
+            d3.select(brushContainerRef.current).call(brushObj.brush.clear);
+            d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+            setBrushSel(null);
+            console.log("Clearing brush");
+        }
+    };
+
+    // Re-applies brush to plot
+    const reBrush = () => {
+        if (brushObj.brush) {
+            d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+            const container = d3.select(brushContainerRef.current);
+            const brushSelection = d3.brushSelection(container.node());
+            if (brushSelection) {
+                container.call(brushObj.brush).call(brushObj.brush.move, brushSelection);
+            }
+        }
+    };
+
+    // Re-brush on change in int zoom level
+    // useEffect(reBrush, [intZoomLevel]);
+    useEffect(clearBrush, [plotTransform]);
+
+    // Transform existing brush selection
+    //TODO: fix
+    // useEffect(() => {
+    //     if (brushSel && brushObj.brush) {
+    //         const container = d3.select(brushContainerRef.current);
+    //         // Transform stored data coords to local plot coords and change brush selection to match
+    //         const selection = plotTransform.apply([scales.iXScale(brushSel[0]), scales.iYScale(brushSel[1])]);
+    //         console.log("brushSel", brushSel, "transformed selection", selection)
+    //         container.call(brushObj.brush).call(brushObj.brush.move, plotTransform.apply(selection));
+    //     }
+    // }, [plotTransform, scales]);
     
     // Brush interaction handler - sets which circles are excluded
     const onBrush = (e) => {
-        if (brushMode && e.selection && scales) {
-            // local svg coords -> transformed svg coords -> data coords
-            const [selx0, selx1] = [
-                scales.iXScale.invert(plotTransform.invertX(e.selection[0]- margin.left)),
-                scales.iXScale.invert(plotTransform.invertX(e.selection[1]- margin.left))];
-            if (selx0 == selx1) {
-                ///TODO: Clear selection
-            } else {
+        if (scales) {
+            if (e.selection && e.selection[0] != e.selection[1]) {
+                // local plot coords -> transformed plot coords -> data coords
+                const [selx0, selx1] = [
+                    scales.iXScale.invert(plotTransform.invertX(e.selection[0])),
+                    scales.iXScale.invert(plotTransform.invertX(e.selection[1]))];
                 const dotSel = d3.select(ref.current).selectAll(".dot").classed("excluded", true);
                 const circleArray = dotSel.nodes();
                 quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
@@ -146,6 +189,14 @@ export default function CCollapsedScatterplot({movieData}) {
                     }
                     return x0 >= selx1 || x1 < selx0;
                 });
+                // Only set the brush selection in brush mode
+                if (brushMode) {
+                    setBrushSel([selx0, selx1]);
+                }
+            } else {
+                d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                setBrushSel(null);
+                console.log("onBrush clear")
             }
         }
     };
@@ -167,15 +218,22 @@ export default function CCollapsedScatterplot({movieData}) {
             d3.select(ref.current).on(".zoom", null);
 
             // Set up brushing
-            const brush = d3.brushX()
-                .extent([[0, 0], [bounds.innerWidth, bounds.innerHeight]])
-                .on("start brush end", onBrush);
-            
-            d3.select("#scatterplot #brush-container")
-                .call(brush).call(brush.move, [0, 0]);
+            const extent = [[0, 0], [bounds.innerWidth, bounds.height]];
+            if (brushObj.brush) {
+                // Set extent of existing brush
+                brushObj.brush.extent(extent);
+                d3.select(brushContainerRef.current).call(brushObj.brush);
+            } else {
+                // Initialize brush
+                const brush = d3.brushX().on("start brush end", onBrush).extent(extent);
+                d3.select(brushContainerRef.current)
+                    .call(brush).call(brush.move, [0, 0]);
+                setBrushObj({brush: brush});
+            }
         } else if (zoomObj.zoom) {
-            d3.select(ref.current).on(".zoom", null);
+            d3.select(brushContainerRef.current).on(".brush", null);
             d3.select(ref.current).call(zoomObj.zoom);
+            clearBrush(); //TODO: remove if fix brush transformation
         }
     }, [brushMode]);
     
@@ -209,7 +267,7 @@ export default function CCollapsedScatterplot({movieData}) {
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
             .classed("plot-axis", true);
 
-        // Inverse scales that transform simulation coordinates to plot coordinates
+        // Inverse scales that transforms data coords -> plot coordinates
         scales.iXScale = d3.scaleLinear().domain(vw).range(xScale.range());
         scales.iYScale = d3.scaleLinear().domain(vh).range(yScale.range());
 
@@ -304,9 +362,11 @@ export default function CCollapsedScatterplot({movieData}) {
                         <rect fill="white" x={0} y={0} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
-                {brushMode && <g id="brush-container"></g>}
+                <g ref={brushContainerRef}
+                    // transform={`translate(${margin.left}, 0)`}
+                    className={brushMode ? "" : "opacity-40 pointer-events-none"}></g>
                 <g className="plot-area-container" style={{clipPath: "url(#plot-area-clip)"}}
-                    transform={`translate(${margin.left},${margin.right})`}>
+                    transform={`translate(${margin.left},${margin.top})`}>
                     <g className="plot-area"></g>
                 </g>
                 <g className="x-axis"></g>
