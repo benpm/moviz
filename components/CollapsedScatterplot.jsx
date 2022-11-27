@@ -127,9 +127,10 @@ export default function CCollapsedScatterplot({movieData}) {
     // Brush interaction handler - sets which circles are excluded
     const onBrush = (e) => {
         if (brushMode && e.selection && scales) {
+            // local svg coords -> transformed svg coords -> data coords
             const [selx0, selx1] = [
-                scales.iXScale.invert(e.selection[0]),
-                scales.iXScale.invert(e.selection[1])];
+                scales.iXScale.invert(plotTransform.invertX(e.selection[0]- margin.left)),
+                scales.iXScale.invert(plotTransform.invertX(e.selection[1]- margin.left))];
             if (selx0 == selx1) {
                 ///TODO: Clear selection
             } else {
@@ -303,9 +304,9 @@ export default function CCollapsedScatterplot({movieData}) {
                         <rect fill="white" x={0} y={0} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
+                {brushMode && <g id="brush-container"></g>}
                 <g className="plot-area-container" style={{clipPath: "url(#plot-area-clip)"}}
                     transform={`translate(${margin.left},${margin.right})`}>
-                    {brushMode && <g id="brush-container"></g>}
                     <g className="plot-area"></g>
                 </g>
                 <g className="x-axis"></g>
