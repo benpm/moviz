@@ -2,3 +2,4 @@ tables
 pymunk
 numpy
 pandas
+thefuzz

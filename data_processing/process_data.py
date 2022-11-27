@@ -1,6 +1,10 @@
 import pandas as pd
 import re
 from datetime import datetime
+from thefuzz import fuzz
+from itertools import combinations, permutations
+from collections import defaultdict
+from rich.pretty import pprint
 
 movies = pd.read_csv("raw_data/movies.csv")
 scores = pd.read_csv("raw_data/rotten_tomatoes_movies.csv")
@@ -60,6 +64,25 @@ movies["released"] = movies["released"].apply(
 # Modify all release dates in the format of "Month YYYY" to "Month 1, YYYY"
 movies["released"] = movies["released"].apply(
     lambda x: re.sub(r"(\w+) (\d{4})", r"\1 01, \2", x) if re.match(r"^\w+ \d{4}", x) else x)
+
+# Get list of company values
+companies = sorted(movies["company"].unique().tolist())
+
+# Create mapping of company names to similar company names
+company_map = {
+    "Walt Disney Animation Studios": "Walt Disney Pictures",
+    "Fox 2000 Pictures": "Twentieth Century Fox",
+}
+for a, b in combinations(companies, 2):
+    if fuzz.token_set_ratio(a, b) > 95:
+        if len(a) > len(b):
+            if a not in company_map:
+                company_map[a] = b
+        else:
+            if b not in company_map:
+                company_map[b] = a
+pprint(company_map)
+movies["company"] = movies["company"].apply(lambda x: company_map[x] if x in company_map else x)
 
 # Save to csv
 OUT_PATH = "../public/movies.csv"
