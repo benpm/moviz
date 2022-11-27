@@ -13,3 +13,7 @@
     stroke-width: 1px;
 }
 .fa { display:inline; }
+
+body {
+    background-color: black;
+}

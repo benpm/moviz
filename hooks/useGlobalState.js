@@ -10,6 +10,7 @@ const useGlobalState = create((set) => ({
     viewMode: "ratings_oscars",
 
     brushMode: false,
+    brushFilter: {},
 
     //State of the scatterplot
     scatterXAxis: "released",
@@ -25,6 +26,7 @@ const useGlobalState = create((set) => ({
     setScales: x => set({ scales: x }),
     setViewMode: x => set({ viewMode: x }),
     setBrushMode: x => set({ brushMode: x }),
+    setBrushFilter: x => set({ brushFilter: x }),
 }));
 
 export default useGlobalState;

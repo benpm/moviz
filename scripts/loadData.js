@@ -31,6 +31,7 @@ function loadScatterPlotData() {
             d.y = parseFloat(d.y);
             d.r = parseFloat(d.r);
             d.movies = d.movies.split(" ").map(i => parseInt(i));
+            d.idx = parseInt(d.idx);
         });
         const groupedData = d3.group(data, d => d.lvl, d => d.x_axis, d => d.y_axis);
         return groupedData;

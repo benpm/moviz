@@ -11,6 +11,7 @@ The rows of the scatterplot.csv file are circles. The columns are:
     - y: y position of the circle
     - r: radius of the circle
     - movies: list of indices into movies.csv contained in the circle, separated by spaces
+    - idx: zero-based index of the circle in its level + axes group
     
 """
 
@@ -58,11 +59,11 @@ AXES = [
     ["gross", "tomatometer_rating"],
 ]
 # Radius of deepest zoom level dots
-BASE_RADIUS = 4
+BASE_RADIUS = 3
 # Number of steps for simulations
 SIM_STEPS = 50
 # Delta time per simulation step
-SIM_DT = 0.1
+SIM_DT = 0.01
 # Distance past dot radius to consider for grouping
 GROUPING_BIAS = 0.5
 # Multiplier for force applied to dots
@@ -70,11 +71,11 @@ FORCE_MULTIPLIER = 0.1
 # Max group radius to create a new coalesced dot for (multiplied by level)
 MAX_GROUP_RADIUS = BASE_RADIUS * 1.25
 # Absolute max radius
-MAX_RADIUS = BASE_RADIUS * 8
+MAX_RADIUS = BASE_RADIUS * 12
 # Number of threads to create simulations with
 SIM_THREADS = 8
 # Minimum fullness for a group to be considered for coalescing
-MIN_FULLNESS = 0.50
+MIN_FULLNESS = 0.65
 
 class Dot(pymunk.Circle):
     def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
@@ -242,13 +243,14 @@ def main():
         for lvl, (space, dots) in enumerate(lvls):
             df = pd.concat([df, pd.DataFrame([
                 [lvl, x_axis, y_axis, dot.body.position.x, dot.body.position.y, dot.radius,
-                    " ".join([str(i) for i in list(dot.data_idx)])]
-                for dot in dots
-            ], columns=["lvl", "x_axis", "y_axis", "x", "y", "r", "movies"])])
+                    " ".join([str(i) for i in list(dot.data_idx)]), idx]
+                for idx, dot in enumerate(dots)
+            ], columns=["lvl", "x_axis", "y_axis", "x", "y", "r", "movies", "idx"])])
         print(f"new dataframe length is {len(df)}")
                     
     # Save the generated DataFrame to the scatterplot.csv file
     print("saving dataframe to file...")
+    df["idx"] = df["idx"].astype(int)
     df.to_csv("../public/scatterplot.csv", index=False, float_format="%.2f")
 
 # Just load public/scatterplot.csv and generate scatterplot.h5
