@@ -1,15 +1,18 @@
 import { useEffect } from "react";
 import { useState } from "react";
 import useGlobalState from "../hooks/useGlobalState";
+import CToggle from "./Toggle";
 
 const CLeftPanel = function({ }) {
-    const [viewMode, setViewMode] = useGlobalState(s => [s.viewMode, s.setViewMode]);
+    const [brushMode, setBrushMode] = useGlobalState(s => [s.brushMode, s.setBrushMode]);
     //TODO:global controls related stuff
     //TODO:A switch to enable brushing mode instead of panning
     //TODO:option to adjust bubble radius scale maybe ?
     //TODO:searchbar to filter movies
 
-    return (<p>Left Panel</p>);
+    return (
+        <CToggle handler={v => setBrushMode(v)} label="Brush Mode"></CToggle>
+    );
 }
 
 const CRightPanel = function ({ }) {

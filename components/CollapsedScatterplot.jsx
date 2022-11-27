@@ -22,7 +22,7 @@ export default function CCollapsedScatterplot({movieData}) {
     const [bounds, setBounds] = useState({width: 800, height: 800, innerWidth: 800, innerHeight: 800});
     const target = useRef(null);
     const size = useSize(target);
-    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode, brushMode] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
@@ -30,7 +30,8 @@ export default function CCollapsedScatterplot({movieData}) {
         state.setScatterXAxis,
         state.setScatterYAxis,
         state.scales,
-        state.viewMode
+        state.viewMode,
+        state.brushMode
     ]);
     let scales = null;
 
@@ -57,6 +58,7 @@ export default function CCollapsedScatterplot({movieData}) {
     const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
     const [plotTransform, setPlotTransform] = useState(initTransform);
     const [intZoomLevel, setIntZoomLevel] = useState(maxZoomLevel);
+    const [zoomObj, setZoomObj] = useState({zoom: null});
     const [initialized, setInitialized] = useState(false);
 
     useEffect(() => {
@@ -97,7 +99,7 @@ export default function CCollapsedScatterplot({movieData}) {
     }, 150, [plotTransform]);
 
     const onZoom = ({transform}) => {
-        if (xAxisObj && yAxisObj) {
+        if (!brushMode && xAxisObj && yAxisObj) {
             setPlotTransform(transform);
             const plotArea = d3.select(ref.current).select(".plot-area");
             plotArea.attr("transform", transform);
@@ -114,6 +116,17 @@ export default function CCollapsedScatterplot({movieData}) {
         .domain([0.5, zoomBounds[1] * 0.5])
         .rangeRound([maxZoomLevel, 0])
         .clamp(true);
+    
+    const onBrush = (e) => {
+        if (brushMode && e.selection) {
+            const [selx0, selx1] = e.selection;
+            if (selx0 == selx1) {
+                
+            } else {
+                console.log(selx0, selx1)
+            }
+        }
+    };
 
     // Set bounds on resize
     useEffect(() => {
@@ -125,6 +138,24 @@ export default function CCollapsedScatterplot({movieData}) {
             innerHeight: h - margin.top - margin.bottom
         });
     }, [size]);
+
+    // Brushing enable / disable handler
+    useEffect(() => {
+        if (brushMode) {
+            d3.select(ref.current).on(".zoom", null);
+
+            // Set up brushing
+            const brush = d3.brushX()
+                .extent([[0, 0], [bounds.innerWidth, bounds.innerHeight]])
+                .on("start brush end", onBrush);
+            
+            d3.select(".plot-area-container #brush-container")
+                .call(brush).call(brush.move, [0, 0]);
+        } else if (zoomObj.zoom) {
+            d3.select(ref.current).on(".zoom", null);
+            d3.select(ref.current).call(zoomObj.zoom);
+        }
+    }, [brushMode]);
     
     // Render chart function
     const ref = useD3(svg => {
@@ -168,7 +199,7 @@ export default function CCollapsedScatterplot({movieData}) {
             .attr("r", d => Math.max(2, d.r * 0.85))
             .classed("dot", true)
             .attr("fill", d => {
-                if (d.movies.length == 1) {
+                if (d.movies.length == 1 && movieData[d.movies[0]]) {
                     return OSCAR_COLORS[movieData[d.movies[0]].oscar];
                 } else {
                     return OSCAR_COLORS["none"];
@@ -192,15 +223,19 @@ export default function CCollapsedScatterplot({movieData}) {
             .on("zoom", onZoom)
             .scaleExtent(zoomBounds)
             .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
-        svg.call(zoom);
+        
+        if (!brushMode) {
+            svg.call(zoom);
+        }
 
         // Set zoom
         if (!initialized) {
             svg.call(zoom.transform, initTransform);
             onZoom({transform: initTransform});
+            setZoomObj({zoom: zoom});
+
+            setInitialized(true);
         }
-        
-        setInitialized(true);
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel]);
 
     return (
@@ -228,6 +263,7 @@ export default function CCollapsedScatterplot({movieData}) {
                 </defs>
                 <g className="plot-area-container" style={{clipPath: "url(#plot-area-clip)"}}
                     transform={`translate(${margin.left},${margin.right})`}>
+                    {brushMode && <g id="brush-container"></g>}
                     <g className="plot-area"></g>
                 </g>
                 <g className="x-axis"></g>
