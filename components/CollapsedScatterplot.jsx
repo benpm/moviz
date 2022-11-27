@@ -218,20 +218,13 @@ export default function CCollapsedScatterplot({movieData}) {
             d3.select(ref.current).on(".zoom", null);
 
             // Set up brushing
-            const extent = [[0, 0], [bounds.innerWidth, bounds.height]];
-            if (brushObj.brush) {
-                // Set extent of existing brush
-                brushObj.brush.extent(extent);
-                d3.select(brushContainerRef.current).call(brushObj.brush);
-            } else {
-                // Initialize brush
-                const brush = d3.brushX().on("start brush end", onBrush).extent(extent);
-                d3.select(brushContainerRef.current)
-                    .call(brush).call(brush.move, [0, 0]);
-                setBrushObj({brush: brush});
-            }
+            const brush = d3.brushX()
+                .on("start brush end", onBrush)
+                .extent([[0, 0], [bounds.innerWidth, bounds.height]]);
+            d3.select(brushContainerRef.current)
+                .call(brush).call(brush.move, [0, 0]);
+            setBrushObj({brush: brush});
         } else if (zoomObj.zoom) {
-            d3.select(brushContainerRef.current).on(".brush", null);
             d3.select(ref.current).call(zoomObj.zoom);
             clearBrush(); //TODO: remove if fix brush transformation
         }
@@ -322,9 +315,7 @@ export default function CCollapsedScatterplot({movieData}) {
                     qtrees[zoomLvl][xAxis] = {};
                     for (let [yAxis, dots] of yAxisMap.entries()) {
                         qtrees[zoomLvl][xAxis][yAxis] = d3.quadtree()
-                            .x(d => d.x)
-                            .y(d => d.y)
-                            .addAll(dots);
+                            .x(d => d.x).y(d => d.y).addAll(dots);
                     }
                 }
             }
@@ -362,9 +353,7 @@ export default function CCollapsedScatterplot({movieData}) {
                         <rect fill="white" x={0} y={0} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
-                <g ref={brushContainerRef}
-                    // transform={`translate(${margin.left}, 0)`}
-                    className={brushMode ? "" : "opacity-40 pointer-events-none"}></g>
+                {brushMode && <g ref={brushContainerRef}></g>}
                 <g className="plot-area-container" style={{clipPath: "url(#plot-area-clip)"}}
                     transform={`translate(${margin.left},${margin.top})`}>
                     <g className="plot-area"></g>
