@@ -96,7 +96,7 @@ function HeatmapToolTip(d) {
     //find average audience
     const avgAudience = d3.mean(d, (d) => d.audience_rating);
     return (
-        <div className="tooltip bg-dark">
+        <div className="tooltip bg-navbar">
             <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.length}</span></div>
             <div className="tooltip-body">
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
