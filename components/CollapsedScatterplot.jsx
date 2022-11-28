@@ -48,8 +48,7 @@ export default function CCollapsedScatterplot({movieData}) {
     const [xAxisList, setXAxisList] = useState([]);
     const [yAxisList, setYAxisList] = useState([]);
     
-    var xAxisObj = null;
-    var yAxisObj = null;
+    const [axes, setAxes] = useState({x: null, y: null});
 
     // Make sure these parameters match the parameters in data_processing/simulate.py
     const simBounds = {x:[-1000, 1000], y:[-300, 300]};
@@ -119,18 +118,31 @@ export default function CCollapsedScatterplot({movieData}) {
 
     // Handler for pan / zoom
     const onZoom = ({transform}) => {
-        if (!brushMode && xAxisObj && yAxisObj && scales) {
+        if (!brushMode && axes.x && axes.y && scales) {
             setPlotTransform(transform);
             const plotArea = d3.select(ref.current).select(".plot-area");
             plotArea.attr("transform", transform);
     
             // Update axes
             d3.select(ref.current).select(".x-axis")
-                .call(xAxisObj.scale(transform.rescaleX(scales.f[xAxis])));
+                .call(axes.x.scale(transform.rescaleX(scales.f[xAxis])));
             d3.select(ref.current).select(".y-axis")
-                .call(yAxisObj.scale(transform.rescaleY(scales.f[yAxis])));
+                .call(axes.y.scale(transform.rescaleY(scales.f[yAxis])));
+        } else {
+            console.warn(`onZoom() ignored: brushMode=${brushMode}, axes.x=${axes.x}, axes.y=${axes.y}, scales=${scales}`);
         }
     };
+    useEffect(() => {
+        if (zoomObj.zoom && axes.x && axes.y && scales) {
+            zoomObj.zoom
+                .on("zoom", onZoom)
+                .scaleExtent(zoomBounds)
+                .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
+            d3.select(ref.current)
+                .call(zoomObj.zoom)
+                .call(zoomObj.zoom.transform, plotTransform);
+        }
+    }, [axes, scales, brushMode, zoomObj, bounds]);
 
     // Brush interaction handler - sets which circles are excluded
     const onXBrush = (e) => {
@@ -140,6 +152,7 @@ export default function CCollapsedScatterplot({movieData}) {
                     plotTransform.k,
                     plotTransform.x + margin.left,
                     plotTransform.y + margin.top);
+                console.log("onXBrush");
                 // local plot coords -> transformed plot coords -> data coords
                 const [selx0, selx1] = [
                     scales.iXScale.invert(t.invertX(e.selection[0])),
@@ -154,14 +167,8 @@ export default function CCollapsedScatterplot({movieData}) {
                     return x0 >= selx1 || x1 < selx0;
                 });
                 d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
-                // Only set the brush selection in brush mode
-                if (brushMode) {
-                    setBrushSel([selx0, selx1]);
-                    console.log("brush sel", brushSel);
-                }
             } else {
                 d3.select(ref.current).selectAll(".dot").classed("excluded", false);
-                setBrushSel(null);
             }
         }
     };
@@ -179,7 +186,6 @@ export default function CCollapsedScatterplot({movieData}) {
                 const [sely1, sely0] = [
                     scales.iYScale.invert(t.invertY(e.selection[0][1])),
                     scales.iYScale.invert(t.invertY(e.selection[1][1]))];
-                console.log([selx0, selx1], [sely0, sely1])
                 // Add all dots inside the rectangular region to the included set
                 let included = new Set();
                 quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
@@ -192,21 +198,14 @@ export default function CCollapsedScatterplot({movieData}) {
                     return x0 >= selx1 || x1 < selx0 || y0 >= sely1 || y1 < sely0;
                 });
                 d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
-                // Only set the brush selection in brush mode
-                if (brushMode) {
-                    setBrushSel([[selx0, sely0], [selx1, sely1]]);
-                }
             } else {
                 d3.select(ref.current).selectAll(".dot").classed("excluded", false);
-                setBrushSel(null);
             }
         }
     };
 
     // Brush behavior object
     const [brushObj, setBrushObj] = useState({brush: null});
-    // Current brush selection in data coordinates
-    const [brushSel, setBrushSel] = useState(null);
     // Current handler for brush selection
     const [brushHandler, setBrushHandler] = useState({handler: null, gen: null});
 
@@ -215,19 +214,6 @@ export default function CCollapsedScatterplot({movieData}) {
         if (brushObj.brush) {
             d3.select(brushContainerRef.current).call(brushObj.brush.clear);
             d3.select(ref.current).selectAll(".dot").classed("excluded", false);
-            setBrushSel(null);
-        }
-    };
-
-    // Re-applies brush to plot
-    const reBrush = () => {
-        if (brushObj.brush) {
-            d3.select(ref.current).selectAll(".dot").classed("excluded", false);
-            const container = d3.select(brushContainerRef.current);
-            const brushSelection = d3.brushSelection(container.node());
-            if (brushSelection) {
-                container.call(brushObj.brush).call(brushObj.brush.move, brushSelection);
-            }
         }
     };
 
@@ -245,9 +231,18 @@ export default function CCollapsedScatterplot({movieData}) {
         });
     }, [size]);
 
+    // Associate brush handler
+    useEffect(() => {
+        if (scales && nodeMap && brushObj.brush && brushHandler.handler) {
+            brushObj.brush
+                .on("start brush end", brushHandler.handler)
+                .extent([[0, 0], [bounds.width, bounds.height]]);
+        }
+    }, [scales, nodeMap, plotTransform, brushMode, brushHandler, brushObj, bounds]);
+
     // Brushing enable / disable handler
     useEffect(() => {
-        if (!scales || !brushHandler.handler || !nodeMap) return;
+        if (!scales || !brushHandler.handler) return;
         if (brushMode) {
             d3.select(ref.current).on(".zoom", null);
 
@@ -258,15 +253,14 @@ export default function CCollapsedScatterplot({movieData}) {
             d3.select(brushContainerRef.current)
                 .call(brush).call(brush.clear);
             setBrushObj({brush: brush});
-        } else if (zoomObj.zoom) {
-            d3.select(ref.current).call(zoomObj.zoom);
+        } else {
             clearBrush(); //TODO: remove if fix brush transformation
         }
-    }, [brushMode, brushHandler, scales, nodeMap, zoomObj]);
+    }, [brushMode, brushHandler, scales]);
     
     // Render chart function
     const ref = useD3(svg => {
-        if (!gScales || !data || !movieData) {
+        if (!gScales || !data || movieData.length == 0) {
             return;
         }
 
@@ -285,9 +279,10 @@ export default function CCollapsedScatterplot({movieData}) {
         // Initialize zoom and scales
         const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
-        xAxisObj = d3.axisBottom(xScale).tickFormat(
-            intZoomLevel==2 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
-        yAxisObj = d3.axisLeft(yScale).tickFormat(_scales.format[yAxis]);
+        const xAxisObj = d3.axisBottom(xScale).tickFormat(
+            intZoomLevel != 0 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
+        const yAxisObj = d3.axisLeft(yScale).tickFormat(_scales.format[yAxis]);
+        setAxes({x: xAxisObj, y: yAxisObj});
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
             .classed("plot-axis", true).transition().duration(1000);
@@ -311,7 +306,6 @@ export default function CCollapsedScatterplot({movieData}) {
             .classed("dot", true)
             .attr("fill", d => {
                 if (d.movies.length == 1) {
-                    console.assert(movieData[d.movies[0]], d);
                     return OSCAR_COLORS[movieData[d.movies[0]].oscar];
                 } else {
                     return OSCAR_COLORS["none"];
@@ -337,20 +331,8 @@ export default function CCollapsedScatterplot({movieData}) {
         if (_nodeMap.size > 0) {
             setNodeMap(_nodeMap);
         }
-        
-        
-        // Set zoom matching new plot boundaries
-        const zoom = (zoomObj.zoom || d3.zoom()).on("zoom", onZoom).scaleExtent(zoomBounds)
-            .translateExtent([[-100, -100], [bounds.innerWidth + 100, bounds.innerHeight + 100]]);
-        if (!brushMode) {
-            svg.call(zoom);
-        }
 
         if (!initialized) {
-            // Set initial zoom level
-            svg.call(zoom.transform, initTransform);
-            onZoom({transform: initTransform});
-
             // Initialize quadtree for every zoom level and every pair of axes
             let qtrees = {};
             for (let [zoomLvl, xAxisMap] of data.entries()) {
@@ -364,10 +346,9 @@ export default function CCollapsedScatterplot({movieData}) {
                 }
             }
             setQuadtrees(qtrees);
-
             setInitialized(true);
+            setZoomObj({zoom: d3.zoom()});
         }
-        setZoomObj({zoom: zoom});
         setScales(_scales);
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel]);
 
