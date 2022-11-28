@@ -5,8 +5,7 @@ import useSize from "../hooks/useSize";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 
-function clearPlot(svg)
-{
+function clearPlot(svg) {
     svg.select(".bars").selectAll("*").remove();
     svg.select(".lines").selectAll("*").remove();
     svg.select(".legend").selectAll("*").remove();
@@ -68,12 +67,14 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
     const yScale = countScale.rangeRound([bounds.innerHeight, 0]).nice();
     xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d, i) => i % 5 == 0));
     yAxisObj = d3.axisLeft(yScale);
-    svg.select(".x-axis").call(xAxisObj)
-        .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-        .classed("plot-axis", true);
-    svg.select(".y-axis").call(yAxisObj)
-        .attr("transform", `translate(${margin.left}, ${margin.top})`)
-        .classed("plot-axis", true);
+    svg.select(".x-axis").classed("plot-axis", true)
+        .call(xAxisObj).attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+        .transition().duration(1000)
+        .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
+    svg.select(".y-axis").classed("plot-axis", true)
+        .call(yAxisObj).attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
+        .transition().duration(1000)
+        .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
     //create a categorical color scale for every genre from oscarData
     let colorScale = d3.scaleOrdinal([...d3.schemeDark2, "#17bed0"]).domain([...new Set(oscarData.map(d => d.genre))]);
@@ -182,7 +183,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
                 d.delete(k);
             }
         });
-        if(toggleOtherStudios)
+        if (toggleOtherStudios)
             d.set("Other", sum);
     }
 
@@ -207,8 +208,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     stackedStudioBudgetByYear = stackedStudioBudgetByYear(studioBudgetByYear);
     //create a categorical color scale for every studio from the top 25
     let colorScale = d3.scaleOrdinal([...d3.schemeTableau10, "#17bed0",
-                "#292929", "#4F4F4F", "#949494", "#C4C4C4", "#CCCCCC", "#E8E8E8", "#FAFAFA"])
-                .domain(/*toggleOtherStudios ?*/ ['Other', allStudios] /*: allStudios*/);
+        "#292929", "#4F4F4F", "#949494", "#C4C4C4", "#CCCCCC", "#E8E8E8", "#FAFAFA"])
+        .domain(/*toggleOtherStudios ?*/['Other', allStudios] /*: allStudios*/);
 
     //get maximum budget overall filter out entry with key 'year'
     let maxBudget = d3.max(stackedStudioBudgetByYear, d => d3.max(d, d => d[1]));
@@ -220,12 +221,14 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //create axes
     xAxisObj = d3.axisBottom(xScale).tickValues(d3.range(1980, 2021, 5)).tickFormat(d3.format("d"));
     yAxisObj = d3.axisLeft(yScale).tickFormat(d3.format("$.0s"));
-    svg.select(".x-axis").call(xAxisObj)
-        .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-        .classed("plot-axis", true);
-    svg.select(".y-axis").call(yAxisObj)
-        .attr("transform", `translate(${margin.left}, ${margin.top})`)
-        .classed("plot-axis", true);
+    svg.select(".x-axis").classed("plot-axis", true)
+        .call(xAxisObj).attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+        .transition().duration(1000)
+        .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
+    svg.select(".y-axis").classed("plot-axis", true)
+        .call(yAxisObj).attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
+        .transition().duration(1000)
+        .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
     var areaGen = d3.area()
         .x((d) => xScale(d.data.year))
@@ -238,19 +241,22 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .data(stackedStudioBudgetByYear)
         .join(
             enter => enter.append("path")
-            .attr("transform", `translate(${margin.left} ${margin.top + bounds.innerHeight}) scale(1,0)`)
-            .transition().duration(1000)
-            .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,1)`),
+                .attr("transform", `translate(${margin.left} ${margin.top + bounds.innerHeight}) scale(1,0)`)
+                .transition().duration(1000)
+                .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,1)`),
             update => update,
-            exit => exit.remove()
+            exit => exit.attr("transform", `scale(1,1) translate(${margin.left} ${margin.top})`)
+                .transition().duration(1000)
+                .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,0)`)
+                .remove()
         )
         .attr("d", areaGen)
         .attr("fill", (d) => colorScale(d.key))
         .attr("fill-opacity", '0.7')
         .attr("stroke", (d) => colorScale(d.key))
-        .attr("stroke-opacity", 1) 
-        .attr("stroke-width", 2) 
-        .attr("stroke-linejoin", "round") 
+        .attr("stroke-opacity", 1)
+        .attr("stroke-width", 2)
+        .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round");
 
     //selecte plot title
@@ -258,7 +264,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //set title 
     title.text(
         toggleOtherStudios ? `Stacked Budget of Top Studios` :
-        `Stacked Budget of Top ${TOP_N} Studios`)
+            `Stacked Budget of Top ${TOP_N} Studios`)
         .attr("x", bounds.innerWidth / 2 + margin.left)
         .attr("y", margin.top + bounds.innerHeight * 0.06)
         .attr("text-anchor", "middle")
@@ -268,11 +274,11 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
 
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
-        .attr("transform", `translate(${margin.left + margin.left/3}, ${margin.top * 2})`);
-        //add transparent reectangle with rounded borders to make legend stand out
+        .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top * 2})`);
+    //add transparent reectangle with rounded borders to make legend stand out
     legend.append("rect")
-        .attr("x", -margin.left/10)
-        .attr("y", -margin.top/3)
+        .attr("x", -margin.left / 10)
+        .attr("y", -margin.top / 3)
         .attr("width", 170)
         .attr("height", 17 * 10.5)
         .attr("fill", "white")
@@ -308,7 +314,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         legendItems.filter((s) => s != d).attr("fill-opacity", 0.2);
         //make affiliated area brighter
         svg.select(".lines").selectAll("path")
-            .filter((s) => s.key == d )
+            .filter((s) => s.key == d)
             .attr("fill", (d) => d3.color(colorScale(d.key)).brighter(1.5))
     });
     legendItems.on("mouseout", (e, d) => {
@@ -319,19 +325,19 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .attr("fill", (d) => colorScale(d.key))
 
     });
-    
+
     //attach mousehover listener to stacked areas
     svg.select(".lines").selectAll("path")
         .on("mouseover", function (event, d) {
             //make are more bright and set opacity of non-corresponding legend item to 0.2
             d3.select(event.target).attr("fill", d3.color(colorScale(d.key)).brighter(1.5))
             d3.selectAll(".legend-item").filter((e) => e != d.key).attr("opacity", 0.2);
-    })
+        })
         .on("mouseout", function (event, d) {
             //set area back to original color and set opacity of non-corresponding legend item to 1
             d3.select(event.target).attr("fill", colorScale(d.key))
             d3.selectAll(".legend-item").attr("opacity", 1);
-    });
+        });
 
     svg.on("mousemove", (e, d) => {
         //get mouse position
@@ -341,15 +347,15 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .selectAll("line")
             .data([mx])
             .join("line")
-            .attr("x1", d=> d-5)
-            .attr("x2", d=>d-5)
+            .attr("x1", d => d - 5)
+            .attr("x2", d => d - 5)
             .attr("y1", margin.top)
             .attr("y2", margin.top + bounds.innerHeight)
             .attr("stroke", "white")
             .attr("stroke-width", 1)
             //.attr("stroke-opacity", 1)
             .attr("stroke-dasharray", "5,2");
-            //get year of mouse position
+        //get year of mouse position
         let year = xScale.invert(mx - margin.left);
         //round year to nearest integer
         year = Math.round(year);

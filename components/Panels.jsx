@@ -27,7 +27,9 @@ const CRightPanel = function ({ }) {
 
     return (
         <div>
-            {viewMode == "movie_economy" && <CToggle handler={v => toggleOtherStudios(v)} icon="horizontal_split" label="Other Studios"></CToggle>}
+            {viewMode == "movie_economy" ? 
+                <CToggle handler={v => toggleOtherStudios(v)} icon="horizontal_split" label="Other Studios"></CToggle> :
+                null}
         </div>
     );
 }
