@@ -285,14 +285,15 @@ export default function CCollapsedScatterplot({movieData}) {
         // Initialize zoom and scales
         const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
-        xAxisObj = d3.axisBottom(xScale).tickFormat(_scales.format[xAxis]);
+        xAxisObj = d3.axisBottom(xScale).tickFormat(
+            intZoomLevel==2 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
         yAxisObj = d3.axisLeft(yScale).tickFormat(_scales.format[yAxis]);
         svg.select(".x-axis").call(xAxisObj)
             .attr("transform", `translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-            .classed("plot-axis", true);
+            .classed("plot-axis", true).transition().duration(1000);
         svg.select(".y-axis").call(yAxisObj)
             .attr("transform", `translate(${margin.left}, ${margin.top})`)
-            .classed("plot-axis", true);
+            .classed("plot-axis", true).transition().duration(1000);
 
         // Inverse scales that transforms data coords -> plot coordinates
         _scales.iXScale = d3.scaleLinear().domain(vw).range(xScale.range());

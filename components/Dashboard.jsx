@@ -24,7 +24,8 @@ const Dashboard = () => {
             nominations: d3.scaleLinear(),
           },
           format: {
-            released: d3.timeFormat("%b %d, %Y"),
+            released_zoomed: d3.timeFormat("%b %d, %Y"),
+            released: d3.timeFormat("%Y"),
             budget: d3.format("$,.1s"),
             gross: d3.format("$,.1s"),
             score: d => d,
