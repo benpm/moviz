@@ -3,10 +3,10 @@ import { useState } from "react";
 
 // Toggle switch component
 export default function CToggle({handler, label, icon}) {
-    const baseButtonStyle = "flex justify-center place-items-center px-2 py-1 rounded-md text-sm font-medium w-8 h-8 "
+    const baseButtonStyle = "flex justify-center place-items-center px-2 py-1 rounded-md text-sm font-medium w-8 h-8 hover:text-accent "
     const buttonToggleStyles = [
         "bg-dark text-light",
-        "bg-mid2 text-white"
+        "bg-mid text-white"
     ];
 
     const [toggled, setToggled] = useState(true);

@@ -350,31 +350,9 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             //.attr("stroke-opacity", 1)
             .attr("stroke-dasharray", "5,2");
             //get year of mouse position
-        let year = xScale.invert(mx);
+        let year = xScale.invert(mx - margin.left);
         //round year to nearest integer
         year = Math.round(year);
-        //get year index in data
-        //TODO:render a text that shows the year and the budgets of the studios
-        let text = svg.select(".mouse-text-group")
-            .selectAll("text")
-            .data([year])
-            .join("text")
-            .attr("x", mx)
-            .attr("y", margin.top + bounds.innerHeight * 0.06)
-            .attr("font-size", "0.8em")
-            .attr("fill", "white")
-            .attr("text-anchor", "middle")
-            .text((d) => {
-                let text = d;
-                //get data for year
-                let data = studioBudgetByYear.filter((e) => e.year == d);
-                //add budget for each studio
-                data.forEach((e) => {
-                    text += `\n${e.studio}: ${e.budget}`;
-                })
-                return text;
-            });
-        //TODO: make the legend disappear
     });
 
     svg.on("mouseover", (e, d) => {

@@ -4,8 +4,8 @@ import useGlobalState from "../hooks/useGlobalState";
 
 export default function CViewSelector({ }) {
   const commonStyle = " h-9 py-1 px-1 text-sm font-medium border-black/50 text-black hover:border-gray-500 ";
-  const pressedStyle = commonStyle + " hover:text-white bg-tealBlue-dark shadow-inner shadow-black ";
-  const unpressedStyle = commonStyle + " bg-tealBlue z-4 hover:bg-straw ";
+  const pressedStyle = commonStyle + " hover:text-white bg-mid2 shadow-inner shadow-black ";
+  const unpressedStyle = commonStyle + " bg-mid z-4 hover:bg-accent ";
   const exButtonStyles = [
     " rounded-l-3xl border-l-2 border-t ",
     " border-t ",
