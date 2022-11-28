@@ -25,7 +25,11 @@ const CRightPanel = function ({ }) {
     //TODO:if movie economy view a checkbox to display avg trend as a line
     //TODO:story telling mode buttons we can higligth the some interesting points in the data
 
-    return (<CToggle handler={v => toggleOtherStudios(v)} icon="variables" label='Show "Other" Studios'></CToggle>);
+    return (
+        <div>
+            {viewMode == "movie_economy" && <CToggle handler={v => toggleOtherStudios(v)} icon="variables" label="Show Other Studios"></CToggle>}
+        </div>
+    );
 }
 
 export { CLeftPanel, CRightPanel };
