@@ -208,7 +208,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //create a categorical color scale for every studio from the top 25
     let colorScale = d3.scaleOrdinal([...d3.schemeTableau10, "#17bed0",
                 "#292929", "#4F4F4F", "#949494", "#C4C4C4", "#CCCCCC", "#E8E8E8", "#FAFAFA"])
-                .domain(toggleOtherStudios ? ['Other', allStudios] : allStudios);
+                .domain(/*toggleOtherStudios ?*/ ['Other', allStudios] /*: allStudios*/);
 
     //get maximum budget overall filter out entry with key 'year'
     let maxBudget = d3.max(stackedStudioBudgetByYear, d => d3.max(d, d => d[1]));
