@@ -18,6 +18,9 @@ const useGlobalState = create((set) => ({
 
     scales: null,
 
+    //state for the stacked line chart
+    companionPlotShowOtherStudios: true,
+
     setHoverPos: x => set({ hoverPos: x }),
     setHoverItem: x => set({ hoverItem: x }),
     setViewSize: x => set({ viewSize: x }),
@@ -27,6 +30,7 @@ const useGlobalState = create((set) => ({
     setViewMode: x => set({ viewMode: x }),
     setBrushMode: x => set({ brushMode: x }),
     setBrushFilter: x => set({ brushFilter: x }),
+    setCompanionPlotShowOtherStudios: x => set({ companionPlotShowOtherStudios: x }),
 }));
 
 export default useGlobalState;

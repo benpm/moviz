@@ -143,7 +143,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         .attr("fill", "white");
 }
 
-function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode) {
+function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios) {
     //sum budget of the movies and group them by studio for each data month
     let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company);
     studioBudgetByYear = studioBudgetByYear.map((r) => {
@@ -174,7 +174,6 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     const TOP_N = 15;
     let topNStudios = d3.group(totalBudgetByStudio.slice(0, TOP_N), d => d[0]);
     //accumilate the studios that are not in the top TOP_N into "Other" for all years
-    let otherStudios = [];
     for (let d of studioBudgetByYear) {
         let sum = 0;
         d.forEach((v, k) => {
@@ -183,10 +182,11 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
                 d.delete(k);
             }
         });
-        d.set("Other", sum);
+        if(toggleOtherStudios)
+            d.set("Other", sum);
     }
 
-    let allStudios = ["Other", ...topNStudios.keys()];
+    let allStudios = toggleOtherStudios ? ["Other", ...topNStudios.keys()] : [...topNStudios.keys()];
     studioBudgetByYear.forEach((d) => {
         allStudios.forEach((s) => {
             if (!d.has(s)) {
@@ -207,7 +207,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     stackedStudioBudgetByYear = stackedStudioBudgetByYear(studioBudgetByYear);
     //create a categorical color scale for every studio from the top 25
     let colorScale = d3.scaleOrdinal([...d3.schemeTableau10, "#17bed0",
-                "#292929", "#4F4F4F", "#949494", "#C4C4C4", "#CCCCCC", "#E8E8E8", "#FAFAFA"]).domain(['Other', allStudios]);
+                "#292929", "#4F4F4F", "#949494", "#C4C4C4", "#CCCCCC", "#E8E8E8", "#FAFAFA"])
+                .domain(toggleOtherStudios ? ['Other', allStudios] : allStudios);
 
     //get maximum budget overall filter out entry with key 'year'
     let maxBudget = d3.max(stackedStudioBudgetByYear, d => d3.max(d, d => d[1]));
@@ -255,7 +256,9 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //selecte plot title
     let title = svg.select(".plot-title");
     //set title 
-    title.text(`Stacked Budget of Top ${TOP_N} Studios`)
+    title.text(
+        toggleOtherStudios ? `Stacked Budget of Top Studios` :
+        `Stacked Budget of Top ${TOP_N} Studios`)
         .attr("x", bounds.innerWidth / 2 + margin.left)
         .attr("y", margin.top + bounds.innerHeight * 0.06)
         .attr("text-anchor", "middle")
@@ -398,13 +401,14 @@ export default function CCompanionPlot({ data }) {
     const [legendImage, setLegendImage] = useState("");
 
 
-    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
         state.scales,
-        state.viewMode
+        state.viewMode,
+        state.companionPlotShowOtherStudios
     ]);
     let scales = null;
     var xAxisObj = null;
@@ -437,7 +441,7 @@ export default function CCompanionPlot({ data }) {
             case "movie_economy":
                 //svg.select(".bars").selectAll("*").remove();
                 clearPlot(svg);
-                drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode);
+                drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios);
                 break;
             case "cost_quality":
                 clearPlot(svg);
@@ -445,7 +449,7 @@ export default function CCompanionPlot({ data }) {
         }
 
 
-    }, [bounds, scales, yAxis, xAxis, data, viewMode]);
+    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios]);
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
