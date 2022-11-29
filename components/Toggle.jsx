@@ -2,14 +2,14 @@ import { useEffect } from "react";
 import { useState } from "react";
 
 // Toggle switch component
-export default function CToggle({handler, label, icon}) {
+export default function CToggle({handler, label, icon, initValue}) {
     const baseButtonStyle = "flex justify-center place-items-center px-2 py-1 rounded-md text-sm font-medium w-8 h-8 hover:text-accent "
     const buttonToggleStyles = [
         "bg-dark text-light",
         "bg-mid text-white"
     ];
 
-    const [toggled, setToggled] = useState(true);
+    const [toggled, setToggled] = useState(initValue);
     const [buttonStyle, setButtonStyle] = useState(baseButtonStyle);
 
     const toggle = () => {
@@ -25,7 +25,7 @@ export default function CToggle({handler, label, icon}) {
         <div className="flex flex-row place-items-center p-3">
             <button onClick={toggle}
                     className={buttonStyle}>
-                <span className="material-symbols-outlined">{icon}</span>
+                <span className="material-symbols-outlined">{icon instanceof Array ? icon[Number(toggled)] : icon}</span>
             </button>
             <p className="p-2">{label}</p>
         </div>

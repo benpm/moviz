@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import useSize from "../hooks/useSize";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
+import CToggle from "./Toggle";
 
 function clearPlot(svg) {
     svg.select(".bars").selectAll("*").remove();
@@ -16,10 +17,10 @@ function clearPlot(svg) {
     svg.on("mouseover", null);
 }
 
-function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange, setTitleText) {
+function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange, setTitleText, useNominations) {
     //filter movies with oscar wins
     let oscarData = data.filter(d => {
-        return (d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0)
+        return ((useNominations && d.oscar.includes("nominee")) || d.oscar.includes("winner"))
         && (brushRange === null || (d.year >= brushRange[0] && d.year <= brushRange[1]))
     });
     //bin the data by year and genre and count the number of movies in each bin
@@ -136,7 +137,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
             d3.select(e.target).attr("stroke", "black");
         });
 
-    setTitleText("Number of Oscar Wins and Nominations for Genres over the Years");
+    setTitleText(`Number of Oscar Wins${useNominations && " and Nominations"} for Genres ${yearsExtent[0]} - ${yearsExtent[1]}`);
 }
 
 function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText) {
@@ -257,7 +258,9 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round");
 
-    setTitleText(toggleOtherStudios ? `Stacked Budget of Top Studios` : `Stacked Budget of Top ${TOP_N} Studios`);
+    setTitleText(toggleOtherStudios ?
+        `Stacked Budget of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
+        `Stacked Budget of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
 
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
@@ -372,6 +375,7 @@ export default function CCompanionPlot({ data }) {
     const [titleText, setTitleText] = useState("");
     const titleRef = useRef();
     const titleSize = useSize(titleRef);
+    const [useNominations, setUseNominations] = useState(!~!false);
     
     let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
         state.setHoverItem,
@@ -415,7 +419,7 @@ export default function CCompanionPlot({ data }) {
                 clearPlot(svg);
                 drawStackedBarChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
-                    brushRange, setTitleText);
+                    brushRange, setTitleText, useNominations);
                 break;
             case "movie_economy":
                 //svg.select(".bars").selectAll("*").remove();
@@ -428,7 +432,7 @@ export default function CCompanionPlot({ data }) {
                 clearPlot(svg);
                 break;
         }
-    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter]);
+    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations]);
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
@@ -447,6 +451,9 @@ export default function CCompanionPlot({ data }) {
                 <g className="y-axis"></g>
                 <g className="legend"></g>
             </svg>
+            {viewMode == "ratings_oscars" && (<div className="absolute left-10 top-4 text-white">
+                <CToggle icon={["check_box_outline_blank", "select_check_box"]} label="Nominations" handler={setUseNominations} initValue={useNominations} />
+            </div>)}
             <h3 ref={titleRef} className="text-white font-bold text-xl text-center w-full">{titleText}</h3>
         </div>
     );
