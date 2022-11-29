@@ -25,12 +25,17 @@ from itertools import combinations
 
 class Scale:
     def __init__(self, _range, _domain, conv_range=lambda _:_, conv_domain=lambda _:_):
-        self.range = [conv_range(r) for r in _range]
+        self.range = [r for r in _range]
         self.range_extent = self.range[1] - self.range[0]
         self.domain = _domain
         self.domain_extent = self.domain[1] - self.domain[0]
         self.conv_range = conv_range
         self.conv_domain = conv_domain
+        print(f"Scale: {self.range} -> {self.domain}")
+
+    def set_domain(self, _domain):
+        self.domain = _domain
+        self.domain_extent = self.domain[1] - self.domain[0]
 
     def __call__(self, v):
         return ((self.conv_range(v) - self.range[0]) / self.range_extent) * self.domain_extent + self.domain[0]
@@ -194,12 +199,10 @@ def main():
     movies = pd.read_csv("../public/movies.csv")
 
     scales = {
-        "released": Scale(extent(movies, "released"), SIM_BOUNDS[0], conv_range=parse_date, conv_domain=lambda x: x.strftime("%B %d, %Y")),
-        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[0], conv_range=log_safe),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[0], conv_range=log_safe),
-        "budget": Scale(extent(movies, "budget"), SIM_BOUNDS[1], conv_range=log_safe),
-        "gross": Scale(extent(movies, "gross"), SIM_BOUNDS[1], conv_range=log_safe),
-        "score": Scale((0, 10), SIM_BOUNDS[1]),
+        "released": Scale(extent(movies, "released", parse_date), SIM_BOUNDS[0], conv_range=parse_date, conv_domain=lambda x: x.strftime("%B %d, %Y")),
+        "budget": Scale(extent(movies, "budget", log_safe), SIM_BOUNDS[0], conv_range=log_safe),
+        "gross": Scale(extent(movies, "gross", log_safe), SIM_BOUNDS[0], conv_range=log_safe),
+        "score": Scale((0, 10), SIM_BOUNDS[0]),
         "nominations": Scale(extent(movies, "nominations"), SIM_BOUNDS[1]),
         "tomatometer_rating": Scale((0, 100), SIM_BOUNDS[1]),
         "audience_rating": Scale((0, 100), SIM_BOUNDS[1])
@@ -224,8 +227,12 @@ def main():
         
         # Zoom level 0 (deepest): create a Dot object for each row in the scatterplot.csv file
         for i, row in movies.iterrows():
+            xscale = scales[x_axis]
+            xscale.set_domain(SIM_BOUNDS[0])
+            yscale = scales[y_axis]
+            yscale.set_domain(SIM_BOUNDS[1])
             lvls[0][1].append(Dot(set([i]), BASE_RADIUS,
-                Vec2d(scales[x_axis](row[x_axis]), scales[y_axis](row[y_axis])), space))
+                Vec2d(xscale(row[x_axis]), yscale(row[y_axis])), space))
 
         # Run the simulation for zoom level 0
         print(f"running initial simulation of {len(lvls[0][1])} dots...")
