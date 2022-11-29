@@ -54,11 +54,7 @@ export default function CCollapsedScatterplot({ movieData }) {
     const simBounds = { x: [-1000, 1000], y: [-300, 300] };
 
     const [dotStroke, setDotStroke] = useState(1);
-    const [initialized, setInitialized] = useState(false);
     const [quadtrees, setQuadtrees] = useState(null);
-
-    // Mapping from data idx to circle element node in the svg plot
-    const [nodeMap, setNodeMap] = useState(null);
 
     // Handler for mode switch buttons (ViewSelector.jsx)
     useEffect(() => {
@@ -86,7 +82,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                 break;
         }
         clearBrush();
-    }, [viewMode, scales, nodeMap]);
+    }, [viewMode]);
 
     // Load data on first render 
     useEffect(() => {
@@ -128,8 +124,6 @@ export default function CCollapsedScatterplot({ movieData }) {
                 .call(axes.x.scale(transform.rescaleX(scales.f[xAxis])));
             d3.select(ref.current).select(".y-axis")
                 .call(axes.y.scale(transform.rescaleY(scales.f[yAxis])));
-        } else {
-            console.warn(`onZoom() ignored: brushMode=${brushMode}, axes.x=${axes.x}, axes.y=${axes.y}, scales=${scales}`);
         }
     };
     useEffect(() => {
@@ -146,7 +140,8 @@ export default function CCollapsedScatterplot({ movieData }) {
 
     // Brush interaction handler - sets which circles are excluded
     const onXBrush = (e) => {
-        if (scales && nodeMap) {
+        console.log("scales:", scales, "e:", e);
+        if (scales) {
             if (e.selection && e.selection[0] != e.selection[1]) {
                 const t = new d3.ZoomTransform(
                     plotTransform.k,
@@ -173,7 +168,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         }
     };
     const onXYBrush = (e) => {
-        if (scales && nodeMap) {
+        if (scales) {
             if (e.selection) {
                 // local plot coords -> transformed plot coords -> data coords
                 const t = new d3.ZoomTransform(
@@ -233,12 +228,13 @@ export default function CCollapsedScatterplot({ movieData }) {
 
     // Associate brush handler
     useEffect(() => {
-        if (scales && nodeMap && brushObj.brush && brushHandler.handler) {
+        if (scales && brushObj.brush && brushHandler.handler) {
             brushObj.brush
                 .on("start brush end", brushHandler.handler)
                 .extent([[0, 0], [bounds.width, bounds.height]]);
+            console.debug("associated brush handler")
         }
-    }, [scales, nodeMap, plotTransform, brushMode, brushHandler, brushObj, bounds]);
+    }, [scales, plotTransform, brushMode, brushHandler, brushObj, bounds]);
 
     // Brushing enable / disable handler
     useEffect(() => {
@@ -265,6 +261,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         }
 
         let _scales = scales || copyScales(gScales);
+        setScales(_scales);
 
         // Get relevant zoom level, x axis, y axis data subset and swap axes as needed
         let dataSubset = data.get(intZoomLevel);
@@ -298,7 +295,6 @@ export default function CCollapsedScatterplot({ movieData }) {
         _scales.iYScale = d3.scaleLinear().domain(vh).range(yScale.range());
 
         // Draw points
-        let _nodeMap = new Map();
         svg.select(".plot-area")
             .selectAll("circle")
             .data(dataSubset)
@@ -326,16 +322,9 @@ export default function CCollapsedScatterplot({ movieData }) {
             })
             .on("mouseout", (e, d) => {
                 setHoverItem({ datum: null, x: 0, y: 0, caller: null });
-            })
-            .datum((d, _, g) => {
-                _nodeMap.set(d.idx, g[0]);
-                return d;
             });
-        if (_nodeMap.size > 0) {
-            setNodeMap(_nodeMap);
-        }
-
-        if (!initialized) {
+        
+        if (!quadtrees) {
             // Initialize quadtree for every zoom level and every pair of axes
             let qtrees = {};
             for (let [zoomLvl, xAxisMap] of data.entries()) {
@@ -349,10 +338,11 @@ export default function CCollapsedScatterplot({ movieData }) {
                 }
             }
             setQuadtrees(qtrees);
-            setInitialized(true);
+        }
+
+        if (!zoomObj.zoom) {
             setZoomObj({ zoom: d3.zoom() });
         }
-        setScales(_scales);
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel]);
 
     return (
