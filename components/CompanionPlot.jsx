@@ -5,6 +5,7 @@ import useSize from "../hooks/useSize";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 import CToggle from "./Toggle";
+import { exit } from "process";
 
 function clearPlot(svg) {
     svg.select(".bars").selectAll("*").remove();
@@ -266,38 +267,34 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
         .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
-    //add transparent reectangle with rounded borders to make legend stand out
-    legend.append("rect")
-        .attr("x", -margin.left / 10)
-        .attr("y", -margin.top / 3)
-        .attr("width", 170)
-        .attr("height", 17 * 10.5)
-        .attr("fill", "white")
-        .attr("fill-opacity", 0.1)
-        .attr("stroke", "white")
-        .attr("stroke-width", 1)
-        .attr("stroke-opacity", 0.5)
-        .attr("rx", 5)
-        .attr("ry", 5);
 
+    //legend.selectAll(".legend-item").remove() IMPORTANT CRUTCH ENABLE IF SOMETHING BREAKS
+    
     //create legend items
     let legendItems = legend.selectAll(".legend-item")
         .data(allStudios)
-        .join("g")
-        .attr("class", "legend-item")
-        .attr("transform", (d, i) => `translate(0, ${i * 10.8})`);
-    //create legend item rectangles 
-    legendItems.append("rect")
-        .attr("width", 6)
-        .attr("height", 6)
-        .attr("fill", (d) => colorScale(d));
-    //create legend item text
-    legendItems.append("text")
-        .attr("x", 10)
-        .attr("y", 6)
-        .attr("font-size", "0.7em")
-        .attr("fill", "white")
-        .text((d) => d);
+        .join((enter) => {
+            let g = enter.append("g").classed("legend-item", true)
+                .attr("transform", (d, i) => `translate(0, ${i * 10.5})`);
+            g.append("rect")
+                .attr("width", 6)
+                .attr("height", 6)
+                .attr("fill", (d) => colorScale(d));
+            g.append("text")
+                .attr("x", 10)
+                .attr("y", 6)
+                .attr("font-size", "0.7em")
+                .attr("fill", "white")
+                .text((d) => d);
+            return g;
+        }, update => {
+            let g = update.classed("legend-item", true).attr("transform", (d, i) => `translate(0, ${i * 10.5})`);
+            g.select('rect').attr("fill", (d) => colorScale(d));
+            g.select('text').text((d) => d);
+            return g;
+        }, exit => {
+            exit.remove()
+        });
 
     //attach mouse listener to legend items make the non selected studios transparent
     legendItems.on("mouseover", (e, d) => {
@@ -413,34 +410,6 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setTitleText) {
 
     //draw legend
     //generate a 5 element array that has values from decadeCount min to max
-    let legendValues = d3.range(d3.min(decadeCount, (d) => d.value), d3.max(decadeCount, (d) => d.value), d3.max(decadeCount, (d) => d.value) / 28);
-    let legendGroup = svg.select(".legend")
-        .selectAll("g")
-        .data(legendValues)
-        .join("g")
-        .attr("transform", (d, i) =>
-            `translate(${margin.left + bounds.innerWidth + 16} ${margin.top + i * (bounds.innerHeight / 28)})`)
-        .append("rect")
-        .attr("width", 12)
-        .attr("height", (bounds.innerHeight / 27.5))
-        .attr("fill", (d) => colorScale(d));
-
-    //pick 4 points from the legendValues array and use them as labels
-    let legendLabels = [legendValues[0], legendValues[legendValues.length / 4], legendValues[legendValues.length / 2], legendValues[legendValues.length - 1]];
-    svg.select(".legend")
-        .selectAll("g")
-        .data(legendLabels)
-        .append("text")
-        .attr("transform", (d, i) => `translate(-5, ${bounds.innerHeight - i * (bounds.innerHeight / 3) + margin.bottom - margin.top}) rotate(-90)`)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "0.8em")
-        .attr("font-weight", "bold")
-        .attr("fill", "white")
-        .text((d) => parseInt(d))
-        .attr("opacity", 1);
-
-
-
 
     //Set the title text
     setTitleText(`Number of Selected Movies per ${CLUSTER_SIZE} Years`);
@@ -497,20 +466,19 @@ export default function CCompanionPlot({ data }) {
 
         switch (viewMode) {
             case "ratings_oscars":
-                clearPlot(svg);
+                //clearPlot(svg);
                 drawStackedBarChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
                     brushRange, setTitleText, useNominations);
                 break;
             case "movie_economy":
-                //svg.select(".bars").selectAll("*").remove();
-                clearPlot(svg);
+                //clearPlot(svg);
                 drawStackedLineChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
                     viewMode, toggleOtherStudios, brushRange, setTitleText);
                 break;
             case "cost_quality":
-                clearPlot(svg);
+                //clearPlot(svg);
                 drawDecadeHeatmap(svg, data, bounds, margin, setTitleText);
                 break;
         }
@@ -525,14 +493,20 @@ export default function CCompanionPlot({ data }) {
                     </clipPath>
                 </defs>
                 <g style={{ clipPath: "url(#plot-clip)" }}>
-                    <g className="bars"></g>
-                    <g className="lines"></g>
-                    <g className="rects"></g>
-                    <g className="mouse-line-group"></g>
+                    {viewMode == "ratings_oscars" && <g className="bars"></g>}
+                    {viewMode == "movie_economy" && <><g className="lines"></g>
+                        <g className="mouse-line-group"></g>
+                        <g className="legend">
+                            <rect x={-margin.left / 10} y={-margin.top / 3} 
+                            width="170" height="180" fill="white" fillOpacity="0.1"
+                            stroke="white" strokeWidth="1" strokeOpacity="0.5"
+                            rx={5}></rect>
+                        </g>
+                    </>}
+                    {viewMode == "cost_quality" && <g className="rects"></g>}
                 </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
-                <g className="legend"></g>
             </svg>
             {viewMode == "ratings_oscars" && (<div className="absolute left-10 top-4 text-white">
                 <CToggle icon={["check_box_outline_blank", "select_check_box"]} label="Nominations" handler={setUseNominations} initValue={useNominations} />
