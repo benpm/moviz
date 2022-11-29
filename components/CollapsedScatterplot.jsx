@@ -23,7 +23,7 @@ export default function CCollapsedScatterplot({ movieData }) {
     const target = useRef(null);
     const size = useSize(target);
     const brushContainerRef = useRef(null);
-    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode, brushMode] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode, brushMode, setBrushRange, setBrushFilter] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
@@ -32,7 +32,9 @@ export default function CCollapsedScatterplot({ movieData }) {
         state.setScatterYAxis,
         state.scales,
         state.viewMode,
-        state.brushMode
+        state.brushMode,
+        state.setBrushRange,
+        state.setBrushFilter
     ]);
     const [scales, setScales] = useState(null);
 
@@ -123,6 +125,9 @@ export default function CCollapsedScatterplot({ movieData }) {
                     const [selx0, selx1] = [
                         scales.iXScale.invert(t.invertX(e.selection[0])),
                         scales.iXScale.invert(t.invertX(e.selection[1]))];
+                    setBrushRange([
+                        scales.f[xAxis].invert(t.invertX(e.selection[0])).getFullYear(),
+                        scales.f[xAxis].invert(t.invertX(e.selection[1])).getFullYear()]);
                     let included = new Set();
                     console.log(xAxis, yAxis, intZoomLevel);
                     quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
@@ -133,6 +138,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                         }
                         return x0 >= selx1 || x1 < selx0;
                     });
+                    setBrushFilter(included);
                     d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
                 } else {
                     d3.select(ref.current).selectAll(".dot").classed("excluded", false);
@@ -218,6 +224,8 @@ export default function CCollapsedScatterplot({ movieData }) {
             d3.select(brushContainerRef.current).call(brushObj.brush.clear);
             d3.select(ref.current).selectAll(".dot").classed("excluded", false);
         }
+        setBrushRange(null);
+        setBrushFilter([]);
     };
 
     // Re-brush on change in int zoom level
@@ -254,7 +262,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             // Set up brushing
             const brush = (brushHandler.gen)()
                 .on("start brush end", brushHandler.handler)
-                .extent([[0, 0], [bounds.width, bounds.height]]);
+                .extent([[0, 0], [bounds.width, bounds.innerHeight + margin.bottom]]);
             d3.select(brushContainerRef.current)
                 .call(brush).call(brush.clear);
             setBrushObj({ brush: brush });
@@ -292,13 +300,15 @@ export default function CCollapsedScatterplot({ movieData }) {
         const yAxisObj = d3.axisLeft(yScale).tickValues(yTicks).tickArguments(_scales.format[yAxis]);
         setAxes({ x: xAxisObj, y: yAxisObj });
         svg.select(".x-axis").classed("plot-axis", true)
-            .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-            .call(xAxisObj).transition().duration(1000)
+            // .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+            .call(xAxisObj)
+            // .transition().duration(1000)
             .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
 
         svg.select(".y-axis").classed("plot-axis", true)
-            .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
-            .call(yAxisObj).transition().duration(1000)
+            // .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
+            .call(yAxisObj)
+            // .transition().duration(1000)
             .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
         // Inverse scales that transforms data coords -> plot coordinates

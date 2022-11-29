@@ -16,9 +16,12 @@ function clearPlot(svg) {
     svg.on("mouseover", null);
 }
 
-function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos) {
+function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange) {
     //filter movies with oscar wins
-    let oscarData = data.filter(d => d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0);
+    let oscarData = data.filter(d => {
+        return (d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0)
+        && (brushRange === null || (d.year >= brushRange[0] && d.year <= brushRange[1]))
+    });
     //bin the data by year and genre and count the number of movies in each bin
     let oscarDataByYear = d3.group(oscarData, d => d.year, d => d.genre);
     //sort by year
@@ -65,19 +68,22 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
     const xScale = d3.scaleBand().domain([...oscarDataByYear.keys()]).rangeRound([0, bounds.innerWidth]);
     const countScale = d3.scaleLinear().domain([0, max]).range([0, 1]).nice();
     const yScale = countScale.rangeRound([bounds.innerHeight, 0]).nice();
-    xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d, i) => i % 5 == 0));
+    const yearsExtent = d3.extent(oscarDataByYear.keys());
+    const nYears = yearsExtent[1] - yearsExtent[0];
+    const tickSkip = Math.ceil(nYears / 12);
+    xAxisObj = d3.axisBottom(xScale).tickValues([...oscarDataByYear.keys()].filter((d, i) => i % tickSkip == 0));
     yAxisObj = d3.axisLeft(yScale);
     svg.select(".x-axis").classed("plot-axis", true)
         .call(xAxisObj).attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-        .transition().duration(1000)
+        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
     svg.select(".y-axis").classed("plot-axis", true)
         .call(yAxisObj).attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
-        .transition().duration(1000)
+        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
     //create a categorical color scale for every genre from oscarData
-    let colorScale = d3.scaleOrdinal([...d3.schemeDark2, "#17bed0"]).domain([...new Set(oscarData.map(d => d.genre))]);
+    let colorScale = d3.scaleOrdinal([...d3.schemeDark2, "#17bed0"]).domain([...new Set(data.map(d => d.genre))]);
 
     // draw stacked bar chart
     svg.select(".bars")
@@ -95,12 +101,10 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
             update => update,
             exit => exit.remove()
         )
-        .classed("stacked-bar", true).transition(
-            //disable pointer events until transition is done
-            svg.selectAll(".stacked-bar").style("pointer-events", "none")
-            //enable pointer events after transition is done
-        ).on("end", () => svg.selectAll(".stacked-bar").style("pointer-events", "auto"))
-        .duration(1000)
+        .classed("stacked-bar", true)
+        // .transition()
+        // .on("end", () => svg.selectAll(".stacked-bar").style("pointer-events", "auto"))
+        // .duration(1000)
         .attr("x", 0)
         .attr("y", d => yScale(d[1].sum))
         .attr("width", xScale.bandwidth())
@@ -144,9 +148,11 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         .attr("fill", "white");
 }
 
-function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios) {
+function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange) {
     //sum budget of the movies and group them by studio for each data month
-    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company);
+    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company).filter(d => 
+        (brushRange === null || (d[0] >= brushRange[0] && d[0] <= brushRange[1]))
+    );
     studioBudgetByYear = studioBudgetByYear.map((r) => {
         let m = new Map();
         m.set("year", r[0]);
@@ -215,19 +221,23 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     let maxBudget = d3.max(stackedStudioBudgetByYear, d => d3.max(d, d => d[1]));
 
     //create axes scales
-    const xScale = d3.scaleLinear().domain(d3.extent(data, d => d.year)).rangeRound([0, bounds.innerWidth]);
+    const yearsExtent = d3.extent(studioBudgetByYear, d => d.year);
+    const xScale = d3.scaleLinear().domain(yearsExtent).rangeRound([0, bounds.innerWidth]);
     const yScale = d3.scaleLinear().domain([0, maxBudget]).rangeRound([bounds.innerHeight, 0]).nice();
 
     //create axes
-    xAxisObj = d3.axisBottom(xScale).tickValues(d3.range(1980, 2021, 5)).tickFormat(d3.format("d"));
+    const tickSkip = Math.ceil((yearsExtent[1] - yearsExtent[0]) / 12);
+    xAxisObj = d3.axisBottom(xScale).tickValues(d3.range(...yearsExtent, tickSkip)).tickFormat(d3.format("d"));
     yAxisObj = d3.axisLeft(yScale).tickFormat(d3.format("$.0s"));
     svg.select(".x-axis").classed("plot-axis", true)
-        .call(xAxisObj).attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-        .transition().duration(1000)
+        .call(xAxisObj)
+        // .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
+        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
     svg.select(".y-axis").classed("plot-axis", true)
-        .call(yAxisObj).attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
-        .transition().duration(1000)
+        .call(yAxisObj)
+        // .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
+        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
     var areaGen = d3.area()
@@ -241,14 +251,11 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .data(stackedStudioBudgetByYear)
         .join(
             enter => enter.append("path")
-                .attr("transform", `translate(${margin.left} ${margin.top + bounds.innerHeight}) scale(1,0)`)
-                .transition().duration(1000)
+                // .attr("transform", `translate(${margin.left} ${margin.top + bounds.innerHeight}) scale(1,0)`)
+                // .transition().duration(1000)
                 .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,1)`),
             update => update,
-            exit => exit.attr("transform", `scale(1,1) translate(${margin.left} ${margin.top})`)
-                .transition().duration(1000)
-                .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,0)`)
-                .remove()
+            exit => exit.remove()
         )
         .attr("d", areaGen)
         .attr("fill", (d) => colorScale(d.key))
@@ -385,14 +392,16 @@ export default function CCompanionPlot({ data }) {
     const [legendImage, setLegendImage] = useState("");
 
 
-    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
         state.scatterYAxis,
         state.scales,
         state.viewMode,
-        state.companionPlotShowOtherStudios
+        state.companionPlotShowOtherStudios,
+        state.brushRange,
+        state.brushFilter
     ]);
     let scales = null;
     var xAxisObj = null;
@@ -420,12 +429,16 @@ export default function CCompanionPlot({ data }) {
         switch (viewMode) {
             case "ratings_oscars":
                 clearPlot(svg);
-                drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos);
+                drawStackedBarChart(
+                    svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
+                    brushRange);
                 break;
             case "movie_economy":
                 //svg.select(".bars").selectAll("*").remove();
                 clearPlot(svg);
-                drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios);
+                drawStackedLineChart(
+                    svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
+                    viewMode, toggleOtherStudios, brushRange);
                 break;
             case "cost_quality":
                 clearPlot(svg);
@@ -433,7 +446,7 @@ export default function CCompanionPlot({ data }) {
         }
 
 
-    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios]);
+    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter]);
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
