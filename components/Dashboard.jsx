@@ -14,6 +14,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (data.length == 0) {
       loadMovieData().then((data) => {
+        const mf = d3.format("02d");
         setScales({
           f: {
             released: d3.scaleTime().domain(d3.extent(data, d => d.released)),
@@ -27,25 +28,28 @@ const Dashboard = () => {
             runtime: d3.scaleLinear().domain(d3.extent(data, d => d.runtime)),
           },
           format: {
-            released_zoomed:  d3.timeFormat("%b %d, %Y"),
-            released:  d3.timeFormat("%Y"),
-            budget: d3.format("$,.1s"),
-            gross: d3.format("$,.1s"),
-            score:  d3.format("d"),
-            tomatometer_rating:  d3.format("d"),
-            audience_rating:  d3.format("d"),
-            nominations:  d3.format("~s"),
-            gross:  d3.format("$,.1s"),
-            budget:  d3.format("$,.1s"),
-            runtime:  m => `${m / 60 | 0}h ${m % 60 | 0}m`,
+            released_zoomed:  [10, d3.timeFormat("%b %d, %Y")],
+            released:  [10, d3.timeFormat("%Y")],
+            budget: [8, d3.format("$,.1s")],
+            gross: [8, d3.format("$,.1s")],
+            score:  [10, d3.format("d")],
+            tomatometer_rating:  [10, d3.format("d")],
+            audience_rating:  [10, d3.format("d")],
+            nominations:  [10, d3.format("~s")],
+            gross:  [10, d3.format("$,.1s")],
+            budget:  [10, d3.format("$,.1s")],
+            runtime:  [10, m => `${Math.floor(m/60)}:${mf(m%60)}`],
           },
           ticksFilter: {
             score: i => Math.ceil(i) - i == 0.0,
             tomatometer_rating: i => Math.ceil(i) - i == 0.0,
             audience_rating: i => Math.ceil(i) - i == 0.0,
+          },
+          ticksCount: {
+            budget: 5,
+            gross: 5,
           }
         });
-        console.log(d3.timeFormat("%Y"));
         setData(data);
       });
     }
