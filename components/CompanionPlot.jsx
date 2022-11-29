@@ -16,7 +16,7 @@ function clearPlot(svg) {
     svg.on("mouseover", null);
 }
 
-function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange) {
+function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange, setTitleText) {
     //filter movies with oscar wins
     let oscarData = data.filter(d => {
         return (d.oscar.includes("nominee") != 0 || d.oscar.includes("winner") != 0)
@@ -136,19 +136,10 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
             d3.select(e.target).attr("stroke", "black");
         });
 
-    //selecte plot title
-    let title = svg.select(".plot-title");
-    //set title 
-    title.text("Number of Oscar Wins and Nominations for Genres over the Years")
-        .attr("x", bounds.innerWidth / 2 + margin.left)
-        .attr("y", margin.top + bounds.innerHeight * 0.06)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "1.2em")
-        .attr("font-weight", "bold")
-        .attr("fill", "white");
+    setTitleText("Number of Oscar Wins and Nominations for Genres over the Years");
 }
 
-function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange) {
+function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText) {
     //sum budget of the movies and group them by studio for each data month
     let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company).filter(d => 
         (brushRange === null || (d[0] >= brushRange[0] && d[0] <= brushRange[1]))
@@ -266,22 +257,11 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round");
 
-    //selecte plot title
-    let title = svg.select(".plot-title");
-    //set title 
-    title.text(
-        toggleOtherStudios ? `Stacked Budget of Top Studios` :
-            `Stacked Budget of Top ${TOP_N} Studios`)
-        .attr("x", bounds.innerWidth / 2 + margin.left)
-        .attr("y", margin.top + bounds.innerHeight * 0.06)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "1.2em")
-        .attr("font-weight", "bold")
-        .attr("fill", "white");
+    setTitleText(toggleOtherStudios ? `Stacked Budget of Top Studios` : `Stacked Budget of Top ${TOP_N} Studios`);
 
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
-        .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top * 2})`);
+        .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
     //add transparent reectangle with rounded borders to make legend stand out
     legend.append("rect")
         .attr("x", -margin.left / 10)
@@ -384,14 +364,15 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
 }
 
 export default function CCompanionPlot({ data }) {
-    let test = false;
-    const margin = { top: 20, right: 35, bottom: 20, left: (test ? 35 : 45) };
+    const [margin, setMargin] = useState({ top: 20, right: 35, bottom: 20, left: 45 });
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
     const [legendImage, setLegendImage] = useState("");
-
-
+    const [titleText, setTitleText] = useState("");
+    const titleRef = useRef();
+    const titleSize = useSize(titleRef);
+    
     let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -416,7 +397,10 @@ export default function CCompanionPlot({ data }) {
             innerWidth: w - margin.left - margin.right,
             innerHeight: h - margin.top - margin.bottom
         });
-    }, [size]);
+    }, [size, margin]);
+    useEffect(() => {
+        setMargin({ top: titleRef.current.getBoundingClientRect().height, right: 35, bottom: 20, left: 45 });
+    }, [titleSize]);
 
     // Render chart function
     const ref = useD3(svg => {
@@ -431,33 +415,30 @@ export default function CCompanionPlot({ data }) {
                 clearPlot(svg);
                 drawStackedBarChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
-                    brushRange);
+                    brushRange, setTitleText);
                 break;
             case "movie_economy":
                 //svg.select(".bars").selectAll("*").remove();
                 clearPlot(svg);
                 drawStackedLineChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
-                    viewMode, toggleOtherStudios, brushRange);
+                    viewMode, toggleOtherStudios, brushRange, setTitleText);
                 break;
             case "cost_quality":
                 clearPlot(svg);
                 break;
         }
-
-
     }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter]);
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
-            <svg ref={ref} className="w-full h-full">
+            <svg ref={ref} width={bounds.width} height={bounds.height} className="absolute top-0 left-0">
                 <defs>
                     <clipPath id="plot-clip">
                         <rect fill="white" x={margin.left} y={margin.top} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
                 <g style={{ clipPath: "url(#plot-clip)" }}>
-                    <text className="plot-title" />
                     <g className="bars"></g>
                     <g className="lines"></g>
                     <g className="mouse-line-group"></g>
@@ -466,6 +447,7 @@ export default function CCompanionPlot({ data }) {
                 <g className="y-axis"></g>
                 <g className="legend"></g>
             </svg>
+            <h3 ref={titleRef} className="text-white font-bold text-xl text-center w-full">{titleText}</h3>
         </div>
     );
 }
