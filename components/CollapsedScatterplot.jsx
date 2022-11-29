@@ -291,13 +291,12 @@ export default function CCollapsedScatterplot({ movieData }) {
         dataSubset = dataSubset.get(vxAxis).get(vyAxis);
 
         // Initialize zoom and scales
-        const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]).nice();
-        const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
-        const xTicks = xScale.ticks().filter(_scales.ticksFilter[xAxis] || (() => true));
-        const yTicks = yScale.ticks().filter(_scales.ticksFilter[yAxis] || (() => true));
-        const xAxisObj = d3.axisBottom(xScale).tickValues(xTicks).tickFormat(
-            intZoomLevel != 0 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
-        const yAxisObj = d3.axisLeft(yScale).tickValues(yTicks).tickFormat(_scales.format[yAxis]);
+        const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
+        const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
+        const xAxisObj = d3.axisBottom(xScale)
+            .tickArguments(intZoomLevel != 0 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
+        const yAxisObj = d3.axisLeft(yScale)
+            .tickArguments(_scales.format[yAxis]);
         setAxes({ x: xAxisObj, y: yAxisObj });
         svg.select(".x-axis").classed("plot-axis", true)
             // .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
