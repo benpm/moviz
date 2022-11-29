@@ -283,11 +283,13 @@ export default function CCollapsedScatterplot({ movieData }) {
         dataSubset = dataSubset.get(vxAxis).get(vyAxis);
 
         // Initialize zoom and scales
-        const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
-        const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
-        const xAxisObj = d3.axisBottom(xScale).tickArguments(
+        const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]).nice();
+        const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
+        const xTicks = xScale.ticks().filter(_scales.ticksFilter[xAxis] || (() => true));
+        const yTicks = yScale.ticks().filter(_scales.ticksFilter[yAxis] || (() => true));
+        const xAxisObj = d3.axisBottom(xScale).tickValues(xTicks).tickArguments(
             intZoomLevel != 0 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
-        const yAxisObj = d3.axisLeft(yScale).tickArguments(_scales.format[yAxis]);
+        const yAxisObj = d3.axisLeft(yScale).tickValues(yTicks).tickArguments(_scales.format[yAxis]);
         setAxes({ x: xAxisObj, y: yAxisObj });
         svg.select(".x-axis").classed("plot-axis", true)
             .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
@@ -379,14 +381,20 @@ export default function CCollapsedScatterplot({ movieData }) {
                     <clipPath id="plot-area-clip">
                         <rect fill="white" x={0} y={0} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
+                    <clipPath id="y-axis-clip">
+                        <rect fill="white" x={-margin.left} y={0} width={margin.left} height={bounds.innerHeight} />
+                    </clipPath>
+                    <clipPath id="x-axis-clip">
+                        <rect fill="white" x={0} y={0} width={bounds.innerWidth} height={margin.bottom} />
+                    </clipPath>
                 </defs>
                 {brushMode && <g ref={brushContainerRef}></g>}
                 <g className="plot-area-container" style={{ clipPath: "url(#plot-area-clip)" }}
                     transform={`translate(${margin.left},${margin.top})`}>
                     <g className="plot-area"></g>
                 </g>
-                <g className="x-axis"></g>
-                <g className="y-axis"></g>
+                <g className="x-axis" style={{ clipPath: "url(#x-axis-clip)" }}></g>
+                <g className="y-axis" style={{ clipPath: "url(#y-axis-clip)" }}></g>
             </svg>
         </div>
     );

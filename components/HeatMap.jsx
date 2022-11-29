@@ -79,12 +79,12 @@ export default function CHeatMap({ data }) {
             .call(xAxisObj)
             .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
             .transition().duration(1000)
-            .attr("transform", `scale(1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
+            .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
         svg.select(".y-axis").classed("plot-axis", true)
             .call(yAxisObj)
             .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
             .transition().duration(1000)
-            .attr("transform", `scale(1) translate(${margin.left}, ${margin.top})`);
+            .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
         //draw a hexagonal heatmap of the data draw empty hexagons
         const RADIUS = 15;
