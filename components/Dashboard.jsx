@@ -24,16 +24,16 @@ const Dashboard = () => {
             nominations: d3.scaleLinear(),
           },
           format: {
-            released_zoomed: d3.timeFormat("%b %d, %Y"),
-            released: d3.timeFormat("%Y"),
-            budget: d3.format("$,.1s"),
-            gross: d3.format("$,.1s"),
-            score: d => d,
-            tomatometer_rating: d => d,
-            audience_rating: d => d,
-            nominations: d3.format("~s"),
-            gross: d3.format("$,.1s"),
-            budget: d3.format("$,.1s"),
+            released_zoomed: [10, d3.timeFormat("%b %d, %Y")],
+            released: [10, d3.timeFormat("%Y")],
+            budget: [4, d3.format("$,.1s")],
+            gross: [4, d3.format("$,.1s")],
+            score: [10, d => d],
+            tomatometer_rating: [10, d => d],
+            audience_rating: [10, d => d],
+            nominations: [10, d3.format("~s")],
+            gross: [10, d3.format("$,.1s")],
+            budget: [10, d3.format("$,.1s")],
           }
         });
         setData(data);

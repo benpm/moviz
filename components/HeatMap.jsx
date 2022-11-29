@@ -32,7 +32,7 @@ function generateArrayMinMax(min, max, n) {
  }
 
 export default function CHeatMap({ data }) {
-    const margin = { top: 20, right: 35, bottom: 20, left: 25 };
+    const margin = { top: 20, right: 35, bottom: 20, left: 50 };
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
@@ -73,8 +73,8 @@ export default function CHeatMap({ data }) {
         // Initialize zoom and scales
         const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = scales.f[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
-        xAxisObj = d3.axisBottom(xScale).tickFormat(scales.format[xAxis]);
-        yAxisObj = d3.axisLeft(yScale).tickFormat(scales.format[yAxis]);
+        xAxisObj = d3.axisBottom(xScale).tickArguments(scales.format[xAxis]);
+        yAxisObj = d3.axisLeft(yScale).tickArguments(scales.format[yAxis]);
         svg.select(".x-axis").classed("plot-axis", true)
             .call(xAxisObj)
             .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
