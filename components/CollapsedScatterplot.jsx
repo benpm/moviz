@@ -56,34 +56,6 @@ export default function CCollapsedScatterplot({ movieData }) {
     const [dotStroke, setDotStroke] = useState(1);
     const [quadtrees, setQuadtrees] = useState(null);
 
-    // Handler for mode switch buttons (ViewSelector.jsx)
-    useEffect(() => {
-        switch (viewMode) {
-            case "ratings_oscars":
-                setXAxisList(null);
-                setXAxis("released");
-                setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
-                setYAxis("score");
-                setBrushHandler({ handler: onXBrush, gen: d3.brushX });
-                break;
-            case "movie_economy":
-                setXAxisList(null);
-                setXAxis("released");
-                setYAxisList(["budget", "gross"]);
-                setYAxis("budget");
-                setBrushHandler({ handler: onXBrush, gen: d3.brushX });
-                break;
-            case "cost_quality":
-                setXAxisList(["budget", "gross"]);
-                setXAxis("budget");
-                setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
-                setYAxis("score");
-                setBrushHandler({ handler: onXYBrush, gen: d3.brush });
-                break;
-        }
-        clearBrush();
-    }, [viewMode]);
-
     // Load data on first render 
     useEffect(() => {
         if (data == null) {
@@ -138,66 +110,102 @@ export default function CCollapsedScatterplot({ movieData }) {
         }
     }, [axes, scales, brushMode, zoomObj, bounds]);
 
-    // Brush interaction handler - sets which circles are excluded
-    const onXBrush = (e) => {
-        console.log("scales:", scales, "e:", e);
-        if (scales) {
-            if (e.selection && e.selection[0] != e.selection[1]) {
-                const t = new d3.ZoomTransform(
-                    plotTransform.k,
-                    plotTransform.x + margin.left,
-                    plotTransform.y + margin.top);
-                console.log("onXBrush");
-                // local plot coords -> transformed plot coords -> data coords
-                const [selx0, selx1] = [
-                    scales.iXScale.invert(t.invertX(e.selection[0])),
-                    scales.iXScale.invert(t.invertX(e.selection[1]))];
-                let included = new Set();
-                quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
-                    if (node.data) {
-                        if (node.data.x >= selx0 && node.data.x <= selx1) {
-                            included.add(node.data.idx);
+    // Handler for mode switch buttons (ViewSelector.jsx)
+    useEffect(() => {
+        const onXBrush = (e) => {
+            if (scales) {
+                if (e.selection && e.selection[0] != e.selection[1]) {
+                    const t = new d3.ZoomTransform(
+                        plotTransform.k,
+                        plotTransform.x + margin.left,
+                        plotTransform.y + margin.top);
+                    // local plot coords -> transformed plot coords -> data coords
+                    const [selx0, selx1] = [
+                        scales.iXScale.invert(t.invertX(e.selection[0])),
+                        scales.iXScale.invert(t.invertX(e.selection[1]))];
+                    let included = new Set();
+                    console.log(xAxis, yAxis, intZoomLevel);
+                    quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
+                        if (node.data) {
+                            if (node.data.x >= selx0 && node.data.x <= selx1) {
+                                included.add(node.data.idx);
+                            }
                         }
-                    }
-                    return x0 >= selx1 || x1 < selx0;
-                });
-                d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
-            } else {
-                d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                        return x0 >= selx1 || x1 < selx0;
+                    });
+                    d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
+                } else {
+                    d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                }
             }
-        }
-    };
-    const onXYBrush = (e) => {
-        if (scales) {
-            if (e.selection) {
-                // local plot coords -> transformed plot coords -> data coords
-                const t = new d3.ZoomTransform(
-                    plotTransform.k,
-                    plotTransform.x + margin.left,
-                    plotTransform.y + margin.top);
-                const [selx0, selx1] = [
-                    scales.iXScale.invert(t.invertX(e.selection[0][0])),
-                    scales.iXScale.invert(t.invertX(e.selection[1][0]))];
-                const [sely1, sely0] = [
-                    scales.iYScale.invert(t.invertY(e.selection[0][1])),
-                    scales.iYScale.invert(t.invertY(e.selection[1][1]))];
-                // Add all dots inside the rectangular region to the included set
-                let included = new Set();
-                quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
-                    if (node.data) {
-                        if (node.data.x >= selx0 && node.data.x <= selx1 &&
-                            node.data.y >= sely0 && node.data.y <= sely1) {
-                            included.add(node.data.idx);
+        };
+        const onXYBrush = (e) => {
+            if (scales) {
+                if (e.selection) {
+                    // local plot coords -> transformed plot coords -> data coords
+                    const t = new d3.ZoomTransform(
+                        plotTransform.k,
+                        plotTransform.x + margin.left,
+                        plotTransform.y + margin.top);
+                    const [selx0, selx1] = [
+                        scales.iXScale.invert(t.invertX(e.selection[0][0])),
+                        scales.iXScale.invert(t.invertX(e.selection[1][0]))];
+                    const [sely1, sely0] = [
+                        scales.iYScale.invert(t.invertY(e.selection[0][1])),
+                        scales.iYScale.invert(t.invertY(e.selection[1][1]))];
+                    // Add all dots inside the rectangular region to the included set
+                    let included = new Set();
+                    quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
+                        if (node.data) {
+                            if (node.data.x >= selx0 && node.data.x <= selx1 &&
+                                node.data.y >= sely0 && node.data.y <= sely1) {
+                                included.add(node.data.idx);
+                            }
                         }
-                    }
-                    return x0 >= selx1 || x1 < selx0 || y0 >= sely1 || y1 < sely0;
-                });
-                d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
-            } else {
-                d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                        return x0 >= selx1 || x1 < selx0 || y0 >= sely1 || y1 < sely0;
+                    });
+                    d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
+                } else {
+                    d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                }
             }
+        };
+        switch (viewMode) {
+            case "ratings_oscars":
+                setBrushHandler({ handler: onXBrush, gen: d3.brushX });
+                break;
+            case "movie_economy":
+                setBrushHandler({ handler: onXBrush, gen: d3.brushX });
+                break;
+            case "cost_quality":
+                setBrushHandler({ handler: onXYBrush, gen: d3.brush });
+                break;
         }
-    };
+        clearBrush();
+    }, [viewMode, scales, plotTransform, xAxis, yAxis, intZoomLevel]);
+
+    useEffect(() => {
+        switch (viewMode) {
+            case "ratings_oscars":
+                setXAxisList(null);
+                setXAxis("released");
+                setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
+                setYAxis("score");
+                break;
+            case "movie_economy":
+                setXAxisList(null);
+                setXAxis("released");
+                setYAxisList(["budget", "gross"]);
+                setYAxis("budget");
+                break;
+            case "cost_quality":
+                setXAxisList(["budget", "gross"]);
+                setXAxis("budget");
+                setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
+                setYAxis("score");
+                break;
+        }
+    }, [viewMode]);
 
     // Brush behavior object
     const [brushObj, setBrushObj] = useState({ brush: null });
@@ -232,9 +240,10 @@ export default function CCollapsedScatterplot({ movieData }) {
             brushObj.brush
                 .on("start brush end", brushHandler.handler)
                 .extent([[0, 0], [bounds.width, bounds.height]]);
-            console.debug("associated brush handler")
+            console.debug("associated brush handler", xAxis, yAxis);
+            
         }
-    }, [scales, plotTransform, brushMode, brushHandler, brushObj, bounds]);
+    }, [scales, brushObj, brushHandler, bounds]);
 
     // Brushing enable / disable handler
     useEffect(() => {
@@ -260,7 +269,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             return;
         }
 
-        let _scales = scales || copyScales(gScales);
+        let _scales = copyScales(scales || gScales);
         setScales(_scales);
 
         // Get relevant zoom level, x axis, y axis data subset and swap axes as needed
