@@ -137,7 +137,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
             d3.select(e.target).attr("stroke", "black");
         });
 
-    setTitleText(`Number of Oscar Wins${useNominations && " and Nominations"} for Genres ${yearsExtent[0]} - ${yearsExtent[1]}`);
+    setTitleText(`Number of Oscar Wins${useNominations ? " and Nominations" : ""} for Genres ${yearsExtent[0]} - ${yearsExtent[1]}`);
 }
 
 function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText) {

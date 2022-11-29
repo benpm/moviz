@@ -6,6 +6,7 @@ import CHeatMap from './HeatMap';
 import CCompanionPlot from "./CompanionPlot";
 import useGlobalState from '../hooks/useGlobalState';
 import CCollapsedScatterplot from "./CollapsedScatterplot";
+import { timeFormat } from "d3";
 
 const Dashboard = () => {
   const [data, setData] = useState([]);
@@ -23,18 +24,20 @@ const Dashboard = () => {
             tomatometer_rating: d3.scaleLinear().domain([0, 100]),
             audience_rating: d3.scaleLinear().domain([0, 100]),
             nominations: d3.scaleLinear(),
+            runtime: d3.scaleLinear().domain(d3.extent(data, d => d.runtime)),
           },
           format: {
-            released_zoomed: [10, d3.timeFormat("%b %d, %Y")],
-            released: [10, d3.timeFormat("%Y")],
-            budget: [4, ("$,.1s")],
-            gross: [4, ("$,.1s")],
-            score: [10, "d"],
-            tomatometer_rating: [10, "d"],
-            audience_rating: [10, "d"],
-            nominations: [10, ("~s")],
-            gross: [10, ("$,.1s")],
-            budget: [10, ("$,.1s")],
+            released_zoomed:  d3.timeFormat("%b %d, %Y"),
+            released:  d3.timeFormat("%Y"),
+            budget: d3.format("$,.1s"),
+            gross: d3.format("$,.1s"),
+            score:  d3.format("d"),
+            tomatometer_rating:  d3.format("d"),
+            audience_rating:  d3.format("d"),
+            nominations:  d3.format("~s"),
+            gross:  d3.format("$,.1s"),
+            budget:  d3.format("$,.1s"),
+            runtime:  m => `${m / 60 | 0}h ${m % 60 | 0}m`,
           },
           ticksFilter: {
             score: i => Math.ceil(i) - i == 0.0,
@@ -42,6 +45,7 @@ const Dashboard = () => {
             audience_rating: i => Math.ceil(i) - i == 0.0,
           }
         });
+        console.log(d3.timeFormat("%Y"));
         setData(data);
       });
     }
