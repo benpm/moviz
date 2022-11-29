@@ -9,6 +9,7 @@ import CToggle from "./Toggle";
 function clearPlot(svg) {
     svg.select(".bars").selectAll("*").remove();
     svg.select(".lines").selectAll("*").remove();
+    svg.select(".rects").selectAll("*").remove();
     svg.select(".legend").selectAll("*").remove();
     svg.select(".mouse-line-group").selectAll("*").remove();
     //disable svg event listeners
@@ -21,7 +22,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
     //filter movies with oscar wins
     let oscarData = data.filter(d => {
         return ((useNominations && d.oscar.includes("nominee")) || d.oscar.includes("winner"))
-        && (brushRange === null || (d.year >= brushRange[0] && d.year <= brushRange[1]))
+            && (brushRange === null || (d.year >= brushRange[0] && d.year <= brushRange[1]))
     });
     //bin the data by year and genre and count the number of movies in each bin
     let oscarDataByYear = d3.group(oscarData, d => d.year, d => d.genre);
@@ -142,7 +143,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
 
 function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText) {
     //sum budget of the movies and group them by studio for each data month
-    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company).filter(d => 
+    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company).filter(d =>
         (brushRange === null || (d[0] >= brushRange[0] && d[0] <= brushRange[1]))
     );
     studioBudgetByYear = studioBudgetByYear.map((r) => {
@@ -366,6 +367,86 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     });
 }
 
+function drawDecadeHeatmap(svg, data, bounds, margin, setTitleText) {
+    const CLUSTER_SIZE = 5;
+
+    //create a array of all decades from 1980 to 2020
+    let decades = d3.range(1980, 2022, CLUSTER_SIZE);
+    //get the number of movies per decade
+    let decadeCount = d3.rollup(data, (v) => v.length, (d) => d.year - d.year % CLUSTER_SIZE);
+    //create an array out of the decade count
+    decadeCount = Array.from(decadeCount, ([key, value]) => ({ key, value }));
+
+    let colorScale = d3.scaleSequential(d3.interpolateGnBu).domain([0, 1000]);
+
+    //define the x scale banded
+    let xScale = d3.scaleBand().domain(decades).range([margin.left, bounds.innerWidth + margin.right]);
+
+    //clear axes
+    svg.select(".x-axis").selectAll("*").remove();
+    svg.select(".y-axis").selectAll("*").remove();
+
+    //draw the heatmap
+    let rectGroup = svg.select(".rects")
+        .selectAll("g")
+        .data(decadeCount)
+        .join("g")
+        .attr("transform", (d) => `translate(${xScale(d.key)}, ${bounds.innerHeight / 3})`);
+    rectGroup.append("rect")
+        .attr("width", xScale.bandwidth())
+        .attr("height", bounds.innerHeight / 2.5)
+        .attr("fill", (d) => colorScale(d.value))
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("stroke-opacity", 0.5)
+        .attr("rx", 5)
+        .attr("ry", 5)
+    rectGroup.append("text")
+        //rotate text 45 degrees and render them under the rect
+        .attr("transform", (d, i) => `translate(${xScale.bandwidth() / 2}, ${bounds.innerHeight / 2}) rotate(-45)`)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "0.8em")
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .text((d) => d.key)
+        .attr("opacity", 1);
+
+    //draw legend
+    //generate a 5 element array that has values from decadeCount min to max
+    let legendValues = d3.range(d3.min(decadeCount, (d) => d.value), d3.max(decadeCount, (d) => d.value), d3.max(decadeCount, (d) => d.value) / 28);
+    let legendGroup = svg.select(".legend")
+        .selectAll("g")
+        .data(legendValues)
+        .join("g")
+        .attr("transform", (d, i) =>
+            `translate(${margin.left + bounds.innerWidth + 16} ${margin.top + i * (bounds.innerHeight / 28)})`)
+        .append("rect")
+        .attr("width", 12)
+        .attr("height", (bounds.innerHeight / 27.5))
+        .attr("fill", (d) => colorScale(d));
+
+    //pick 4 points from the legendValues array and use them as labels
+    let legendLabels = [legendValues[0], legendValues[legendValues.length / 4], legendValues[legendValues.length / 2], legendValues[legendValues.length - 1]];
+    svg.select(".legend")
+        .selectAll("g")
+        .data(legendLabels)
+        .append("text")
+        .attr("transform", (d, i) => `translate(-5, ${bounds.innerHeight - i * (bounds.innerHeight / 3) + margin.bottom - margin.top}) rotate(-90)`)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "0.8em")
+        .attr("font-weight", "bold")
+        .attr("fill", "white")
+        .text((d) => parseInt(d))
+        .attr("opacity", 1);
+
+
+
+
+    //Set the title text
+    setTitleText(`Number of Selected Movies per ${CLUSTER_SIZE} Years`);
+}
+
+
 export default function CCompanionPlot({ data }) {
     const [margin, setMargin] = useState({ top: 20, right: 35, bottom: 20, left: 45 });
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
@@ -376,7 +457,7 @@ export default function CCompanionPlot({ data }) {
     const titleRef = useRef();
     const titleSize = useSize(titleRef);
     const [useNominations, setUseNominations] = useState(!~!false);
-    
+
     let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -430,6 +511,7 @@ export default function CCompanionPlot({ data }) {
                 break;
             case "cost_quality":
                 clearPlot(svg);
+                drawDecadeHeatmap(svg, data, bounds, margin, setTitleText);
                 break;
         }
     }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations]);
@@ -445,6 +527,7 @@ export default function CCompanionPlot({ data }) {
                 <g style={{ clipPath: "url(#plot-clip)" }}>
                     <g className="bars"></g>
                     <g className="lines"></g>
+                    <g className="rects"></g>
                     <g className="mouse-line-group"></g>
                 </g>
                 <g className="x-axis"></g>
