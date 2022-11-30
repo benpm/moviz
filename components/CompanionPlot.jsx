@@ -7,6 +7,7 @@ import copyScales from "../scripts/copyScales";
 import CToggle from "./Toggle";
 import { ramp, generateArrayMinMax } from "../scripts/createLegendImage";
 import { exit } from "process";
+import { selectAll } from "d3";
 
 function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange, setTitleText, useNominations) {
     //filter movies with oscar wins
@@ -291,24 +292,6 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             exit.remove()
         });
 
-    //attach mouse listener to legend items make the non selected studios transparent
-    // legendItems.on("mouseover", (e, d) => {
-    //     //make other legend items transparent
-    //     legendItems.filter((s) => s != d).attr("fill-opacity", 0.2);
-    //     //make affiliated area brighter
-    //     svg.select(".lines").selectAll("path")
-    //         .filter((s) => s.key == d)
-    //         .attr("fill", (d) => d3.color(colorScale(d.key)).brighter(1.5))
-    // });
-    // legendItems.on("mouseout", (e, d) => {
-    //     legendItems.attr("fill-opacity", 1);
-    //     //make affiliated area original color
-    //     svg.select(".lines").selectAll("path")
-    //         //reset the fill colors
-    //         .attr("fill", (d) => colorScale(d.key))
-
-    // });
-
     //attach mousehover listener to stacked areas
     svg.select(".lines").selectAll("path")
         .on("mouseover", function (event, d) {
@@ -382,11 +365,9 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
     });
     //sort the decades
     decadeCount = new Map([...decadeCount.entries()].sort((a, b) => a[0] - b[0]));
-    console.log(decadeCount);
-    //create an array out of the decade count
-    decadeCount = Array.from(decadeCount, ([key, value]) => ({ key, value }));
-    let max = d3.max(decadeCount, (d) => d.value);
-    let colorScale = d3.scaleSequential(d3.interpolateGnBu).domain([max, 0]);
+
+    let max = d3.max(decadeCount, (d) => d[1]);
+    let colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0,max]);
 
     //define the x scale banded
     let xScale = d3.scaleBand().domain(decades).range([margin.left, bounds.innerWidth + margin.right]);
@@ -395,41 +376,46 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
     svg.select(".x-axis").selectAll("*").remove();
     svg.select(".y-axis").selectAll("*").remove();
 
-    //draw the heatmap
-    svg.select(".rects")
+    let rects = svg.select(".rects")
         .selectAll("g")
-        .data(decadeCount)
-        .join(
-            enter => {
-                let g = enter.append("g");
-                g.append("rect")
-                    .attr("stroke", "black")
-                    .attr("stroke-width", 1)
-                    .attr("stroke-opacity", 0.5)
-                    .attr("rx", 5)
-                    .attr("ry", 5);
-                g.append("text")
-                    //rotate text 45 degrees and render them under the rect
-                    .attr("transform", (d, i) => `translate(${xScale.bandwidth() / 2}, ${bounds.innerHeight / 2}) rotate(-45)`)
-                    .attr("text-anchor", "middle")
-                    .attr("font-size", "0.8em")
-                    .attr("font-weight", "bold")
-                    .attr("fill", "white")
-                    .text((d) => d.key)
-                    .attr("opacity", 1);
-                return g;
-            },
-            update => update,
-            exit => exit.remove()
-        )
-        .attr("transform", (d) => `translate(${xScale(d.key)}, ${bounds.innerHeight / 3})`)
-        .selectAll("rect")
-        .attr("fill", (d) => colorScale(d.value))
-        .attr("width", xScale.bandwidth())
-        .attr("height", bounds.innerHeight / 2.5);
+        .data(decadeCount);
+
+    rects.join(
+        enter => {
+            let g = enter.append("g").attr("transform", (d) => `translate(${xScale(d[0])}, ${bounds.innerHeight / 3})`);
+            g.append("text")
+                .attr("transform", `translate(${xScale.bandwidth() / 2}, ${bounds.innerHeight / 2}) rotate(-45)`)
+                .attr("text-anchor", "middle")
+                .attr("font-size", "0.8em")
+                .attr("font-weight", "bold")
+                .attr("fill", "white")
+                .text((d) => d[0])
+                .attr("opacity", 1);
+            g.append("rect")
+                .attr("width", xScale.bandwidth())
+                .attr("height", bounds.innerHeight / 3)
+                .attr("fill", (d) => colorScale(d[1]))
+                .attr("stroke", "black")
+                .attr("stroke-width", 1)
+                .attr("stroke-opacity", 0.5)
+                .attr("rx", 5)
+                .attr("ry", 5)
+            return g;
+        },
+        update => {
+            update.attr("transform", (d) => `translate(${xScale(d[0])}, ${bounds.innerHeight / 3})`);
+            update.select("text").attr("transform", `translate(${xScale.bandwidth() / 2}, ${bounds.innerHeight / 2}) rotate(-45)`);
+            update.select("rect")
+                .attr("width", xScale.bandwidth())
+                .attr("height", bounds.innerHeight / 3)
+                .attr("fill", (d) => colorScale(d[1]));
+            return update;
+        },
+        exit => exit.remove()
+    );
 
     //draw legend
-    setLegendImage(ramp(colorScale, true).toDataURL());
+    setLegendImage(ramp(colorScale, false).toDataURL());
     svg.select(".legend-ticks")
         .selectAll("text")
         .data(generateArrayMinMax(0, max, 4))
