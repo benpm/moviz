@@ -51,21 +51,22 @@ def extent(data: pd.DataFrame, field: str, conv: callable = lambda x: x):
 ZOOM_LEVELS = 3
 SIM_BOUNDS = ((-1000, 1000), (-300, 300))
 AXES = [
-    ["released", "score"],
-    ["released", "audience_rating"],
-    ["released", "tomatometer_rating"],
-    ["released", "budget"],
-    ["released", "gross"],
-    ["released", "profit"],
-    ["budget", "score"],
-    ["budget", "audience_rating"],
-    ["budget", "tomatometer_rating"],
-    ["gross", "score"],
-    ["gross", "audience_rating"],
-    ["gross", "tomatometer_rating"],
-    ["profit", "score"],
-    ["profit", "audience_rating"],
-    ["profit", "tomatometer_rating"],
+    # (exclude_oscars, [x_axis, y_axis])
+    (True, ["released", "score"]),
+    (True, ["released", "audience_rating"]),
+    (True, ["released", "tomatometer_rating"]),
+    (True, ["released", "budget"]),
+    (True, ["released", "gross"]),
+    (True, ["released", "profit"]),
+    (False, ["budget", "score"]),
+    (False, ["budget", "audience_rating"]),
+    (False, ["budget", "tomatometer_rating"]),
+    (False, ["gross", "score"]),
+    (False, ["gross", "audience_rating"]),
+    (False, ["gross", "tomatometer_rating"]),
+    (False, ["profit", "score"]),
+    (False, ["profit", "audience_rating"]),
+    (False, ["profit", "tomatometer_rating"]),
 ]
 # Radius of deepest zoom level dots
 BASE_RADIUS = 3
@@ -87,7 +88,7 @@ SIM_THREADS = 8
 MIN_FULLNESS = 0.65
 
 class Dot(pymunk.Circle):
-    def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space) -> None:
+    def __init__(self, data_idx: set[int], radius: float, pos: Vec2d, space: pymunk.Space, can_coalesce: bool = True) -> None:
         body = pymunk.Body()
         body.position = pos + Vec2d(uniform(-0.5, 0.5), uniform(-0.5, 0.5))
         super().__init__(body, radius)
@@ -96,6 +97,7 @@ class Dot(pymunk.Circle):
         self.friction = 0.0
         self.init_pos = pos
         self.density = 1
+        self.can_coalesce = can_coalesce
         space.add(self.body, self)
     
     def pre_step(self):
@@ -123,6 +125,7 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
         # Attempt to construct a new group by finding near dots to source_dot
         while queue:
             dot = queue.pop()
+            if not dot.can_coalesce: continue
             last_group = group.copy()
 
             # Find all dots within GROUPING_BIAS * radius of dot
@@ -132,7 +135,7 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
             # Add all dots to group and queue if not already in a group
             added = 0
             for qdot in query:
-                if qdot not in grouped_dots and qdot not in group:
+                if qdot not in grouped_dots and qdot not in group and qdot.can_coalesce:
                     group.add(qdot)
                     queue.append(qdot)
                     added += 1
@@ -159,7 +162,7 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
         if len(group) > 1:
             # Add all dots inside group radius to group, if they are not already in a group
             for qi in space.point_query(center, radius, pymunk.ShapeFilter()):
-                if qi.shape not in grouped_dots and qi.shape not in group:
+                if qi.shape not in grouped_dots and qi.shape not in group and qi.shape.can_coalesce:
                     group.add(qi.shape)
 
             # Reject if less than minimum fullness
@@ -220,7 +223,7 @@ def main():
     space = pymunk.Space()
     space.gravity = 0, 0
 
-    for x_axis, y_axis in AXES:
+    for exclude_oscars, (x_axis, y_axis) in AXES:
         print(f"\nsimulating on {x_axis} / {y_axis}")
 
         # Initialize zoom level 0 space
@@ -237,7 +240,8 @@ def main():
             yscale = scales[y_axis]
             yscale.set_domain(SIM_BOUNDS[1])
             lvls[0][1].append(Dot(set([i]), BASE_RADIUS,
-                Vec2d(xscale(row[x_axis]), yscale(row[y_axis])), space))
+                Vec2d(xscale(row[x_axis]), yscale(row[y_axis])), space,
+                not (exclude_oscars and row["nominations"] > 0)))
 
         # Run the simulation for zoom level 0
         print(f"running initial simulation of {len(lvls[0][1])} dots...")

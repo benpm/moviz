@@ -6,31 +6,7 @@ import * as hb from "d3-hexbin";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 import CDropdown from "./Dropdown";
-
-function ramp(scale, n = 256) {
-    const color = scale.copy().domain(d3.quantize(d3.interpolate(0, n), n));
-    const canvas = document.createElement("canvas");
-    canvas.width = n;
-    canvas.height = 1;
-    const context = canvas.getContext("2d");
-    for (let i = 0; i < n; ++i) {
-        context.fillStyle = color(i / (n - 1));
-        context.fillRect(i, 0, 1, 1);
-    }
-    return canvas;
-}
-
-//https://stackoverflow.com/questions/63842169/i-have-min-and-max-number-how-can-i-generate-n-number-of-array
-function generateArrayMinMax(min, max, n) {
-    let list = [min],
-        interval = (max - min) / (n - 1);
-
-    for (let i = 1; i < n - 1; i++) {
-        list.push(Number.parseInt(min + interval * i));
-    }
-    list.push(Number.parseInt(max));                        // prevent floating point arithmetic errors
-    return list;
-}
+import {ramp, generateArrayMinMax} from "../scripts/createLegendImage";
 
 export default function CHeatMap({ data }) {
     const margin = { top: 20, right: 35, bottom: 20, left: 50 };
@@ -206,7 +182,7 @@ export default function CHeatMap({ data }) {
                 <g style={{ clipPath: "url(#plot-clip)" }}>
                     <g className="hexagons"></g>
                 </g>
-                <g className="legend" transform={`translate(${bounds.width - margin.right / 3},${bounds.height - margin.bottom}) rotate(-90 0,0)`}>
+                <g className="legend-h" transform={`translate(${bounds.width - margin.right / 3},${bounds.height - margin.bottom}) rotate(-90 0,0)`}>
                     <image width={bounds.height - margin.bottom - margin.top} height={margin.right / 3} preserveAspectRatio="none" xlinkHref={legendImage}></image>
                     <g className="legend-ticks">
                         <text x={margin.bottom - margin.top} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>

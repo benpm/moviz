@@ -5,19 +5,8 @@ import useSize from "../hooks/useSize";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 import CToggle from "./Toggle";
+import {ramp, generateArrayMinMax} from "../scripts/createLegendImage";
 import { exit } from "process";
-
-function clearPlot(svg) {
-    svg.select(".bars").selectAll("*").remove();
-    svg.select(".lines").selectAll("*").remove();
-    svg.select(".rects").selectAll("*").remove();
-    svg.select(".legend").selectAll("*").remove();
-    svg.select(".mouse-line-group").selectAll("*").remove();
-    //disable svg event listeners
-    svg.on("mousemove", null);
-    svg.on("mouseout", null);
-    svg.on("mouseover", null);
-}
 
 function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange, setTitleText, useNominations) {
     //filter movies with oscar wins
@@ -269,7 +258,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
 
     //legend.selectAll(".legend-item").remove() IMPORTANT CRUTCH ENABLE IF SOMETHING BREAKS
-    
+
     //create legend items
     let legendItems = legend.selectAll(".legend-item")
         .data(allStudios)
@@ -297,22 +286,22 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         });
 
     //attach mouse listener to legend items make the non selected studios transparent
-    legendItems.on("mouseover", (e, d) => {
-        //make other legend items transparent
-        legendItems.filter((s) => s != d).attr("fill-opacity", 0.2);
-        //make affiliated area brighter
-        svg.select(".lines").selectAll("path")
-            .filter((s) => s.key == d)
-            .attr("fill", (d) => d3.color(colorScale(d.key)).brighter(1.5))
-    });
-    legendItems.on("mouseout", (e, d) => {
-        legendItems.attr("fill-opacity", 1);
-        //make affiliated area original color
-        svg.select(".lines").selectAll("path")
-            //reset the fill colors
-            .attr("fill", (d) => colorScale(d.key))
+    // legendItems.on("mouseover", (e, d) => {
+    //     //make other legend items transparent
+    //     legendItems.filter((s) => s != d).attr("fill-opacity", 0.2);
+    //     //make affiliated area brighter
+    //     svg.select(".lines").selectAll("path")
+    //         .filter((s) => s.key == d)
+    //         .attr("fill", (d) => d3.color(colorScale(d.key)).brighter(1.5))
+    // });
+    // legendItems.on("mouseout", (e, d) => {
+    //     legendItems.attr("fill-opacity", 1);
+    //     //make affiliated area original color
+    //     svg.select(".lines").selectAll("path")
+    //         //reset the fill colors
+    //         .attr("fill", (d) => colorScale(d.key))
 
-    });
+    // });
 
     //attach mousehover listener to stacked areas
     svg.select(".lines").selectAll("path")
@@ -347,6 +336,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         let year = xScale.invert(mx - margin.left);
         //round year to nearest integer
         year = Math.round(year);
+        let legend = svg.select(".legend")
+            .attr("transform", `translate(${mx > bounds.innerWidth / 2 ? mx - 180 : mx + 10}, ${margin.top + 10})`);
     });
 
     svg.on("mouseover", (e, d) => {
@@ -361,10 +352,12 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         d3.select(".mouse-line-group")
             .selectAll("line")
             .attr("stroke-opacity", 0);
+        d3.select(".legend")
+            .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
     });
 }
 
-function drawDecadeHeatmap(svg, data, bounds, margin, setTitleText) {
+function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText) {
     const CLUSTER_SIZE = 5;
 
     //create a array of all decades from 1980 to 2020
@@ -387,29 +380,42 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setTitleText) {
     let rectGroup = svg.select(".rects")
         .selectAll("g")
         .data(decadeCount)
-        .join("g")
+        .join(
+            enter => {
+                let g = enter.append("g");
+                g.append("rect")
+                    .attr("width", xScale.bandwidth())
+                    .attr("height", bounds.innerHeight / 2.5)
+                    .attr("fill", (d) => colorScale(d.value))
+                    .attr("stroke", "black")
+                    .attr("stroke-width", 1)
+                    .attr("stroke-opacity", 0.5)
+                    .attr("rx", 5)
+                    .attr("ry", 5);
+                g.append("text")
+                    //rotate text 45 degrees and render them under the rect
+                    .attr("transform", (d, i) => `translate(${xScale.bandwidth() / 2}, ${bounds.innerHeight / 2}) rotate(-45)`)
+                    .attr("text-anchor", "middle")
+                    .attr("font-size", "0.8em")
+                    .attr("font-weight", "bold")
+                    .attr("fill", "white")
+                    .text((d) => d.key)
+                    .attr("opacity", 1);
+                return g;
+            }
+        )
         .attr("transform", (d) => `translate(${xScale(d.key)}, ${bounds.innerHeight / 3})`);
-    rectGroup.append("rect")
-        .attr("width", xScale.bandwidth())
-        .attr("height", bounds.innerHeight / 2.5)
-        .attr("fill", (d) => colorScale(d.value))
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
-        .attr("stroke-opacity", 0.5)
-        .attr("rx", 5)
-        .attr("ry", 5)
-    rectGroup.append("text")
-        //rotate text 45 degrees and render them under the rect
-        .attr("transform", (d, i) => `translate(${xScale.bandwidth() / 2}, ${bounds.innerHeight / 2}) rotate(-45)`)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "0.8em")
-        .attr("font-weight", "bold")
-        .attr("fill", "white")
-        .text((d) => d.key)
-        .attr("opacity", 1);
 
     //draw legend
-    //generate a 5 element array that has values from decadeCount min to max
+    //find the max number of movies in a decade
+    let max = d3.max(decadeCount, (d) => d.value);
+    setLegendImage(ramp(colorScale).toDataURL());
+    svg.select(".legend-ticks")
+        .selectAll("text")
+        .data(generateArrayMinMax(0, max, 4))
+        .join("text")
+        .text((d) => d)
+
 
     //Set the title text
     setTitleText(`Number of Selected Movies per ${CLUSTER_SIZE} Years`);
@@ -479,7 +485,7 @@ export default function CCompanionPlot({ data }) {
                 break;
             case "cost_quality":
                 //clearPlot(svg);
-                drawDecadeHeatmap(svg, data, bounds, margin, setTitleText);
+                drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText);
                 break;
         }
     }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations]);
@@ -492,18 +498,37 @@ export default function CCompanionPlot({ data }) {
                         <rect fill="white" x={margin.left} y={margin.top} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
-                <g style={{ clipPath: "url(#plot-clip)" }}>
+                <g>
                     {viewMode == "ratings_oscars" && <g className="bars"></g>}
-                    {viewMode == "movie_economy" && <><g className="lines"></g>
+                    {viewMode == "movie_economy" && <><g className="lines" style={{ clipPath: "url(#plot-clip)" }}></g>
                         <g className="mouse-line-group"></g>
-                        <g className="legend">
-                            <rect x={-margin.left / 10} y={-margin.top / 3} 
-                            width="170" height="180" fill="white" fillOpacity="0.1"
-                            stroke="white" strokeWidth="1" strokeOpacity="0.5"
-                            rx={5}></rect>
+                        <g className="legend pointer-events-none">
+                            <rect x={-margin.left / 10} y={-margin.top / 3}
+                                width="170" height="180" fill="#505050" fillOpacity={0.7}
+                                stroke="white" strokeWidth="1" strokeOpacity="0.5"
+                                rx={5}></rect>
                         </g>
                     </>}
-                    {viewMode == "cost_quality" && <g className="rects"></g>}
+                    {viewMode == "cost_quality" &&
+                        <>
+                            <g className="rects"></g>
+                            <g className=".legend" transform={`translate(${bounds.width - margin.right / 3},${bounds.height - margin.bottom}) rotate(-90 0,0)`}>
+                                <image width={bounds.innerHeight} height={margin.right / 3} preserveAspectRatio="none" xlinkHref={legendImage}></image>
+                                <g className="legend-ticks">
+                                    <text x={margin.bottom - margin.top} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                                    <line x1={0} y1={0} x2={0} y2={margin.right / 3} stroke="white" strokeWidth={2} />
+
+                                    <text x={(bounds.innerHeight) / 3} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                                    <line x1={(bounds.innerHeight) / 3} y1={0} x2={(bounds.innerHeight) / 3} y2={margin.right / 3} stroke="white" strokeWidth={2} />
+
+                                    <text x={(bounds.innerHeight) * 2 / 3} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                                    <line x1={(bounds.innerHeight) * 2 / 3} y1={0} x2={(bounds.innerHeight) * 2 / 3} y2={margin.right / 3} stroke="white" strokeWidth={2} />
+
+                                    <text x={(bounds.innerHeight)} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
+                                    <line x1={(bounds.innerHeight)} y1={0} x2={(bounds.innerHeight)} y2={margin.right / 3} stroke="white" strokeWidth={2} />
+                                </g>
+                            </g>
+                        </>}
                 </g>
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>

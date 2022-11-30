@@ -72,6 +72,7 @@ companies = sorted(movies["company"].unique().tolist())
 company_map = {
     "Walt Disney Animation Studios": "Walt Disney Pictures",
     "Fox 2000 Pictures": "Twentieth Century Fox",
+    "Metro-Goldwyn-Mayer (MGM)": "MGM",
 }
 for a, b in combinations(companies, 2):
     if fuzz.token_set_ratio(a, b) > 95:
