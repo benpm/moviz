@@ -198,7 +198,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     stackedStudioBudgetByYear = stackedStudioBudgetByYear(studioBudgetByYear);
     //create a categorical color scale for every studio from the top 25\
     let colorScale = d3.scaleOrdinal(
-        [...d3.schemeTableau10 , ...d3.schemeSet3 ])
+        [...d3.schemeTableau10, ...d3.schemeSet3])
         .domain(/*toggleOtherStudios ?*/['Other', allStudios] /*: allStudios*/);
 
     //get maximum budget overall filter out entry with key 'year'
@@ -345,7 +345,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .attr("stroke-dasharray", "5,2");
         //get year of mouse position
         let year = xScale.invert(mx - margin.left);
-        if(year < yearsExtent[0] || year > yearsExtent[1]) {
+        if (year < yearsExtent[0] || year > yearsExtent[1]) {
             return;
         }
         //round year to nearest integer
@@ -371,7 +371,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         d3.select(".legend")
             .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
         legend.selectAll(".legend-item-value")
-        .text((d) =>'');
+            .text((d) => '');
     });
 }
 
@@ -394,7 +394,7 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
     decadeCount = new Map([...decadeCount.entries()].sort((a, b) => a[0] - b[0]));
 
     let max = d3.max(decadeCount, (d) => d[1]);
-    let colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0,max]);
+    let colorScale = d3.scaleSequential(d3.interpolateInferno).domain([0, max]);
 
     //define the x scale banded
     let xScale = d3.scaleBand().domain(decades).range([margin.left, bounds.innerWidth + margin.right]);
@@ -466,7 +466,7 @@ export default function CCompanionPlot({ data }) {
     const titleSize = useSize(titleRef);
     const [useNominations, setUseNominations] = useState(!~!false);
 
-    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
+    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, setToggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
@@ -474,6 +474,7 @@ export default function CCompanionPlot({ data }) {
         state.scales,
         state.viewMode,
         state.companionPlotShowOtherStudios,
+        state.setCompanionPlotShowOtherStudios,
         state.brushRange,
         state.brushFilter
     ]);
@@ -521,6 +522,11 @@ export default function CCompanionPlot({ data }) {
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
+            {viewMode == "movie_economy" &&
+                <div className="absolute bottom-12 left-10 z-50 text-white">
+                    <CToggle handler={v => setToggleOtherStudios(v)} icon="horizontal_split" label="Other Studios" initValue={true}></CToggle>
+                </div>
+            }
             <svg ref={ref} width={bounds.width} height={bounds.height} className="absolute top-0 left-0">
                 <defs>
                     <clipPath id="plot-clip">

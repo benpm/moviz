@@ -19,7 +19,7 @@ const CLeftPanel = function ({ }) {
 }
 
 const CRightPanel = function ({ }) {
-    const [viewMode, setViewMode, toggleOtherStudios] = useGlobalState(s => [s.viewMode, s.setViewMode, s.setCompanionPlotShowOtherStudios]);
+    const [viewMode, setViewMode] = useGlobalState(s => [s.viewMode, s.setViewMode]);
     //TODO:View specific stuff
     //TODO:if economic metrics are rendered adjust for inflation switch 
     //that also should adjust the inflation for companion plot
@@ -28,9 +28,11 @@ const CRightPanel = function ({ }) {
 
     return (
         <div>
-            {viewMode == "movie_economy" ? 
-                <CToggle handler={v => toggleOtherStudios(v)} icon="horizontal_split" label="Other Studios" initValue={false}></CToggle> :
-                null}
+            {viewMode == "movie_economy" ?
+                <div className="flex">
+                    <CToggle handler={v=>console.log("ouch!")} icon="timeline" label="Show Trend" initValue={false}></CToggle>
+                </div> : null
+            }
         </div>
     );
 }
