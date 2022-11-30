@@ -353,7 +353,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         let legend = svg.select(".legend")
             .attr("transform", `translate(${mx > bounds.innerWidth / 2 ? mx - 180 : mx + 10}, ${margin.top + 10})`);
         legend.selectAll(".legend-item-value")
-            .text((d) => dollarFormat(studioBudgetByYearDict[year][d]));
+            .text((d) => studioBudgetByYearDict[year][d] ? dollarFormat(studioBudgetByYearDict[year][d]) : "");
     });
 
     svg.on("mouseover", (e, d) => {
@@ -536,7 +536,7 @@ export default function CCompanionPlot({ data }) {
                 <g>
                     {viewMode == "ratings_oscars" && <g className="bars"></g>}
                     {viewMode == "movie_economy" && <><g className="lines" style={{ clipPath: "url(#plot-clip)" }}></g>
-                        <g className="mouse-line-group"></g>
+                        <g className="mouse-line-group pointer-events-none"></g>
                         <g className="legend pointer-events-none">
                             <rect x={-margin.left / 10} y={-margin.top / 3}
                                 width="170" height="180" fill="#505050" fillOpacity={0.7}

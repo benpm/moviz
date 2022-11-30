@@ -11,6 +11,7 @@ function loadMovieData() {
             d.year = parseInt(d.year);
             d.budget = parseInt(d.budget);
             d.gross = parseInt(d.gross);
+            d.profit = parseInt(d.profit);
             d.released = new Date(d.released);
             d.runtime = parseInt(d.runtime);
             d.score = parseFloat(d.score);

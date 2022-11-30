@@ -55,9 +55,9 @@ AXES = [
     (True, ["released", "score"]),
     (True, ["released", "audience_rating"]),
     (True, ["released", "tomatometer_rating"]),
-    (True, ["released", "budget"]),
-    (True, ["released", "gross"]),
-    (True, ["released", "profit"]),
+    (False, ["released", "budget"]),
+    (False, ["released", "gross"]),
+    (False, ["released", "profit"]),
     (False, ["budget", "score"]),
     (False, ["budget", "audience_rating"]),
     (False, ["budget", "tomatometer_rating"]),
@@ -181,7 +181,7 @@ def coalesce(space: pymunk.Space, dots: list[Dot], max_radius: float) -> tuple[p
     if len(grouped_dots) < len(dots):
         for dot in dots:
             if dot not in grouped_dots:
-                out_dots.append(Dot(dot.data_idx, dot.radius, dot.body.position, out_space))
+                out_dots.append(Dot(dot.data_idx, dot.radius, dot.body.position, out_space, dot.can_coalesce))
 
     return out_space, out_dots
 

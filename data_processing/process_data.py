@@ -73,6 +73,7 @@ company_map = {
     "Walt Disney Animation Studios": "Walt Disney Pictures",
     "Fox 2000 Pictures": "Twentieth Century Fox",
     "Metro-Goldwyn-Mayer (MGM)": "MGM",
+    "Pixar Animations Studios": "Pixar",
 }
 for a, b in combinations(companies, 2):
     if fuzz.token_set_ratio(a, b) > 95:
@@ -84,6 +85,9 @@ for a, b in combinations(companies, 2):
                 company_map[b] = a
 pprint(company_map)
 movies["company"] = movies["company"].apply(lambda x: company_map[x] if x in company_map else x)
+
+# Remove movies with missing gross or budget
+movies = movies.dropna(subset=["gross", "budget"])
 
 movies["profit"] = movies["gross"] - movies["budget"]
 

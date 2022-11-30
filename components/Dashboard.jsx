@@ -22,7 +22,7 @@ const Dashboard = () => {
             year: d3.scaleLinear().domain(d3.extent(data, d => d.year)),
             budget: d3.scaleLog().domain(d3.extent(data, d => d.budget)),
             gross: d3.scaleLog().domain(d3.extent(data, d => d.gross)),
-            profit: d3.scaleLinear().domain(d3.extent(data, d => d.gross)),
+            profit: d3.scaleLinear().domain(d3.extent(data, d => d.profit)),
             score: d3.scaleLinear().domain([0, 10]),
             tomatometer_rating: d3.scaleLinear().domain([0, 100]),
             audience_rating: d3.scaleLinear().domain([0, 100]),
