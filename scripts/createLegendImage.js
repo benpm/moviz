@@ -1,13 +1,13 @@
 import * as d3 from "d3";
 
-function ramp(scale, n = 256) {
+function ramp(scale, inverted =false, n = 256) {
     const color = scale.copy().domain(d3.quantize(d3.interpolate(0, n), n));
     const canvas = document.createElement("canvas");
     canvas.width = n;
     canvas.height = 1;
     const context = canvas.getContext("2d");
     for (let i = 0; i < n; ++i) {
-        context.fillStyle = color(i / (n - 1));
+        context.fillStyle = color((inverted ? (n-i) : i) / (n - 1));
         context.fillRect(i, 0, 1, 1);
     }
     return canvas;

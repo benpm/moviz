@@ -130,7 +130,6 @@ export default function CCollapsedScatterplot({ movieData }) {
                         scales.f[xAxis].invert(t.invertX(e.selection[0])).getFullYear(),
                         scales.f[xAxis].invert(t.invertX(e.selection[1])).getFullYear()]);
                     let included = new Set();
-                    console.log(xAxis, yAxis, intZoomLevel);
                     quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
                         if (node.data) {
                             if (node.data.x >= selx0 && node.data.x <= selx1) {
@@ -139,7 +138,6 @@ export default function CCollapsedScatterplot({ movieData }) {
                         }
                         return x0 >= selx1 || x1 < selx0;
                     });
-                    setBrushFilter(included);
                     d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
                 } else {
                     d3.select(ref.current).selectAll(".dot").classed("excluded", false);
@@ -162,15 +160,18 @@ export default function CCollapsedScatterplot({ movieData }) {
                         scales.iYScale.invert(t.invertY(e.selection[1][1]))];
                     // Add all dots inside the rectangular region to the included set
                     let included = new Set();
+                    let movieIDs = [];
                     quadtrees[intZoomLevel][xAxis][yAxis].visit((node, x0, y0, x1, y1) => {
                         if (node.data) {
                             if (node.data.x >= selx0 && node.data.x <= selx1 &&
                                 node.data.y >= sely0 && node.data.y <= sely1) {
                                 included.add(node.data.idx);
+                                movieIDs.push(...node.data.movies);
                             }
                         }
                         return x0 >= selx1 || x1 < selx0 || y0 >= sely1 || y1 < sely0;
                     });
+                    setBrushFilter(movieIDs);
                     d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
                 } else {
                     d3.select(ref.current).selectAll(".dot").classed("excluded", false);

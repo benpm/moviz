@@ -29,7 +29,7 @@ export default function CToggle({handler, label, icon, initValue}) {
                     className={buttonStyle}>
                 <span className="material-symbols-outlined">{icon instanceof Array ? icon[Number(toggled)] : icon}</span>
             </button>
-            <p className="p-2">{label}</p>
+            <p className="p-2">{label instanceof Array ? label[Number(toggled)] : label}</p>
         </div>
     );
 }

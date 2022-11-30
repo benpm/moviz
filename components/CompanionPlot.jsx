@@ -5,7 +5,7 @@ import useSize from "../hooks/useSize";
 import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 import CToggle from "./Toggle";
-import {ramp, generateArrayMinMax} from "../scripts/createLegendImage";
+import { ramp, generateArrayMinMax } from "../scripts/createLegendImage";
 import { exit } from "process";
 
 function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, brushRange, setTitleText, useNominations) {
@@ -159,10 +159,10 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         });
     });
     //sort avgBudgetByStudio by budget
-    totalBudgetByStudio = ([...totalBudgetByStudio.entries()].sort((a, b) => b[1] - a[1]));
+    let totalBudgetByStudioSorted = ([...totalBudgetByStudio.entries()].sort((a, b) => b[1] - a[1]));
     //get top n studios
     const TOP_N = 15;
-    let topNStudios = d3.group(totalBudgetByStudio.slice(0, TOP_N), d => d[0]);
+    let topNStudios = d3.group(totalBudgetByStudioSorted.slice(0, TOP_N), d => d[0]);
     //accumilate the studios that are not in the top TOP_N into "Other" for all years
     for (let d of studioBudgetByYear) {
         let sum = 0;
@@ -275,6 +275,12 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
                 .attr("font-size", "0.7em")
                 .attr("fill", "white")
                 .text((d) => d);
+            g.append("text")
+                .classed("legend-item-value", true)
+                .attr("x", 120)
+                .attr("y", 6)
+                .attr("font-size", "0.7em")
+                .attr("fill", "white");
             return g;
         }, update => {
             let g = update.classed("legend-item", true).attr("transform", (d, i) => `translate(0, ${i * 10.5})`);
@@ -338,6 +344,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         year = Math.round(year);
         let legend = svg.select(".legend")
             .attr("transform", `translate(${mx > bounds.innerWidth / 2 ? mx - 180 : mx + 10}, ${margin.top + 10})`);
+        legend.selectAll(".legend-item-value")
+            .text((d) => totalBudgetByStudio.get(d));
     });
 
     svg.on("mouseover", (e, d) => {
@@ -357,17 +365,28 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     });
 }
 
-function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText) {
+function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText, brushFilter) {
     const CLUSTER_SIZE = 5;
 
+    //filter data to only include movies that are in the brush filter
+    data = brushFilter.length > 0 ? brushFilter.map(i => data[i]) : data;
     //create a array of all decades from 1980 to 2020
     let decades = d3.range(1980, 2022, CLUSTER_SIZE);
     //get the number of movies per decade
     let decadeCount = d3.rollup(data, (v) => v.length, (d) => d.year - d.year % CLUSTER_SIZE);
+    //push in the empty decades with 0 movies
+    decades.forEach((d) => {
+        if (!decadeCount.has(d)) {
+            decadeCount.set(d, 0);
+        }
+    });
+    //sort the decades
+    decadeCount = new Map([...decadeCount.entries()].sort((a, b) => a[0] - b[0]));
+    console.log(decadeCount);
     //create an array out of the decade count
     decadeCount = Array.from(decadeCount, ([key, value]) => ({ key, value }));
-
-    let colorScale = d3.scaleSequential(d3.interpolateGnBu).domain([0, 1000]);
+    let max = d3.max(decadeCount, (d) => d.value);
+    let colorScale = d3.scaleSequential(d3.interpolateGnBu).domain([max, 0]);
 
     //define the x scale banded
     let xScale = d3.scaleBand().domain(decades).range([margin.left, bounds.innerWidth + margin.right]);
@@ -377,16 +396,13 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
     svg.select(".y-axis").selectAll("*").remove();
 
     //draw the heatmap
-    let rectGroup = svg.select(".rects")
+    svg.select(".rects")
         .selectAll("g")
         .data(decadeCount)
         .join(
             enter => {
                 let g = enter.append("g");
                 g.append("rect")
-                    .attr("width", xScale.bandwidth())
-                    .attr("height", bounds.innerHeight / 2.5)
-                    .attr("fill", (d) => colorScale(d.value))
                     .attr("stroke", "black")
                     .attr("stroke-width", 1)
                     .attr("stroke-opacity", 0.5)
@@ -402,14 +418,18 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
                     .text((d) => d.key)
                     .attr("opacity", 1);
                 return g;
-            }
+            },
+            update => update,
+            exit => exit.remove()
         )
-        .attr("transform", (d) => `translate(${xScale(d.key)}, ${bounds.innerHeight / 3})`);
+        .attr("transform", (d) => `translate(${xScale(d.key)}, ${bounds.innerHeight / 3})`)
+        .selectAll("rect")
+        .attr("fill", (d) => colorScale(d.value))
+        .attr("width", xScale.bandwidth())
+        .attr("height", bounds.innerHeight / 2.5);
 
     //draw legend
-    //find the max number of movies in a decade
-    let max = d3.max(decadeCount, (d) => d.value);
-    setLegendImage(ramp(colorScale).toDataURL());
+    setLegendImage(ramp(colorScale, true).toDataURL());
     svg.select(".legend-ticks")
         .selectAll("text")
         .data(generateArrayMinMax(0, max, 4))
@@ -469,23 +489,19 @@ export default function CCompanionPlot({ data }) {
         } else if (!scales) {
             scales = copyScales(gScales);
         }
-
         switch (viewMode) {
             case "ratings_oscars":
-                //clearPlot(svg);
                 drawStackedBarChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
                     brushRange, setTitleText, useNominations);
                 break;
             case "movie_economy":
-                //clearPlot(svg);
                 drawStackedLineChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
                     viewMode, toggleOtherStudios, brushRange, setTitleText);
                 break;
             case "cost_quality":
-                //clearPlot(svg);
-                drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText);
+                drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText, brushFilter);
                 break;
         }
     }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations]);

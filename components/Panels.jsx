@@ -12,7 +12,8 @@ const CLeftPanel = function ({ }) {
 
     return (
         <div>
-            <CToggle handler={v => setBrushMode(v)} icon="brush" label="Brush Mode" initValue={false}></CToggle>
+            <CToggle handler={v => setBrushMode(v)} icon={["pan_tool", "brush"]}
+                label={["Pan Mode", "Brush Mode"]} initValue={false}></CToggle>
         </div>
     );
 }
