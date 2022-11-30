@@ -132,9 +132,9 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
     setTitleText(`Number of Oscar Wins${useNominations ? " and Nominations" : ""} for Genres ${yearsExtent[0]} - ${yearsExtent[1]}`);
 }
 
-function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText) {
+function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis) {
     //sum budget of the movies and group them by studio for each data month
-    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d.budget), d => d.year, d => d.company).filter(d =>
+    let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d[yAxis]), d => d.year, d => d.company).filter(d =>
         (brushRange === null || (d[0] >= brushRange[0] && d[0] <= brushRange[1]))
     );
     studioBudgetByYear = studioBudgetByYear.map((r) => {
@@ -249,10 +249,15 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("stroke-width", 2)
         .attr("stroke-linejoin", "round")
         .attr("stroke-linecap", "round");
-
+    //Map that maps studio names to their corresponding title string
+    const axisTitles = {
+        "budget": "Budget",
+        "gross": "Revenue",
+        "profit": "Profit",
+    };
     setTitleText(toggleOtherStudios ?
-        `Stacked Budget of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
-        `Stacked Budget of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
+        `Stacked ${axisTitles[yAxis]} of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
+        `Stacked ${axisTitles[yAxis]} of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
 
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
@@ -267,7 +272,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             let g = enter.append("g").classed("legend-item", true)
                 .attr("transform", (d, i) => `translate(0, ${i * 10.5})`);
             g.append("rect")
-                .attr("width", 6)
+                .attr("width", 10)
                 .attr("height", 6)
                 .attr("fill", (d) => colorScale(d));
             g.append("text")
@@ -278,7 +283,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
                 .text((d) => d);
             g.append("text")
                 .classed("legend-item-value", true)
-                .attr("x", 120)
+                .attr("x", 125)
                 .attr("y", 6)
                 .attr("font-size", "0.7em")
                 .attr("fill", "white");
@@ -304,6 +309,23 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             d3.select(event.target).attr("fill", colorScale(d.key))
             d3.selectAll(".legend-item").attr("opacity", 1);
         });
+    //go over studioBudgetByYear create a dictionary for each year insert studio name and budget
+
+    let studioBudgetByYearDict = {};
+    studioBudgetByYear.forEach((d) => {
+        if (studioBudgetByYearDict[d.year] == undefined) {
+            studioBudgetByYearDict[d.year] = {};
+        }
+        //go over all the studios from all studios
+        allStudios.forEach((studio) => {
+            //if studio is in the current year add it to the dictionary
+            if (d[studio] != undefined) {
+                studioBudgetByYearDict[d.year][studio] = d[studio];
+            }
+        });
+    });
+
+    const dollarFormat = d3.format("$,.3s");
 
     svg.on("mousemove", (e, d) => {
         //get mouse position
@@ -323,12 +345,15 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .attr("stroke-dasharray", "5,2");
         //get year of mouse position
         let year = xScale.invert(mx - margin.left);
+        if(year < yearsExtent[0] || year > yearsExtent[1]) {
+            return;
+        }
         //round year to nearest integer
         year = Math.round(year);
         let legend = svg.select(".legend")
             .attr("transform", `translate(${mx > bounds.innerWidth / 2 ? mx - 180 : mx + 10}, ${margin.top + 10})`);
         legend.selectAll(".legend-item-value")
-            .text((d) => totalBudgetByStudio.get(d));
+            .text((d) => dollarFormat(studioBudgetByYearDict[year][d]));
     });
 
     svg.on("mouseover", (e, d) => {
@@ -345,6 +370,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .attr("stroke-opacity", 0);
         d3.select(".legend")
             .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
+        legend.selectAll(".legend-item-value")
+        .text((d) =>'');
     });
 }
 
@@ -484,7 +511,7 @@ export default function CCompanionPlot({ data }) {
             case "movie_economy":
                 drawStackedLineChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
-                    viewMode, toggleOtherStudios, brushRange, setTitleText);
+                    viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis);
                 break;
             case "cost_quality":
                 drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText, brushFilter);
