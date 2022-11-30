@@ -262,6 +262,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
         .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
+    legend.select(".background")
+        .attr('height', 12*TOP_N + 2)
 
     //legend.selectAll(".legend-item").remove() IMPORTANT CRUTCH ENABLE IF SOMETHING BREAKS
 
@@ -538,8 +540,8 @@ export default function CCompanionPlot({ data }) {
                     {viewMode == "movie_economy" && <><g className="lines" style={{ clipPath: "url(#plot-clip)" }}></g>
                         <g className="mouse-line-group pointer-events-none"></g>
                         <g className="legend pointer-events-none">
-                            <rect x={-margin.left / 10} y={-margin.top / 3}
-                                width="170" height="180" fill="#505050" fillOpacity={0.7}
+                            <rect className="background" x={-margin.left / 10} y={-margin.top / 3}
+                                width="170" height="130" fill="#505050" fillOpacity={0.7}
                                 stroke="white" strokeWidth="1" strokeOpacity="0.5"
                                 rx={5}></rect>
                         </g>
