@@ -19,7 +19,9 @@ export default function CToggle({handler, label, icon, initValue}) {
         setButtonStyle(baseButtonStyle + buttonToggleStyles[Number(!toggled)]);
     };
 
-    useEffect(toggle, []);
+    useEffect(() => {
+        setButtonStyle(baseButtonStyle + buttonToggleStyles[Number(initValue)]);
+    }, []);
 
     return (
         <div className="flex flex-row place-items-center p-3">

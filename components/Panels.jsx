@@ -12,7 +12,7 @@ const CLeftPanel = function ({ }) {
 
     return (
         <div>
-            <CToggle handler={v => setBrushMode(v)} icon="brush" label="Brush Mode"></CToggle>
+            <CToggle handler={v => setBrushMode(v)} icon="brush" label="Brush Mode" initValue={false}></CToggle>
         </div>
     );
 }
@@ -28,7 +28,7 @@ const CRightPanel = function ({ }) {
     return (
         <div>
             {viewMode == "movie_economy" ? 
-                <CToggle handler={v => toggleOtherStudios(v)} icon="horizontal_split" label="Other Studios"></CToggle> :
+                <CToggle handler={v => toggleOtherStudios(v)} icon="horizontal_split" label="Other Studios" initValue={false}></CToggle> :
                 null}
         </div>
     );

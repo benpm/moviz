@@ -56,12 +56,16 @@ AXES = [
     ["released", "tomatometer_rating"],
     ["released", "budget"],
     ["released", "gross"],
+    ["released", "profit"],
     ["budget", "score"],
     ["budget", "audience_rating"],
     ["budget", "tomatometer_rating"],
     ["gross", "score"],
     ["gross", "audience_rating"],
     ["gross", "tomatometer_rating"],
+    ["profit", "score"],
+    ["profit", "audience_rating"],
+    ["profit", "tomatometer_rating"],
 ]
 # Radius of deepest zoom level dots
 BASE_RADIUS = 3
@@ -202,6 +206,7 @@ def main():
         "released": Scale(extent(movies, "released", parse_date), SIM_BOUNDS[0], conv_range=parse_date, conv_domain=lambda x: x.strftime("%B %d, %Y")),
         "budget": Scale(extent(movies, "budget", log_safe), SIM_BOUNDS[0], conv_range=log_safe),
         "gross": Scale(extent(movies, "gross", log_safe), SIM_BOUNDS[0], conv_range=log_safe),
+        "profit": Scale(extent(movies, "profit"), SIM_BOUNDS[0]),
         "score": Scale((0, 10), SIM_BOUNDS[0]),
         "nominations": Scale(extent(movies, "nominations"), SIM_BOUNDS[1]),
         "tomatometer_rating": Scale((0, 100), SIM_BOUNDS[1]),

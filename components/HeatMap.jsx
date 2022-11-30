@@ -42,6 +42,7 @@ export default function CHeatMap({ data }) {
         "released": "Release Date",
         "budget": "Budget",
         "gross": "Revenue",
+        "profit": "Profit",
         "score": "IMDb Score",
         "audience_rating": "RT Audience Rating",
         "tomatometer_rating": "RT Tomatometer Rating",
@@ -103,10 +104,8 @@ export default function CHeatMap({ data }) {
         // Initialize zoom and scales
         const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = scales.f[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
-        xAxisObj = d3.axisBottom(xScale)
-            .tickArguments([scales.format[xAxis][0]]).tickFormat(scales.format[xAxis][1]);
-        yAxisObj = d3.axisLeft(yScale)
-            .tickArguments([scales.format[yAxis][0]]).tickFormat(scales.format[yAxis][1]);
+        xAxisObj = scales.format[xAxis](d3.axisBottom(xScale));
+        yAxisObj = scales.format[yAxis](d3.axisLeft(yScale));
         svg.select(".x-axis").classed("plot-axis", true)
             .call(xAxisObj)
             .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)

@@ -42,6 +42,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         "released": "Release Date",
         "budget": "Budget",
         "gross": "Revenue",
+        "profit": "Profit",
         "score": "IMDb Score",
         "audience_rating": "RT Audience Rating",
         "tomatometer_rating": "RT Tomatometer Rating",
@@ -201,11 +202,11 @@ export default function CCollapsedScatterplot({ movieData }) {
             case "movie_economy":
                 setXAxisList(null);
                 setXAxis("released");
-                setYAxisList(["budget", "gross"]);
+                setYAxisList(["budget", "gross", "profit"]);
                 setYAxis("budget");
                 break;
             case "cost_quality":
-                setXAxisList(["budget", "gross"]);
+                setXAxisList(["budget", "gross", "profit"]);
                 setXAxis("budget");
                 setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
                 setYAxis("score");
@@ -293,10 +294,8 @@ export default function CCollapsedScatterplot({ movieData }) {
         // Initialize zoom and scales
         const xScale = _scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
-        const xAxisObj = d3.axisBottom(xScale)
-            .tickArguments(intZoomLevel != 0 ? _scales.format[xAxis] : _scales.format[`${xAxis}_zoomed`]);
-        const yAxisObj = d3.axisLeft(yScale)
-            .tickArguments(_scales.format[yAxis]);
+        const xAxisObj = _scales.format[xAxis](d3.axisBottom(xScale));
+        const yAxisObj = _scales.format[yAxis](d3.axisLeft(yScale));
         setAxes({ x: xAxisObj, y: yAxisObj });
         svg.select(".x-axis").classed("plot-axis", true)
             // .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)

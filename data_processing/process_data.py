@@ -84,6 +84,8 @@ for a, b in combinations(companies, 2):
 pprint(company_map)
 movies["company"] = movies["company"].apply(lambda x: company_map[x] if x in company_map else x)
 
+movies["profit"] = movies["gross"] - movies["budget"]
+
 # Save to csv
 OUT_PATH = "../public/movies.csv"
 movies.to_csv(OUT_PATH, index=True)
