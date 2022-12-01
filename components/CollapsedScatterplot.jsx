@@ -9,6 +9,7 @@ import copyScales from "../scripts/copyScales";
 import { loadScatterPlotData } from "../scripts/loadData";
 import { ramp } from "../scripts/createLegendImage";
 import tailwindConfig from "../tailwind.config";
+import { schemeGnBu } from "d3";
 
 const OSCAR_COLORS = {
     "winner": "#fce603",
@@ -37,7 +38,10 @@ export default function CCollapsedScatterplot({ movieData }) {
         setBrushRange,
         setBrushFilter,
         hoveredExpandedGroup,
-        showTrendLine] = useGlobalState(state => [
+        showTrendLine,
+        hoverDetailTimeout,
+        setHoverDetailTimeout
+    ] = useGlobalState(state => [
             state.setHoverItem,
             state.setHoverPos,
             state.scatterXAxis,
@@ -50,7 +54,9 @@ export default function CCollapsedScatterplot({ movieData }) {
             state.setBrushRange,
             state.setBrushFilter,
             state.hoveredExpandedGroup,
-            state.showTrendLine
+            state.showTrendLine,
+            state.hoverDetailTimeout,
+            state.setHoverDetailTimeout,
         ]);
     const [scales, setScales] = useState(null);
 
@@ -358,10 +364,22 @@ export default function CCollapsedScatterplot({ movieData }) {
         setLegendImage(ramp(profitColorScales[0], true).toDataURL());
         setLegendImage2(ramp(profitColorScales[1]).toDataURL());
 
+        var timeoutEnterId = null;
+        var inGroupDetail = null;
+        const clearHoverDetail = () => {
+            if (timeoutEnterId != null) {
+                clearTimeout(timeoutEnterId);
+                setHoverItem({ datum: null, x: 0, y: 0, caller: null });
+                inGroupDetail = null;
+                svg.select(".hover-emph").remove();
+                if (hoverDetailTimeout != null) {
+                    clearTimeout(hoverDetailTimeout);
+                    setHoverDetailTimeout(null);
+                }
+            }
+        };
+
         // Draw points
-        var timeoutId = null;
-        var timeoutRemove = null;
-        var lockedToGroup = false;
         svg.select(".dots")
             .selectAll("circle")
             .data(dataSubset)
@@ -395,50 +413,55 @@ export default function CCollapsedScatterplot({ movieData }) {
             })
             .on("mouseenter", (e, d) => {
                 if (d.movies.length > 1) {
-                    timeoutId = setTimeout(() => {
-                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group_expanded" });
-                        lockedToGroup = true;
-                        //Ben I NEED HELP
-                    }, 1000);
-                    //create larger circle in the same position and radius
-                    svg.select(".dots")
-                        .append("circle")
-                        .attr("cx", _scales.iXScale(d.x))
-                        .attr("cy", _scales.iYScale(d.y))
-                        .attr("r", d.r * 1.3)
-                        .classed("hover-emph", true)
-                        .attr("fill", "none")
-                        .attr("stroke", tailwindConfig.theme.extend.colors.mid)
-                        .attr("stroke-width", 3)
-                        .transition().duration(1000)
-                        .attr("r", d.r * 0.9)
-                        .attr("stroke", tailwindConfig.theme.extend.colors.accent);
-                }
-            })
-            .on("mouseover", (e, d) => {
-                if (!lockedToGroup) {
-                    if (d.movies.length == 1) {
-                        setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
-                    } else {
+                    if (inGroupDetail == null) {
                         setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
-                    }
-                }
 
+                        // Clear previous group hover detail
+                        clearHoverDetail();
+                        // Set timeout to show group hover detail
+                        timeoutEnterId = setTimeout(() => {
+                            setHoverItem({
+                                datum: d,
+                                x: e.pageX,
+                                y: e.pageY,
+                                caller: "scatterplot_group_expanded",
+                                clearHoverDetail});
+                            inGroupDetail = d;
+                            console.log("show group detail");
+                        }, 1000);
+                        // Create larger circle in the same position and radius
+                        svg.select(".dots")
+                            .append("circle")
+                            .attr("cx", _scales.iXScale(d.x))
+                            .attr("cy", _scales.iYScale(d.y))
+                            .attr("r", d.r * 1.3)
+                            .classed("hover-emph", true)
+                            .attr("fill", "none")
+                            .attr("stroke", tailwindConfig.theme.extend.colors.mid)
+                            .attr("stroke-width", 3)
+                            .transition().duration(1000)
+                            .attr("r", d.r * 0.9)
+                            .attr("stroke", tailwindConfig.theme.extend.colors.accent);
+                    } else if (inGroupDetail === d) {
+                        // Hovering same group we are detailing
+                        clearTimeout(hoverDetailTimeout);
+                        setHoverDetailTimeout(null);
+                    }
+                } else if (inGroupDetail == null) {
+                    setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
+                }
             })
             .on("mousemove", (e, d) => {
-                if (!lockedToGroup)
+                if (inGroupDetail == null)
                     setHoverPos({ x: e.pageX, y: e.pageY });
             })
             .on("mouseout", (e, d) => {
-                timeoutRemove = setTimeout(() => {
-                    setHoverItem({ datum: null, x: 0, y: 0, caller: null });
-                    clearTimeout(timeoutId);
-                    svg.selectAll(".hover-emph").remove();
-                    lockedToGroup = false;
-                }, 800);
-                if(hoveredExpandedGroup)
-                    clearTimeout(timeoutRemove);
-                //TODOsend timeoutRemove to global state and bind it to the mouse hover
+                if (inGroupDetail != null) {
+                    setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
+                } else {
+                    clearHoverDetail();
+                    setHoverItem({ datum: null });
+                }
             });
 
         if (!quadtrees) {

@@ -24,6 +24,8 @@ const useGlobalState = create((set) => ({
     //state for the stacked line chart
     companionPlotShowOtherStudios: true,
 
+    hoverDetailTimeout: null,
+
     setHoverPos: x => set({ hoverPos: x }),
     setHoverItem: x => set({ hoverItem: x }),
     setHoveredExpandedGroup: x => set({ hoveredExpandedGroup: x }),
@@ -37,6 +39,7 @@ const useGlobalState = create((set) => ({
     setCompanionPlotShowOtherStudios: x => set({ companionPlotShowOtherStudios: x }),
     setBrushRange: x => set({ brushRange: x }),
     setShowTrendLine: x => set({ showTrendLine: x }),
+    setHoverDetailTimeout: x => set({ hoverDetailTimeout: x }),
 }));
 
 export default useGlobalState;

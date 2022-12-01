@@ -3,15 +3,22 @@ import useGlobalState from "../hooks/useGlobalState";
 import { FaImdb } from 'react-icons/fa';
 import { SiRottentomatoes } from 'react-icons/si';
 import { GiPopcorn, GiSandsOfTime } from 'react-icons/gi';
+import { useEffect } from "react";
 
-function makeTooltip(d, caller, data, setHoveredExpandedGroup) {
+function makeTooltip(d, caller, data, setHoveredExpandedGroup, hoverDetailTimeout, setHoverDetailTimeout, clearHoverDetail) {
     switch (caller) {
         case "scatterplot":
             return ScatterplotToolTip(d);
         case "scatterplot_group":
             return ScatterplotGroupToolTip(d);
         case "scatterplot_group_expanded":
-            return ScatterplotGroupExpandedToolTip(d,data,setHoveredExpandedGroup);
+            return ScatterplotGroupExpandedToolTip(
+                d,
+                data,
+                setHoveredExpandedGroup,
+                hoverDetailTimeout,
+                setHoverDetailTimeout,
+                clearHoverDetail);
         case "heatmap":
             return HeatmapToolTip(d);
         case "companion-oscars":
@@ -23,25 +30,41 @@ function makeTooltip(d, caller, data, setHoveredExpandedGroup) {
 
 function ScatterplotGroupToolTip(d) {
     return (
-        <div className="tooltip bg-navbar">
+        <div className="pointer-events-none tooltip bg-navbar">
             <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
         </div>
     );
 }
 
-function ScatterplotGroupExpandedToolTip(d, data, setHoveredExpandedGroup) {
+function ScatterplotGroupExpandedToolTip(
+    d,
+    data,
+    setHoveredExpandedGroup,
+    hoverDetailTimeout,
+    setHoverDetailTimeout,
+    clearHoverDetail)
+{
     //fetch the movies with the idx from d.movies from the data and include them in the tooltip as a list.
     return (
-        <div className="tooltip bg-navbar" onMouseEnter={() => setHoveredExpandedGroup(true)}
-        onMouseLeave={() => setHoveredExpandedGroup(false)}>
-            <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
-            <div className="tooltip-body bg-navbar text-black">
+        <div className="tooltip bg-navbar"
+            onMouseEnter={() => {
+                setHoveredExpandedGroup(true);
+                clearTimeout(hoverDetailTimeout);
+                setHoverDetailTimeout(null);
+                console.log("clear hoverDetailTimeout");
+            }}
+            onMouseOut={() => {
+                setHoveredExpandedGroup(false);
+                setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
+                console.log("set hoverDetailTimeout");
+            }}
+            >
+            <div className="pointer-events-none font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
+            <div className="pointer-events-none tooltip-body bg-navbar text-black">
                 <div className="grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
                     {data.map((movie, idx) => {
                         if (d.movies.includes(idx)) {
-                            return <div className="bg-mid rounded-sm p-1 m-1 text-xs font-bold" key={idx} mouseover={
-                                console.log("ahahaha")//ScatterplotToolTip(movie)
-                            }>{movie.name} </div>;
+                            return <div className="bg-mid rounded-sm p-1 m-1 text-xs font-bold" key={idx}>{movie.name} </div>;
                         }
                     })}
                 </div>
@@ -57,7 +80,7 @@ function ScatterplotToolTip(d) {
     const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
 
     return (
-        <div className="tooltip bg-navbar">
+        <div className="pointer-events-none tooltip bg-navbar">
             <div className="font-bold text-lightest">{d.name}</div>
             <div className="tooltip-body bg-navbar text-dark">
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
@@ -126,7 +149,7 @@ function HeatmapToolTip(d) {
     //find average audience
     const avgAudience = d3.mean(d, (d) => d.audience_rating);
     return (
-        <div className="tooltip bg-navbar">
+        <div className="pointer-events-none tooltip bg-navbar">
             <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.length}</span></div>
             <div className="tooltip-body">
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
@@ -172,7 +195,7 @@ function CompanionOscarsToolTip(d) {
     const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
 
     return (
-        <div className="tooltip bg-navbar">
+        <div className="pointer-events-none tooltip bg-navbar">
             <div className="font-bold text-light"> <span className="text-xl text-lightest">{d.movies.length} {d.genre}
             </span> movies were nominated for <span className="text-xl text-lightest">{d.date}</span> Oscars</div>
             <div className="tooltip-body">
@@ -191,7 +214,7 @@ function CompanionOscarsToolTip(d) {
 
 function CompanionHeatmapToolTip(d) {
     return (
-        <div className="tooltip bg-navbar">
+        <div className="pointer-events-none tooltip bg-navbar">
             <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.count}</span></div>
             <div className="tooltip-body">
             </div>
@@ -217,16 +240,35 @@ function positionTooltip({ x, y }, { w, h }) {
 }
 
 export default function CTooltip({ data }) {
-    const [hoverItem, hoverPos, viewSize, setHoveredExpandedGroup] = useGlobalState(state => [
-        state.hoverItem, state.hoverPos, state.viewSize, state.setHoveredExpandedGroup
+    const [
+        hoverItem,
+        hoverPos,
+        viewSize,
+        setHoveredExpandedGroup,
+        hoverDetailTimeout,
+        setHoverDetailTimeout
+    ] = useGlobalState(state => [
+        state.hoverItem,
+        state.hoverPos,
+        state.viewSize,
+        state.setHoveredExpandedGroup,
+        state.hoverDetailTimeout,
+        state.setHoverDetailTimeout
     ]);
 
     return (
         <div
-            className={`absolute bg-dark rounded p-2 text-sm text-gray-800 pointer-events-none
+            className={`absolute bg-dark rounded p-2 text-sm text-gray-800
                 ${hoverItem.datum ? "" : "hidden"}`}
             style={positionTooltip(hoverPos, viewSize)} >
-            {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller, data, setHoveredExpandedGroup) : ""}
+            {hoverItem.datum ? makeTooltip(
+                hoverItem.datum,
+                hoverItem.caller,
+                data,
+                setHoveredExpandedGroup,
+                hoverDetailTimeout,
+                setHoverDetailTimeout,
+                hoverItem.clearHoverDetail) : ""}
         </div>
     );
 }
