@@ -5,12 +5,12 @@ export default function CNavBar() {
     return (
         <div className="bg-navbar flex flex-row text-slate-100 h-16">
             <img src="logo-white.svg" alt="logo" className="h-full ml-4" />
-            <div className="flex-grow text-center basis"><CLeftPanel/></div>
-            <div className="flex-grow basis-1/12">
+            <div className="flex-grow text-center basis-3/12"><CLeftPanel/></div>
+            <div className="basis-4/12">
                 <CViewSelector/>
             </div>
-            <div className ="flex-grow text-center basis"><CRightPanel/></div>
-            <div className="flex flex-col text-right">
+            <div className ="flex-grow text-center basis-2/12"><CRightPanel/></div>
+            <div className="flex flex-col text-right basis-2/12">
                 <a className="p-1" href="https://benpm.github.io/">Ben Mastripolito</a>
                 <a className="p-1" href="https://stlkrv1.github.io/personal-website/#about">Alper Sahistan</a>
             </div>

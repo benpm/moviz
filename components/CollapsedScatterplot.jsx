@@ -379,6 +379,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                             v += movieData[mIdx].profit;
                         })
                 }
+                v /= d.movies.length;
 
                 if (v < 0) {
                     return profitColorScales[0](v);
