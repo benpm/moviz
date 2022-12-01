@@ -155,7 +155,7 @@ function CompanionToolTip(d) {
                         backgroundColor: OSCAR_INFO[m.oscar][0]
                       }}>
                         <div className="p-1 bg-mid rounded-sm" style={{fontWeight:"bold"}}>{m.name}</div>
-                        <div className="p-1" style={{fontWeight:"bold"}}>{OSCAR_INFO[m.oscar][1]}</div>
+                        <div className="p-1" style={{fontWeight:"bold"}}>{OSCAR_INFO[m.oscar][1]} ({m.wins} wins) ({m.nominations} noms)</div>
                     </div>
                 ))}
             </div>

@@ -43,6 +43,8 @@ movies["released"] = movies["released"].apply(lambda x: re.sub(r" \(.*\)", "", x
 # For each movie, set the overall oscar status
 oscar_ranking = ["none", "nominee", "winner", "best_picture_nominee", "best_picture_winner"]
 movies["oscar"] = "none"
+wincounts = defaultdict(lambda: 0)
+nomcounts = defaultdict(lambda: 0)
 def set_oscar(row):
     idx = (row["film"], row["year_film"])
     if idx in movies.index:
@@ -52,10 +54,12 @@ def set_oscar(row):
             label = "winner" if row["winner"] else "nominee"
         if oscar_ranking.index(label) > oscar_ranking.index(movies.loc[idx, "oscar"]):
             movies.loc[idx, "oscar"] = label
+        nomcounts[idx] += 1
+        if label in ["winner", "best_picture_winner"]:
+            wincounts[idx] += 1
 oscars.apply(set_oscar, axis=1)
-# Count each occurence of name and assign that count to a new column nominations
-nomcounts = oscars["film"].value_counts()
-movies["nominations"] = movies.index.map(lambda x: nomcounts[x[0]] if x[0] in nomcounts else 0)
+movies["nominations"] = movies.index.map(lambda k: nomcounts[k] if k in nomcounts else 0)
+movies["wins"] = movies.index.map(lambda k: wincounts[k] if k in wincounts else 0)
 
 # Modify all release dates in the format of "YYYY" to "January 1, YYYY"
 movies["released"] = movies["released"].apply(

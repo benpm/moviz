@@ -29,6 +29,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         value.clear();
         m.forEach((v, k) => value.set(k, v));
     });
+    console.log(oscarDataByYear);
 
     //prefix sum over length of each genre for each year
     let prefixSum = new Map();
@@ -36,7 +37,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         let sum = 0;
         let m = new Map();
         value.forEach((v, k) => {
-            sum += v.length;
+            v.forEach(x => sum += useNominations ? x.nominations : x.wins);
             m.set(k, { sum, v });
         });
         prefixSum.set(key, m);

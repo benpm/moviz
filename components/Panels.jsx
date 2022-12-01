@@ -19,7 +19,7 @@ const CLeftPanel = function ({ }) {
 }
 
 const CRightPanel = function ({ }) {
-    const [viewMode, setViewMode] = useGlobalState(s => [s.viewMode, s.setViewMode]);
+    const [viewMode, setViewMode, setShowTrendLine] = useGlobalState(s => [s.viewMode, s.setViewMode, s.setShowTrendLine]);
     //TODO:View specific stuff
     //TODO:if economic metrics are rendered adjust for inflation switch 
     //that also should adjust the inflation for companion plot
@@ -30,7 +30,7 @@ const CRightPanel = function ({ }) {
         <div>
             {viewMode == "movie_economy" ?
                 <div className="flex">
-                    <CToggle handler={v=>console.log("ouch!")} icon="timeline" label="Show Trend" initValue={false}></CToggle>
+                    <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={false}></CToggle>
                 </div> : null
             }
         </div>

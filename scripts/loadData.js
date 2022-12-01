@@ -19,6 +19,7 @@ function loadMovieData() {
             d.runtime = parseInt(d.runtime);
             d.audience_rating = parseInt(d.audience_rating);
             d.nominations = parseInt(d.nominations);
+            d.wins = parseInt(d.wins);
         });
         return data;
     });

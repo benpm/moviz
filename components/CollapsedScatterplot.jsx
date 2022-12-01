@@ -24,19 +24,31 @@ export default function CCollapsedScatterplot({ movieData }) {
     const target = useRef(null);
     const size = useSize(target);
     const brushContainerRef = useRef(null);
-    let [setHoverItem, setHoverPos, xAxis, yAxis, setXAxis, setYAxis, gScales, viewMode, brushMode, setBrushRange, setBrushFilter] = useGlobalState(state => [
-        state.setHoverItem,
-        state.setHoverPos,
-        state.scatterXAxis,
-        state.scatterYAxis,
-        state.setScatterXAxis,
-        state.setScatterYAxis,
-        state.scales,
-        state.viewMode,
-        state.brushMode,
-        state.setBrushRange,
-        state.setBrushFilter
-    ]);
+    let [setHoverItem,
+        setHoverPos,
+        xAxis,
+        yAxis,
+        setXAxis,
+        setYAxis,
+        gScales,
+        viewMode,
+        brushMode,
+        setBrushRange,
+        setBrushFilter,
+        showTrendLine] = useGlobalState(state => [
+            state.setHoverItem,
+            state.setHoverPos,
+            state.scatterXAxis,
+            state.scatterYAxis,
+            state.setScatterXAxis,
+            state.setScatterYAxis,
+            state.scales,
+            state.viewMode,
+            state.brushMode,
+            state.setBrushRange,
+            state.setBrushFilter,
+            state.showTrendLine
+        ]);
     const [scales, setScales] = useState(null);
 
     const axisTitles = {
@@ -59,7 +71,7 @@ export default function CCollapsedScatterplot({ movieData }) {
 
     const [dotStroke, setDotStroke] = useState(1);
     const [quadtrees, setQuadtrees] = useState(null);
-    const [budgetByYear, setBudgetByYear] = useState(null);
+    const [trendDataByYear, setTrendDataByYear] = useState(null);
     const [legendImage, setLegendImage] = useState("");
     const [legendImage2, setLegendImage2] = useState("");
 
@@ -73,7 +85,7 @@ export default function CCollapsedScatterplot({ movieData }) {
     useEffect(() => {
         // Compute overall average movie budget per year
         if (movieData) {
-            setBudgetByYear(d3.rollups(movieData, d => d3.mean(d, x => x.budget), d => d.year));
+            setTrendDataByYear(d3.rollups(movieData, d => d3.mean(d, x => x[yAxis]), d => d.year));
         }
     }, [movieData]);
 
@@ -286,7 +298,7 @@ export default function CCollapsedScatterplot({ movieData }) {
 
     // Render chart function
     const ref = useD3(svg => {
-        if (!gScales || !data || movieData.length == 0 || !budgetByYear) {
+        if (!gScales || !data || movieData.length == 0 || !trendDataByYear) {
             return;
         }
 
@@ -327,12 +339,12 @@ export default function CCollapsedScatterplot({ movieData }) {
 
         // Draw a line for average budget by year
         const yearScale = _scales.f.year.rangeRound([0, bounds.innerWidth]);
-        const budgetScale = _scales.f.budget.rangeRound([bounds.innerHeight, 0]);
-        const avgBudgetLine = d3.line()
+        const trendScale = _scales.f[yAxis].rangeRound([bounds.innerHeight, 0]);
+        const avgTrendLine = d3.line()
             .x(d => yearScale(d[0]))
-            .y(d => budgetScale(d[1]));
+            .y(d => trendScale(d[1]));
         svg.select(".trend-line")
-            .attr("d", avgBudgetLine(budgetByYear));
+            .attr("d", avgTrendLine(trendDataByYear));
 
 
         const profitColorScales = [
@@ -353,26 +365,25 @@ export default function CCollapsedScatterplot({ movieData }) {
             .attr("r", d => Math.max(2, d.r * 0.85))
             .classed("dot", true)
             .attr("fill", d => {
-                if (d.movies.length == 1) {
-                    const m = movieData[d.movies[0]];
-                    switch (viewMode) {
-                        case "ratings_oscars":
-                            return OSCAR_COLORS[m.oscar];
-                        case "movie_economy":
-                            if (m.profit < 0) {
-                                return profitColorScales[0](m.profit);
-                            } else {
-                                return profitColorScales[1](Math.log10(Math.abs(m.profit)));
-                            }
-                        case "cost_quality":
-                            if (m.profit < 0) {
-                                return profitColorScales[0](m.profit);
-                            } else {
-                                return profitColorScales[1](Math.log10(Math.abs(m.profit)));
-                            }
-                    }
+                let v = 0;
+                switch (viewMode) {
+                    case "ratings_oscars":
+                        if (d.movies.length > 1) {
+                            return OSCAR_COLORS["none"];
+                        } else {
+                            return OSCAR_COLORS[movieData[d.movies[0]].oscar];
+                        }
+                    case "movie_economy":
+                    case "cost_quality":
+                        d.movies.forEach(mIdx => {
+                            v += movieData[mIdx].profit;
+                        })
+                }
+
+                if (v < 0) {
+                    return profitColorScales[0](v);
                 } else {
-                    return OSCAR_COLORS["none"];
+                    return profitColorScales[1](Math.log10(Math.abs(v)));
                 }
             })
             .on("mouseover", (e, d) => {
@@ -431,15 +442,14 @@ export default function CCollapsedScatterplot({ movieData }) {
             .selectAll("circle")
             .attr("stroke", "black");
 
-        if(viewMode == "movie_economy" || viewMode == "cost_quality")
-        {
+        if (viewMode == "movie_economy" || viewMode == "cost_quality") {
             const dollarFormat = d3.format("$,.0s");
             svg.select(".legend-s")
                 .select(".minText")
                 .text(dollarFormat(_scales.f["profit"].domain()[0]));
             svg.select(".legend-s")
                 .select(".maxText")
-                .text( dollarFormat(_scales.f["profit"].domain()[1]));
+                .text(dollarFormat(_scales.f["profit"].domain()[1]));
         }
 
         //set legend opacity to 0 when mouse enters in svg
@@ -458,7 +468,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`);
         });
 
-    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, budgetByYear]);
+    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>
@@ -497,7 +507,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     transform={`translate(${margin.left},${margin.top})`}>
                     <g className="plot-area">
                         <g className="dots"></g>
-                        {viewMode == "movie_economy" && yAxis == "budget" && <path className="trend-line stroke-white stroke-1 fill-none"></path>}
+                        {viewMode == "movie_economy" && showTrendLine && <path className="trend-line stroke-white stroke-1 fill-none"></path>}
                     </g>
                 </g>
                 <g className="legend-s">

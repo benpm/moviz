@@ -16,6 +16,7 @@ const useGlobalState = create((set) => ({
     //State of the scatterplot
     scatterXAxis: "released",
     scatterYAxis: "score",
+    showTrendLine: false,
 
     scales: null,
 
@@ -33,6 +34,7 @@ const useGlobalState = create((set) => ({
     setBrushFilter: x => set({ brushFilter: x }),
     setCompanionPlotShowOtherStudios: x => set({ companionPlotShowOtherStudios: x }),
     setBrushRange: x => set({ brushRange: x }),
+    setShowTrendLine: x => set({ showTrendLine: x }),
 }));
 
 export default useGlobalState;
