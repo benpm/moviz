@@ -7,6 +7,9 @@ import useGlobalState from "../hooks/useGlobalState";
 import useDelayWait from "../hooks/useDelayWait";
 import copyScales from "../scripts/copyScales";
 import { loadScatterPlotData } from "../scripts/loadData";
+import { svg } from "d3";
+import legend from "d3-color-legend";
+import { join } from "path";
 
 const OSCAR_COLORS = {
     "winner": "#fce603",
@@ -251,7 +254,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                 .on("start brush end", brushHandler.handler)
                 .extent([[0, 0], [bounds.width, bounds.height]]);
             console.debug("associated brush handler", xAxis, yAxis);
-            
+
         }
     }, [scales, brushObj, brushHandler, bounds]);
 
@@ -343,7 +346,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             .on("mouseout", (e, d) => {
                 setHoverItem({ datum: null, x: 0, y: 0, caller: null });
             });
-        
+
         if (!quadtrees) {
             // Initialize quadtree for every zoom level and every pair of axes
             let qtrees = {};
@@ -363,6 +366,29 @@ export default function CCollapsedScatterplot({ movieData }) {
         if (!zoomObj.zoom) {
             setZoomObj({ zoom: d3.zoom() });
         }
+
+        //set legend stuff
+        svg.select(".legend-s")
+            .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
+                ${bounds.innerHeight - 60 + margin.bottom/2}) scale(1)`)
+            .selectAll("rect")
+            .attr("width", 160)
+            .attr("height", 60)
+            .attr("rx",4)
+            .attr("stroke-opacity", 1)
+            .attr("fill-opacity", 0.4)
+            .attr("stroke-width", 1);
+
+        svg.select(".legend-s")
+            .select("g")
+            .selectAll("g")
+            .attr("transform", (d, i) => `translate(9, ${9 + i * 14})`);
+            // .selectAll("circle")
+            // .attr("cx", 10)
+            // .attr("cy", (d,i) => 9 + i * 14)
+            // .attr("stroke", "black")
+
+
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel]);
 
     return (
@@ -400,7 +426,23 @@ export default function CCollapsedScatterplot({ movieData }) {
                 {brushMode && <g ref={brushContainerRef}></g>}
                 <g className="plot-area-container" style={{ clipPath: "url(#plot-area-clip)" }}
                     transform={`translate(${margin.left},${margin.top})`}>
-                    <g className="plot-area"></g>
+                    <g className="plot-area">
+                    </g>
+                </g>
+                <g className="legend-s">
+                    <rect className="background fill-white stroke-white rounded-xl"></rect>
+                    {viewMode === "ratings_oscars" ? 
+                        <g className="text-white">
+                            <g><circle r='5'fill={OSCAR_COLORS['nominee']}></circle>
+                            <text>aaaaaaaa</text></g>
+                            <g><circle r='5'fill={OSCAR_COLORS['winner']}></circle>
+                            <text>aaaaaaaa</text></g>
+                            <g><circle r='5'fill={OSCAR_COLORS['best_picture_nominee']}></circle>
+                            <text>aaaaaaaa</text></g>
+                            <g><circle r='5'fill={OSCAR_COLORS['best_picture_winner']}></circle>
+                            <text>aaaaaaaa</text></g>
+                        </g> : null
+                    }
                 </g>
                 <g className="x-axis" style={{ clipPath: "url(#x-axis-clip)" }}></g>
                 <g className="y-axis" style={{ clipPath: "url(#y-axis-clip)" }}></g>
