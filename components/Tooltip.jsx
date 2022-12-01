@@ -2,28 +2,53 @@ import * as d3 from "d3";
 import useGlobalState from "../hooks/useGlobalState";
 import { FaImdb } from 'react-icons/fa';
 import { SiRottentomatoes } from 'react-icons/si';
-import {GiPopcorn, GiSandsOfTime} from 'react-icons/gi';
+import { GiPopcorn, GiSandsOfTime } from 'react-icons/gi';
 
-function makeTooltip(d, caller) {
+function makeTooltip(d, caller, data) {
     switch (caller) {
         case "scatterplot":
             return ScatterplotToolTip(d);
         case "scatterplot_group":
             return ScatterplotGroupToolTip(d);
+        case "scatterplot_group_expanded":
+            return ScatterplotGroupExpandedToolTip(d, data);
         case "heatmap":
             return HeatmapToolTip(d);
-        case "companion":
-            return CompanionToolTip(d);
+        case "companion-oscars":
+            return CompanionOscarsToolTip(d);
+        case "companion-heatmap":
+            return CompanionHeatmapToolTip(d);
     }
 }
 
 function ScatterplotGroupToolTip(d) {
     return (
         <div className="tooltip bg-navbar">
-            <div className="font-bold text-lightest">{d.movies.length} films</div>
+            <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
         </div>
     );
 }
+
+function ScatterplotGroupExpandedToolTip(d, data) {
+    //fetch the movies with the idx from d.movies from the data and include them in the tooltip as a list.
+    return (
+        <div className="tooltip bg-navbar">
+            <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
+            <div className="tooltip-body bg-navbar text-black">
+                <div className="grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
+                    {data.map((movie, idx) => {
+                        if (d.movies.includes(idx)) {
+                            return <div className="bg-mid rounded-sm p-1 m-1 text-xs font-bold" key={idx} mouseover={
+                                console.log("ahahaha")//ScatterplotToolTip(movie)
+                            }>{movie.name} </div>;
+                        }
+                    })}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 
 function ScatterplotToolTip(d) {
     const dateFormat = d3.timeFormat("%b %d, %Y");
@@ -59,19 +84,19 @@ function ScatterplotToolTip(d) {
                     <div className="p-1">{dollarFormat(d.gross)}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><FaImdb/></div>IMDB Score:</div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><FaImdb /></div>IMDB Score:</div>
                     <div className="p-1">{d.score}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><SiRottentomatoes/></div>Tomatometer:</div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><SiRottentomatoes /></div>Tomatometer:</div>
                     <div className="p-1">{d.tomatometer_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><GiPopcorn/></div>Audience:</div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><GiPopcorn /></div>Audience:</div>
                     <div className="p-1">{d.audience_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><GiSandsOfTime/></div>Run Time:</div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><GiSandsOfTime /></div>Run Time:</div>
                     <div className="p-1">{runtimeFormat(d.runtime)}</div>
                 </div>
             </div>
@@ -140,7 +165,7 @@ const OSCAR_INFO = {
     "none": "#606060",
 };
 
-function CompanionToolTip(d) {
+function CompanionOscarsToolTip(d) {
     const dateFormat = d3.timeFormat("%Y");
     const dollarFormat = d3.format("$,.0f");
     const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
@@ -151,17 +176,28 @@ function CompanionToolTip(d) {
             </span> movies were nominated for <span className="text-xl text-lightest">{d.date}</span> Oscars</div>
             <div className="tooltip-body">
                 {d.movies.map((m, i) => (
-                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1"style={{
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1" style={{
                         backgroundColor: OSCAR_INFO[m.oscar][0]
-                      }}>
-                        <div className="p-1 bg-mid rounded-sm" style={{fontWeight:"bold"}}>{m.name}</div>
-                        <div className="p-1" style={{fontWeight:"bold"}}>{OSCAR_INFO[m.oscar][1]} ({m.wins} wins) ({m.nominations} noms)</div>
+                    }}>
+                        <div className="p-1 bg-mid rounded-sm" style={{ fontWeight: "bold" }}>{m.name}</div>
+                        <div className="p-1" style={{ fontWeight: "bold" }}>{OSCAR_INFO[m.oscar][1]} ({m.wins} wins) ({m.nominations} noms)</div>
                     </div>
                 ))}
             </div>
         </div>
     );
 }
+
+function CompanionHeatmapToolTip(d) {
+    return (
+        <div className="tooltip bg-navbar">
+            <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.count}</span></div>
+            <div className="tooltip-body">
+            </div>
+        </div>
+    );
+}
+
 
 
 function positionTooltip({ x, y }, { w, h }) {
@@ -179,7 +215,7 @@ function positionTooltip({ x, y }, { w, h }) {
     return pos;
 }
 
-export default function CTooltip() {
+export default function CTooltip({ data }) {
     const [hoverItem, hoverPos, viewSize] = useGlobalState(state => [
         state.hoverItem, state.hoverPos, state.viewSize
     ]);
@@ -189,7 +225,7 @@ export default function CTooltip() {
             className={`absolute bg-dark rounded p-2 text-sm text-gray-800 pointer-events-none
                 ${hoverItem.datum ? "" : "hidden"}`}
             style={positionTooltip(hoverPos, viewSize)} >
-            {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller) : ""}
+            {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller, data) : ""}
         </div>
     );
 }

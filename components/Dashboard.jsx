@@ -62,7 +62,7 @@ const Dashboard = () => {
       <div className="bg-dark col-span-2"><CCollapsedScatterplot movieData={data}/></div>
       <div className="bg-dark"><CCompanionPlot data={data}></CCompanionPlot></div>
       <div className="bg-dark"><CHeatMap data={data}/></div>
-      <CTooltip />
+      <CTooltip data={data}/>
     </div>
   );
 }

@@ -29,7 +29,6 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         value.clear();
         m.forEach((v, k) => value.set(k, v));
     });
-    console.log(oscarDataByYear);
 
     //prefix sum over length of each genre for each year
     let prefixSum = new Map();
@@ -109,7 +108,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         .attr("ry", "2")
     svg.selectAll(".stacked-bar").on("mouseover", (e, d) => {
         //get year of the bar
-        setHoverItem({ datum: { genre: d[0], movies: d[1].v, date: d3.select(e.target.parentNode).datum()[0] }, caller: "companion" });
+        setHoverItem({ datum: { genre: d[0], movies: d[1].v, date: d3.select(e.target.parentNode).datum()[0] }, caller: "companion-oscars" });
         setHoverPos({ x: e.pageX, y: e.pageY });
         d3.select(e.target)
             .transition()
@@ -126,7 +125,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
                 .attr("fill", colorScale(d[0]))
                 .attr("stroke", "black")
                 .attr("stroke-width", 1);
-            setHoverItem({ datum: null, caller: "companion" });
+            setHoverItem({ datum: null, caller: "companion-oscars" });
             d3.select(e.target).attr("stroke", "black");
         });
 
@@ -199,7 +198,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     stackedStudioBudgetByYear = stackedStudioBudgetByYear(studioBudgetByYear);
     //create a categorical color scale for every studio from the top 25\
     let colorScale = d3.scaleOrdinal(
-        [...d3.schemeTableau10, ...d3.schemeSet3])
+        [...d3.schemeSpectral[10], ...d3.schemePRGn[7]])
         .domain(/*toggleOtherStudios ?*/['Other', allStudios] /*: allStudios*/);
 
     //get maximum budget overall filter out entry with key 'year'
@@ -378,7 +377,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     });
 }
 
-function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText, brushFilter) {
+function drawDecadeHeatmap(svg, data, bounds, margin, setHoverItem, setHoverPos, setLegendImage, setTitleText, brushFilter) {
     const CLUSTER_SIZE = 5;
 
     //filter data to only include movies that are in the brush filter
@@ -438,7 +437,27 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
             update.select("rect")
                 .attr("width", xScale.bandwidth())
                 .attr("height", bounds.innerHeight / 3)
-                .attr("fill", (d) => colorScale(d[1]));
+                .attr("fill", (d) => colorScale(d[1]))
+                .on("mouseover", (e, d) => {
+                    setHoverItem({ datum: { count: d[1]}, caller: "companion-heatmap" });
+                    setHoverPos({ x: e.pageX, y: e.pageY });
+                    d3.select(e.target)
+                        .transition()
+                        .duration(10)
+                        .attr("fill", d3.color(colorScale(d[1])).brighter(1.5))
+                        .attr("stroke-width", 2.5);
+                })
+                .on("mousemove", (e, d) => {
+                    setHoverPos({ x: e.pageX, y: e.pageY });
+                })
+                .on("mouseout", (e, d) => {
+                    d3.select(e.target).transition().duration(100)
+                        .attr("fill", colorScale(d[1]))
+                        .attr("stroke", "black")
+                        .attr("stroke-width", 1);
+                    setHoverItem({ datum: null, caller: "companion-heatmap" });
+                    d3.select(e.target).attr("stroke", "black");
+                });
             return update;
         },
         exit => exit.remove()
@@ -454,7 +473,7 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleTe
 
 
     //Set the title text
-    setTitleText(`Number of Selected Movies per ${CLUSTER_SIZE} Years`);
+    setTitleText(`Distribution of ${brushFilter.length > 0 ? "Selected" : ""} Movies for every ${CLUSTER_SIZE} Years`);
 }
 
 
@@ -518,7 +537,7 @@ export default function CCompanionPlot({ data }) {
                     viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis);
                 break;
             case "cost_quality":
-                drawDecadeHeatmap(svg, data, bounds, margin, setLegendImage, setTitleText, brushFilter);
+                drawDecadeHeatmap(svg, data, bounds, margin, setHoverItem, setHoverPos, setLegendImage, setTitleText, brushFilter);
                 break;
         }
     }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations]);
@@ -527,7 +546,7 @@ export default function CCompanionPlot({ data }) {
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
             {viewMode == "movie_economy" &&
                 <div className="absolute bottom-12 left-10 z-50 text-white">
-                    <CToggle handler={v => setToggleOtherStudios(v)} icon="horizontal_split" label="Other Studios" initValue={true}></CToggle>
+                    <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={true}></CToggle>
                 </div>
             }
             <svg ref={ref} width={bounds.width} height={bounds.height} className="absolute top-0 left-0">

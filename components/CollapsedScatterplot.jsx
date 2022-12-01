@@ -8,6 +8,7 @@ import useDelayWait from "../hooks/useDelayWait";
 import copyScales from "../scripts/copyScales";
 import { loadScatterPlotData } from "../scripts/loadData";
 import { ramp } from "../scripts/createLegendImage";
+import tailwindConfig from "../tailwind.config";
 
 const OSCAR_COLORS = {
     "winner": "#fce603",
@@ -357,6 +358,7 @@ export default function CCollapsedScatterplot({ movieData }) {
 
         // Draw points
         var timeoutId = null;
+        var lockedToGroup = false;
         svg.select(".dots")
             .selectAll("circle")
             .data(dataSubset)
@@ -391,28 +393,44 @@ export default function CCollapsedScatterplot({ movieData }) {
             .on("mouseenter", (e, d) => {
                 if (d.movies.length > 1) {
                     timeoutId = setTimeout(() => {
-                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group_" });
-                    })
-                    
-                    clearTimeout(timeoutId);
-                }  
+                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group_expanded" });
+                        lockedToGroup = true;
+                        //Ben I NEED HELP
+                    }, 1000);
+                    //create larger circle in the same position and radius
+                    svg.select(".dots")
+                        .append("circle")
+                        .attr("cx", _scales.iXScale(d.x))
+                        .attr("cy", _scales.iYScale(d.y))
+                        .attr("r", d.r * 1.3)
+                        .classed("hover-emph", true)
+                        .attr("fill", "none")
+                        .attr("stroke", tailwindConfig.theme.extend.colors.mid)
+                        .attr("stroke-width", 3)
+                        .transition().duration(1000)
+                        .attr("r", d.r * 0.9)
+                        .attr("stroke", tailwindConfig.theme.extend.colors.accent);
+                }
             })
             .on("mouseover", (e, d) => {
-                if (d.movies.length == 1) {
-                    setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
-                } else {
-                    setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
-                    setTimeout(() => {console.log("timeout")}, 1000);
+                if (!lockedToGroup) {
+                    if (d.movies.length == 1) {
+                        setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
+                    } else {
+                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
+                    }
                 }
 
             })
             .on("mousemove", (e, d) => {
-                setHoverPos({ x: e.pageX, y: e.pageY });
+                if (!lockedToGroup)
+                    setHoverPos({ x: e.pageX, y: e.pageY });
             })
             .on("mouseout", (e, d) => {
                 setHoverItem({ datum: null, x: 0, y: 0, caller: null });
-                if (d.movies.length > 1) 
-                    clearTimeout(timeoutId);
+                clearTimeout(timeoutId);
+                svg.selectAll(".hover-emph").remove();
+                lockedToGroup = false;
             });
 
         if (!quadtrees) {
