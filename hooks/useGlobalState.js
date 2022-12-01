@@ -5,6 +5,7 @@ const useGlobalState = create((set) => ({
     // Currently hovered data item
     hoverItem: {datum: null, caller: null},
     hoverPos: {x: 0, y: 0},
+    hoveredExpandedGroup: false,
 
     viewSize: {w: 1920, h: 1080},
     viewMode: "ratings_oscars",
@@ -25,6 +26,7 @@ const useGlobalState = create((set) => ({
 
     setHoverPos: x => set({ hoverPos: x }),
     setHoverItem: x => set({ hoverItem: x }),
+    setHoveredExpandedGroup: x => set({ hoveredExpandedGroup: x }),
     setViewSize: x => set({ viewSize: x }),
     setScatterXAxis: x => set({ scatterXAxis: x }),
     setScatterYAxis: x => set({ scatterYAxis: x }),

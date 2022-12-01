@@ -36,6 +36,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         brushMode,
         setBrushRange,
         setBrushFilter,
+        hoveredExpandedGroup,
         showTrendLine] = useGlobalState(state => [
             state.setHoverItem,
             state.setHoverPos,
@@ -48,6 +49,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             state.brushMode,
             state.setBrushRange,
             state.setBrushFilter,
+            state.hoveredExpandedGroup,
             state.showTrendLine
         ]);
     const [scales, setScales] = useState(null);
@@ -358,6 +360,7 @@ export default function CCollapsedScatterplot({ movieData }) {
 
         // Draw points
         var timeoutId = null;
+        var timeoutRemove = null;
         var lockedToGroup = false;
         svg.select(".dots")
             .selectAll("circle")
@@ -427,10 +430,15 @@ export default function CCollapsedScatterplot({ movieData }) {
                     setHoverPos({ x: e.pageX, y: e.pageY });
             })
             .on("mouseout", (e, d) => {
-                setHoverItem({ datum: null, x: 0, y: 0, caller: null });
-                clearTimeout(timeoutId);
-                svg.selectAll(".hover-emph").remove();
-                lockedToGroup = false;
+                timeoutRemove = setTimeout(() => {
+                    setHoverItem({ datum: null, x: 0, y: 0, caller: null });
+                    clearTimeout(timeoutId);
+                    svg.selectAll(".hover-emph").remove();
+                    lockedToGroup = false;
+                }, 800);
+                if(hoveredExpandedGroup)
+                    clearTimeout(timeoutRemove);
+                //TODOsend timeoutRemove to global state and bind it to the mouse hover
             });
 
         if (!quadtrees) {
@@ -501,7 +509,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`);
         });
 
-    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine]);
+    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine, hoveredExpandedGroup]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>

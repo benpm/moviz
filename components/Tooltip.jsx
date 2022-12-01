@@ -4,14 +4,14 @@ import { FaImdb } from 'react-icons/fa';
 import { SiRottentomatoes } from 'react-icons/si';
 import { GiPopcorn, GiSandsOfTime } from 'react-icons/gi';
 
-function makeTooltip(d, caller, data) {
+function makeTooltip(d, caller, data, setHoveredExpandedGroup) {
     switch (caller) {
         case "scatterplot":
             return ScatterplotToolTip(d);
         case "scatterplot_group":
             return ScatterplotGroupToolTip(d);
         case "scatterplot_group_expanded":
-            return ScatterplotGroupExpandedToolTip(d, data);
+            return ScatterplotGroupExpandedToolTip(d,data,setHoveredExpandedGroup);
         case "heatmap":
             return HeatmapToolTip(d);
         case "companion-oscars":
@@ -29,10 +29,11 @@ function ScatterplotGroupToolTip(d) {
     );
 }
 
-function ScatterplotGroupExpandedToolTip(d, data) {
+function ScatterplotGroupExpandedToolTip(d, data, setHoveredExpandedGroup) {
     //fetch the movies with the idx from d.movies from the data and include them in the tooltip as a list.
     return (
-        <div className="tooltip bg-navbar">
+        <div className="tooltip bg-navbar" onMouseEnter={() => setHoveredExpandedGroup(true)}
+        onMouseLeave={() => setHoveredExpandedGroup(false)}>
             <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
             <div className="tooltip-body bg-navbar text-black">
                 <div className="grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
@@ -216,8 +217,8 @@ function positionTooltip({ x, y }, { w, h }) {
 }
 
 export default function CTooltip({ data }) {
-    const [hoverItem, hoverPos, viewSize] = useGlobalState(state => [
-        state.hoverItem, state.hoverPos, state.viewSize
+    const [hoverItem, hoverPos, viewSize, setHoveredExpandedGroup] = useGlobalState(state => [
+        state.hoverItem, state.hoverPos, state.viewSize, state.setHoveredExpandedGroup
     ]);
 
     return (
@@ -225,7 +226,7 @@ export default function CTooltip({ data }) {
             className={`absolute bg-dark rounded p-2 text-sm text-gray-800 pointer-events-none
                 ${hoverItem.datum ? "" : "hidden"}`}
             style={positionTooltip(hoverPos, viewSize)} >
-            {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller, data) : ""}
+            {hoverItem.datum ? makeTooltip(hoverItem.datum, hoverItem.caller, data, setHoveredExpandedGroup) : ""}
         </div>
     );
 }
