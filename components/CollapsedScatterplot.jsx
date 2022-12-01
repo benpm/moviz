@@ -313,6 +313,9 @@ export default function CCollapsedScatterplot({ movieData }) {
         // Inverse scales that transforms data coords -> plot coordinates
         _scales.iXScale = d3.scaleLinear().domain(vw).range(xScale.range());
         _scales.iYScale = d3.scaleLinear().domain(vh).range(yScale.range());
+    
+
+        const profitColorScale = d3.scaleSequential(d3.interpolateRdYlGn).domain(_scales.f["profit"].range());
 
         // Draw points
         svg.select(".plot-area")
@@ -325,7 +328,15 @@ export default function CCollapsedScatterplot({ movieData }) {
             .classed("dot", true)
             .attr("fill", d => {
                 if (d.movies.length == 1) {
-                    return OSCAR_COLORS[movieData[d.movies[0]].oscar];
+                    const m = movieData[d.movies[0]];
+                    switch (viewMode) {
+                        case "ratings_oscars":
+                            return OSCAR_COLORS[m.oscar];
+                        case "movie_economy":
+                            return profitColorScale(m.profit);
+                        case "cost_quality":
+                            return profitColorScale(m.profit);
+                    }
                 } else {
                     return OSCAR_COLORS["none"];
                 }
