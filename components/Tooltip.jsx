@@ -59,19 +59,19 @@ function ScatterplotToolTip(d) {
                     <div className="p-1">{dollarFormat(d.gross)}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">IMDB Score:<FaImdb/></div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><FaImdb/></div>IMDB Score:</div>
                     <div className="p-1">{d.score}</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Tomatometer:<SiRottentomatoes/></div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><SiRottentomatoes/></div>Tomatometer:</div>
                     <div className="p-1">{d.tomatometer_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Audience:<GiPopcorn/></div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><GiPopcorn/></div>Audience:</div>
                     <div className="p-1">{d.audience_rating}%</div>
                 </div>
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Run Time:<GiSandsOfTime/></div>
+                    <div className="p-1 bg-accent-dark rounded-sm"><div className="inline-block pr-1"><GiSandsOfTime/></div>Run Time:</div>
                     <div className="p-1">{runtimeFormat(d.runtime)}</div>
                 </div>
             </div>

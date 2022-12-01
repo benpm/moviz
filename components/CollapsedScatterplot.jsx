@@ -356,6 +356,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         setLegendImage2(ramp(profitColorScales[1]).toDataURL());
 
         // Draw points
+        var timeoutId = null;
         svg.select(".dots")
             .selectAll("circle")
             .data(dataSubset)
@@ -387,18 +388,31 @@ export default function CCollapsedScatterplot({ movieData }) {
                     return profitColorScales[1](Math.log10(Math.abs(v)));
                 }
             })
+            .on("mouseenter", (e, d) => {
+                if (d.movies.length > 1) {
+                    timeoutId = setTimeout(() => {
+                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group_" });
+                    })
+                    
+                    clearTimeout(timeoutId);
+                }  
+            })
             .on("mouseover", (e, d) => {
                 if (d.movies.length == 1) {
                     setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
                 } else {
                     setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
+                    setTimeout(() => {console.log("timeout")}, 1000);
                 }
+
             })
             .on("mousemove", (e, d) => {
                 setHoverPos({ x: e.pageX, y: e.pageY });
             })
             .on("mouseout", (e, d) => {
                 setHoverItem({ datum: null, x: 0, y: 0, caller: null });
+                if (d.movies.length > 1) 
+                    clearTimeout(timeoutId);
             });
 
         if (!quadtrees) {
