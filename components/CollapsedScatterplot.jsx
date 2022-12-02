@@ -412,9 +412,6 @@ export default function CCollapsedScatterplot({ movieData }) {
                 }
             })
             .on("mouseenter", (e, d) => {
-                //TODO: Remove these when you fix the actual bug
-                inGroupDetail = null;
-                svg.select(".hover-emph").remove();
                 //these end here
                 if (d.movies.length > 1) {
                     if (inGroupDetail == null) {
@@ -461,7 +458,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             })
             .on("mouseout", (e, d) => {
                 if (inGroupDetail != null) {
-                    setHoverDetailTimeout(setTimeout(() => {clearHoverDetail; console.log("460")}, 800));
+                    setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
                 } else {
                     clearHoverDetail(); console.log("462")
                     setHoverItem({ datum: null });
