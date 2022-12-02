@@ -42,22 +42,22 @@ export default function CCollapsedScatterplot({ movieData }) {
         hoverDetailTimeout,
         setHoverDetailTimeout
     ] = useGlobalState(state => [
-            state.setHoverItem,
-            state.setHoverPos,
-            state.scatterXAxis,
-            state.scatterYAxis,
-            state.setScatterXAxis,
-            state.setScatterYAxis,
-            state.scales,
-            state.viewMode,
-            state.brushMode,
-            state.setBrushRange,
-            state.setBrushFilter,
-            state.hoveredExpandedGroup,
-            state.showTrendLine,
-            state.hoverDetailTimeout,
-            state.setHoverDetailTimeout,
-        ]);
+        state.setHoverItem,
+        state.setHoverPos,
+        state.scatterXAxis,
+        state.scatterYAxis,
+        state.setScatterXAxis,
+        state.setScatterYAxis,
+        state.scales,
+        state.viewMode,
+        state.brushMode,
+        state.setBrushRange,
+        state.setBrushFilter,
+        state.hoveredExpandedGroup,
+        state.showTrendLine,
+        state.hoverDetailTimeout,
+        state.setHoverDetailTimeout,
+    ]);
     const [scales, setScales] = useState(null);
 
     const axisTitles = {
@@ -426,7 +426,8 @@ export default function CCollapsedScatterplot({ movieData }) {
                                 x: e.pageX,
                                 y: e.pageY,
                                 caller: "scatterplot_group_expanded",
-                                clearHoverDetail});
+                                clearHoverDetail
+                            });
                             inGroupDetail = d;
                             console.log("show group detail");
                         }, 1000);
@@ -521,8 +522,11 @@ export default function CCollapsedScatterplot({ movieData }) {
         svg.on("mouseenter", () => {
             svg.select(".legend-s")
                 .transition().duration(200)
-                .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                    ${margin.top}) scale(0)`);
+                .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 + 150}, 
+                    ${bounds.innerHeight + margin.bottom / 2}) scale(0)`);
+            svg.select(".title")
+                .transition().duration(200)
+                .attr("transform", `translate(${bounds.innerWidth / 2 + 60}, ${margin.top}) scale(0)`);
         });
 
         //set legend opacity to 1 when mouse leaves svg
@@ -530,8 +534,14 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                    ${margin.top}) scale(1)`);
+                    ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`);
+            svg.select(".title")
+                .transition().duration(200)
+                .attr("transform", `translate(${bounds.innerWidth / 2 + 60}, ${margin.top}) scale(1)`);
         });
+
+
+
 
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine]);
 
@@ -616,6 +626,12 @@ export default function CCollapsedScatterplot({ movieData }) {
                 </g>
                 <g className="x-axis" style={{ clipPath: "url(#x-axis-clip)" }}></g>
                 <g className="y-axis" style={{ clipPath: "url(#y-axis-clip)" }}></g>
+                <text className="title fill-white text-xl" textAnchor="middle" transform={`translate(${bounds.innerWidth / 2 + 60}, ${margin.top})`}>
+                    {viewMode === "ratings_oscars" ? "Movie Ratings Over Time featuring Oscars" :
+                        viewMode === "movie_economy" ? `Movie 
+                            ${axisTitles[yAxis]} Over Time` :
+                            viewMode === "cost_quality" ? `${axisTitles[yAxis]} vs. ${axisTitles[xAxis]}` : null}
+                </text>
             </svg>
         </div>
     );
