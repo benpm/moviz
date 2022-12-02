@@ -96,7 +96,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         if (movieData) {
             setTrendDataByYear(d3.rollups(movieData, d => d3.mean(d, x => x[yAxis]), d => d.year));
         }
-    }, [movieData]);
+    }, [movieData, yAxis]);
 
     // Initialize zoom + scale for transforming plot transform scale to integer zoom level
     const [zoomObj, setZoomObj] = useState({ zoom: null });
