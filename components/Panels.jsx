@@ -30,7 +30,7 @@ const CRightPanel = function ({ }) {
         <div>
             {viewMode == "movie_economy" ?
                 <div className="flex">
-                    <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={true}></CToggle>
+                    <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={false}></CToggle>
                 </div> : null
             }
         </div>
