@@ -490,7 +490,8 @@ export default function CCollapsedScatterplot({ movieData }) {
 
         svg.select(".legend-s")
             .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`)
+                ${bounds.innerHeight - 100 + margin.bottom / 2 - 
+                (viewMode === "cost_quality" ? 25 : 0)}) scale(1)`)
             .selectAll("rect")
             .attr("width", 160)
             .attr("height", 100)
@@ -523,7 +524,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 + 150}, 
-                    ${bounds.innerHeight + margin.bottom / 2}) scale(0)`);
+                    ${bounds.innerHeight + margin.bottom / 2 - (viewMode==="cost_quality" ? 50 : 0)}) scale(0)`);
             svg.select(".title")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth / 2 + 60}, ${margin.top}) scale(0)`);
@@ -534,7 +535,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                    ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`);
+                    ${bounds.innerHeight - 100 + margin.bottom / 2 - (viewMode==="cost_quality" ? 50 : 0)}) scale(1)`);
             svg.select(".title")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth / 2 + 60}, ${margin.top}) scale(1)`);
