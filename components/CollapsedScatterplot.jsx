@@ -412,12 +412,16 @@ export default function CCollapsedScatterplot({ movieData }) {
                 }
             })
             .on("mouseenter", (e, d) => {
+                //TODO: Remove these when you fix the actual bug
+                inGroupDetail = null;
+                svg.select(".hover-emph").remove();
+                //these end here
                 if (d.movies.length > 1) {
                     if (inGroupDetail == null) {
                         setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
 
                         // Clear previous group hover detail
-                        clearHoverDetail();
+                        clearHoverDetail(); console.log("420")
                         // Set timeout to show group hover detail
                         timeoutEnterId = setTimeout(() => {
                             setHoverItem({
@@ -457,9 +461,9 @@ export default function CCollapsedScatterplot({ movieData }) {
             })
             .on("mouseout", (e, d) => {
                 if (inGroupDetail != null) {
-                    setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
+                    setHoverDetailTimeout(setTimeout(() => {clearHoverDetail; console.log("460")}, 800));
                 } else {
-                    clearHoverDetail();
+                    clearHoverDetail(); console.log("462")
                     setHoverItem({ datum: null });
                 }
             });
@@ -532,7 +536,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`);
         });
 
-    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine, hoveredExpandedGroup]);
+    }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>
