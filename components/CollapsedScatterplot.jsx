@@ -459,7 +459,9 @@ export default function CCollapsedScatterplot({ movieData }) {
             })
             .on("mouseout", (e, d) => {
                 if (inGroupDetail != null) {
-                    setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
+                    if (inGroupDetail === d) {
+                        setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
+                    }
                 } else {
                     clearHoverDetail(); console.log("462")
                     setHoverItem({ datum: null });
