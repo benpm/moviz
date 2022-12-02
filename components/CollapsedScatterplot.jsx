@@ -525,7 +525,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                    ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(0)`);
+                    ${margin.top}) scale(0)`);
         });
 
         //set legend opacity to 1 when mouse leaves svg
@@ -533,17 +533,19 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                    ${bounds.innerHeight - 100 + margin.bottom / 2}) scale(1)`);
+                    ${margin.top}) scale(1)`);
         });
 
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, trendDataByYear, showTrendLine]);
 
     return (
         <div id="scatterplot" className="relative w-full h-full" ref={target}>
-            <div className="absolute top-0 right-0">
-                <CDropdown label="Y Axis" options={yAxisList} optionTitles={axisTitles} value={yAxis} onChange={setYAxis} />
+            <div className="absolute top-4 left-12">
+                <CDropdown label="" options={yAxisList} optionTitles={axisTitles} value={yAxis} onChange={setYAxis} />
+            </div>
+            <div className="absolute bottom-6 right-4">
                 {xAxisList != null &&
-                    <CDropdown label="X Axis" options={xAxisList} optionTitles={axisTitles} value={xAxis} onChange={setXAxis} />
+                    <CDropdown label="" options={xAxisList} optionTitles={axisTitles} value={xAxis} onChange={setXAxis} />
                 }
             </div>
             <svg ref={ref} className="w-full h-full">
