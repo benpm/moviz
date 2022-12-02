@@ -575,7 +575,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     transform={`translate(${margin.left},${margin.top})`}>
                     <g className="plot-area">
                         <g className="dots"></g>
-                        {viewMode == "movie_economy" && showTrendLine && <path className="trend-line stroke-white stroke-1 fill-none"></path>}
+                        {viewMode === "movie_economy" && showTrendLine && <path className="trend-line stroke-white stroke-1 fill-none"></path>}
                     </g>
                 </g>
                 <g className="legend-s">
