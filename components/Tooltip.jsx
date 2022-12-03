@@ -63,33 +63,21 @@ function ScatterplotGroupExpandedToolTip(
 {
     //fetch the movies with the idx from d.movies from the data and include them in the tooltip as a list.
     return (
-        <div className="tooltip bg-navbar pointer-events-all p-1 rounded"
-            onMouseLeave={() => {
-                // Set a new timeout for closing the group detail tooltip
-                setHoveredExpandedGroup(false);
-                setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
-                console.log("set hoverDetailTimeout");
-            }}
-            onMouseEnter={() => {
-                // Clear the timeout for closing the group detail tooltip
-                setHoveredExpandedGroup(true);
-                clearTimeout(hoverDetailTimeout);
-                setHoverDetailTimeout(null);
-                console.log("clear hoverDetailTimeout", hoverDetailTimeout);
-            }}>
-            <div className="pointer-events-auto font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
-            <div className="pointer-events-auto tooltip-body bg-navbar text-black">
-                <div className="pointer-events-auto grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
+        <div className="tooltip bg-navbar p-1 rounded">
+            <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
+            <div className="tooltip-body bg-navbar text-black">
+                <div className="grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
                     {data.map((movie, idx) => {
                         if (d.movies.includes(idx)) {
                             return <div
                                 onMouseEnter={(e) => {
-                                    setHoverListItem({movie, pos: {x: e.pageX, y: e.pageY}});
+                                    const r = e.target.getBoundingClientRect();
+                                    setHoverListItem({movie, pos: {x: r.x + r.width, y: r.y}});
                                 }}
                                 onMouseLeave={(e) => {
                                     setHoverListItem(null);
                                 }}
-                                className="pointer-events-auto bg-mid rounded-sm p-1 m-1 text-xs font-bold hover:bg-accent" key={idx}>{movie.name} </div>;
+                                className="bg-mid rounded-sm p-1 m-1 text-xs font-bold hover:bg-accent" key={idx}>{movie.name} </div>;
                         }
                     })}
                 </div>
@@ -291,10 +279,34 @@ export default function CTooltip({ data }) {
 
     return (
         <>
-            <div
-                className={`absolute text-sm text-gray-800 pointer-events-none
-                    ${hoverItem.datum ? "" : "hidden"}`}
-                style={positionTooltip(hoverPos, viewSize)} >
+            <div id="tooltip-container"
+                className={`absolute text-sm text-gray-800 ${hoverItem.datum ? "" : "hidden"}`}
+                style={positionTooltip(hoverPos, viewSize)}
+                onMouseLeave={(e) => {
+                    if (hoverItem.datum && hoverItem.caller == "scatterplot_group_expanded") {
+                        // Set a new timeout for closing the group detail tooltip
+                        setHoveredExpandedGroup(false);
+                        if (hoverDetailTimeout) {
+                            clearTimeout(hoverDetailTimeout);
+                        }
+                        setHoverDetailTimeout(setTimeout(() => {
+                            console.log(hoverDetailTimeout, "timeout");
+                            hoverItem.clearHoverDetail();
+                        }, 800));
+                        console.log("set hoverDetailTimeout");
+                        console.log(e.relatedTarget)
+                    }
+                }}
+                onMouseEnter={(e) => {
+                    if (hoverItem.datum && hoverItem.caller == "scatterplot_group_expanded") {
+                        // Clear the timeout for closing the group detail tooltip
+                        setHoveredExpandedGroup(true);
+                        clearTimeout(hoverDetailTimeout);
+                        setHoverDetailTimeout(null);
+                        console.log("clear hoverDetailTimeout", hoverDetailTimeout);
+                        console.log(e.relatedTarget)
+                    }
+                }}>
                 {hoverItem.datum ? makeTooltip(
                     hoverItem.datum,
                     hoverItem.caller,

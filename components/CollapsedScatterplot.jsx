@@ -386,9 +386,15 @@ export default function CCollapsedScatterplot({ movieData }) {
                 if(brushDirty)
                     return;
                 if (inGroupDetail != null) {
-                    if (inGroupDetail === d) {
-                        const id = setTimeout(clearHoverDetail, 800);
+                    const t = e.relatedTarget;
+                    if (inGroupDetail === d && t.id != "tooltip-container"
+                        && !e.relatedTarget.classList.contains("tooltip")) {
+                        const id = setTimeout(() => {
+                            clearHoverDetail();
+                            console.log("timeout in sp");
+                        }, 800);
                         setHoverDetailTimeout(id);
+                        console.log(e.relatedTarget);
                         console.log("setHoverDetailTimeout", id);
                     }
                 } else {
