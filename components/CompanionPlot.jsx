@@ -282,10 +282,16 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         "budget": "Budget",
         "gross": "Revenue",
         "profit": "Profit",
+        "budget_adj": "Budget (Adjusted)",
+        "gross_adj": "Revenue (Adjusted)",
+        "profit_adj": "Profit (Adjusted)",
+
     };
     setTitleText(toggleOtherStudios ?
         `Stacked ${axisTitles[yAxis]} of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
         `Stacked ${axisTitles[yAxis]} of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
+
+    console.log(yAxis);
 
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")

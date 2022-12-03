@@ -357,7 +357,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                         setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
 
                         // Clear previous group hover detail
-                        clearHoverDetail(); console.log("420")
+                        clearHoverDetail();
                         // Set timeout to show group hover detail
                         timeoutEnterId = setTimeout(() => {
                             setHoverItem({
@@ -414,7 +414,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                         console.log("setHoverDetailTimeout", id);
                     }
                 } else {
-                    clearHoverDetail(); console.log("462")
+                    clearHoverDetail();
                     setHoverItem({ datum: null });
                 }
             });
@@ -673,7 +673,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                 </g>
                 <g className="x-axis" style={{ clipPath: "url(#x-axis-clip)" }}></g>
                 <g className="y-axis" style={{ clipPath: "url(#y-axis-clip)" }}></g>
-                <text className="title fill-white text-xl" textAnchor="middle" transform={`translate(${bounds.innerWidth / 2 + 60}, ${margin.top})`}>
+                <text className="title fill-white text-2xl" textAnchor="middle" transform={`translate(${bounds.innerWidth / 2 + 60}, ${margin.top})`}>
                     {viewMode === "ratings_oscars" ? "Movie Ratings Over Time featuring Oscars" :
                         viewMode === "movie_economy" ? `Movie 
                             ${axisTitles[yAxis]} Over Time` :
