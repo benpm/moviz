@@ -280,7 +280,7 @@ export default function CTooltip({ data }) {
     return (
         <>
             <div id="tooltip-container"
-                className={`absolute text-sm text-gray-800 ${hoverItem.datum ? "" : "hidden"}`}
+                className={`absolute text-sm text-gray-800 ${hoverItem.datum ? "" : "hidden"} ${hoverItem.caller == "scatterplot_group_expanded" ? "" : "pointer-events-none"}`}
                 style={positionTooltip(hoverPos, viewSize)}
                 onMouseLeave={(e) => {
                     if (hoverItem.datum && hoverItem.caller == "scatterplot_group_expanded") {
