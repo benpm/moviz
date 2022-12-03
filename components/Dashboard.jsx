@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { loadMovieData, loadScatterPlotData } from '../scripts/loadData';
+import { loadInflationData, loadMovieData, loadScatterPlotData } from '../scripts/loadData';
 import { useEffect, useState } from 'react';
 import CTooltip from './Tooltip';
 import CHeatMap from './HeatMap';
@@ -10,8 +10,11 @@ import { timeFormat } from "d3";
 
 const Dashboard = () => {
   const [data, setData] = useState([]);
-  const [setScales] = useGlobalState(s => [s.setScales]);
+  const [setScales, cpiData, setCpiData] = useGlobalState(s => [s.setScales, s.cpiData, s.setCpiData]);
   useEffect(() => {
+    if (cpiData.length == 0) {
+      loadInflationData().then(setCpiData);
+    }
     if (data.length == 0) {
       loadMovieData().then((data) => {
         const mf = d3.format("02d");

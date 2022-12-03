@@ -26,6 +26,9 @@ const useGlobalState = create((set) => ({
 
     hoverDetailTimeout: null,
 
+    // Consumer price index data for inflation adjustment
+    cpiData: [],
+
     setHoverPos: x => set({ hoverPos: x }),
     setHoverItem: x => set({ hoverItem: x }),
     setHoveredExpandedGroup: x => set({ hoveredExpandedGroup: x }),
@@ -40,6 +43,7 @@ const useGlobalState = create((set) => ({
     setBrushRange: x => set({ brushRange: x }),
     setShowTrendLine: x => set({ showTrendLine: x }),
     setHoverDetailTimeout: x => set({ hoverDetailTimeout: x }),
+    setCpiData: x => set({ cpiData: x }),
 }));
 
 export default useGlobalState;

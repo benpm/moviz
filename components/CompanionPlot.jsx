@@ -132,7 +132,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
     setTitleText(`Number of Oscar Wins${useNominations ? " and Nominations" : ""} for Genres ${yearsExtent[0]} - ${yearsExtent[1]}`);
 }
 
-function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis) {
+function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos, viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis, cpiData, adjustInflation) {
     //sum budget of the movies and group them by studio for each data month
     let studioBudgetByYear = d3.rollups(data, v => d3.sum(v, d => d[yAxis]), d => d.year, d => d.company).filter(d =>
         (brushRange === null || (d[0] >= brushRange[0] && d[0] <= brushRange[1]))
@@ -141,7 +141,11 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         let m = new Map();
         m.set("year", r[0]);
         r[1].forEach(([key, value]) => {
-            m.set(key, value);
+            if (adjustInflation) {
+                m.set(key, value / cpiData.get(r[0]));
+            } else {
+                m.set(key, value);
+            }
         });
         return m;
     });
@@ -511,8 +515,20 @@ export default function CCompanionPlot({ data }) {
     const titleRef = useRef();
     const titleSize = useSize(titleRef);
     const [useNominations, setUseNominations] = useState(!~!false);
+    const [adjustInflation, setAdjustInflation] = useState(false);
 
-    let [setHoverItem, setHoverPos, xAxis, yAxis, gScales, viewMode, toggleOtherStudios, setToggleOtherStudios, brushRange, brushFilter] = useGlobalState(state => [
+    let [setHoverItem,
+        setHoverPos,
+        xAxis,
+        yAxis,
+        gScales,
+        viewMode,
+        toggleOtherStudios,
+        setToggleOtherStudios,
+        brushRange,
+        brushFilter,
+        cpiData
+    ] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
         state.scatterXAxis,
@@ -522,7 +538,8 @@ export default function CCompanionPlot({ data }) {
         state.companionPlotShowOtherStudios,
         state.setCompanionPlotShowOtherStudios,
         state.brushRange,
-        state.brushFilter
+        state.brushFilter,
+        state.cpiData
     ]);
     let scales = null;
     var xAxisObj = null;
@@ -558,20 +575,25 @@ export default function CCompanionPlot({ data }) {
             case "movie_economy":
                 drawStackedLineChart(
                     svg, data, bounds, margin, xAxisObj, yAxisObj, setHoverItem, setHoverPos,
-                    viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis);
+                    viewMode, toggleOtherStudios, brushRange, setTitleText, yAxis, cpiData, adjustInflation);
                 break;
             case "cost_quality":
                 drawDecadeHeatmap(svg, data, bounds, margin, setHoverItem, setHoverPos, setLegendImage, setTitleText, brushFilter);
                 break;
         }
-    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations]);
+    }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations, adjustInflation]);
 
     return (
         <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
             {viewMode == "movie_economy" &&
-                <div className="absolute bottom-12 left-10 z-50 text-white">
-                    <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={true}></CToggle>
-                </div>
+                <>
+                    <div className="absolute bottom-12 left-10 z-50 text-white">
+                        <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={toggleOtherStudios}></CToggle>
+                    </div>
+                    <div className="absolute bottom-20 left-10 z-50 text-white">
+                        <CToggle handler={v => setAdjustInflation(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Adjust for Inflation" initValue={adjustInflation}></CToggle>
+                    </div>
+                </>
             }
             <svg ref={ref} width={bounds.width} height={bounds.height} className="absolute top-0 left-0">
                 <defs>

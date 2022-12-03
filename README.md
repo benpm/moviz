@@ -13,3 +13,4 @@ Visualization of your favorite movies :) project for Visualization for Data Scie
 - https://www.imdb.com/interfaces/
 - https://www.kaggle.com/datasets/danielgrijalvas/movies
 - https://www.kaggle.com/datasets/stefanoleone992/rotten-tomatoes-movies-and-critic-reviews-dataset
+- https://www.bls.gov/cpi/data.htm
