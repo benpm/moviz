@@ -44,7 +44,7 @@ function makeTooltip(
 
 function ScatterplotGroupToolTip(d) {
     return (
-        <div className="pointer-events-none tooltip bg-navbar">
+        <div className="pointer-events-none tooltip p-1 bg-navbar">
             <div className="font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
         </div>
     );
@@ -93,7 +93,7 @@ function ScatterplotToolTip(d) {
     const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
 
     return (
-        <div className="pointer-events-none tooltip bg-navbar">
+        <div className="pointer-events-none tooltip p-1 bg-navbar">
             <div className="font-bold text-lightest">{d.name}</div>
             <div className="tooltip-body bg-navbar text-dark">
                 <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
@@ -162,7 +162,7 @@ function HeatmapToolTip(d) {
     //find average audience
     const avgAudience = d3.mean(d, (d) => d.audience_rating);
     return (
-        <div className={`bg-dark rounded p-2 text-sm text-gray-800`}>
+        <div className={`bg-navbar rounded p-1 text-sm text-gray-800`}>
             <div className="pointer-events-none tooltip bg-navbar rounded-sm">
                 <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.length}</span></div>
                 <div className="tooltip-body">
@@ -210,7 +210,7 @@ function CompanionOscarsToolTip(d) {
     const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
 
     return (
-        <div className="pointer-events-none tooltip bg-navbar">
+        <div className="pointer-events-none tooltip p-1 bg-navbar">
             <div className="font-bold text-light"> <span className="text-xl text-lightest">{d.movies.length} {d.genre}
             </span> movies were nominated for <span className="text-xl text-lightest">{d.date}</span> Oscars</div>
             <div className="tooltip-body">
@@ -229,7 +229,7 @@ function CompanionOscarsToolTip(d) {
 
 function CompanionHeatmapToolTip(d) {
     return (
-        <div className="pointer-events-none tooltip bg-navbar">
+        <div className="pointer-events-none p-1 rounded tooltip bg-navbar">
             <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.count}</span></div>
             <div className="tooltip-body">
             </div>
@@ -282,7 +282,7 @@ export default function CTooltip({ data }) {
     return (
         <>
             <div id="tooltip-container"
-                className={`absolute text-sm text-gray-800 ${hoverItem.datum ? "" : "hidden"} ${hoverItem.caller == "scatterplot_group_expanded" ? "" : "pointer-events-none"}`}
+                className={`absolute text-sm text-gray-800 p-2 bg-dark rounded ${hoverItem.datum ? "" : "hidden"} ${hoverItem.caller == "scatterplot_group_expanded" ? "" : "pointer-events-none"}`}
                 style={positionTooltip(hoverPos, viewSize)}
                 onMouseLeave={(e) => {
                     if (hoverItem.datum && hoverItem.caller == "scatterplot_group_expanded") {

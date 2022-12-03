@@ -10,7 +10,7 @@ export default function CNavBar() {
                 <CViewSelector/>
             </div>
             <div className ="flex-grow text-center basis-2/12"><CRightPanel/></div>
-            <div className="flex flex-col text-right basis-2/12">
+            <div className="flex-shrink flex flex-col text-right">
                 <a className="p-1" href="https://benpm.github.io/">Ben Mastripolito</a>
                 <a className="p-1" href="https://stlkrv1.github.io/personal-website/#about">Alper Sahistan</a>
             </div>

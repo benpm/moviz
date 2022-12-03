@@ -28,13 +28,10 @@ const CRightPanel = function ({ }) {
     //TODO:story telling mode buttons we can higligth the some interesting points in the data
 
     return (
-        <div>
-            {viewMode == "movie_economy" ?
-                <div className="flex">
-                    <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={false}></CToggle>
-                    <CToggle handler={v => setAdjustInflation(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Adjust for Inflation" initValue={adjustInflation}></CToggle>
-                </div> : null
-            }
+        <div className="flex">
+            {viewMode == "movie_economy" && <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={false}></CToggle>}
+            {(viewMode == "movie_economy" || viewMode == "cost_quality")
+                ? <CToggle handler={v => setAdjustInflation(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Adjust for Inflation" initValue={adjustInflation}></CToggle> : null}
         </div>
     );
 }
