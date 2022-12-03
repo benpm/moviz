@@ -9,6 +9,8 @@ from rich.pretty import pprint
 movies = pd.read_csv("raw_data/movies.csv")
 scores = pd.read_csv("raw_data/rotten_tomatoes_movies.csv")
 oscars = pd.read_csv("raw_data/the_oscar_award.csv")
+cpi = pd.read_csv("../public/inflation_cpi.csv")
+cpi.set_index("year", inplace=True)
 
 # Create a new column for the RT scores which is the release year
 scores = scores.dropna(subset=["original_release_date", "tomatometer_rating", "audience_rating"])
@@ -93,7 +95,13 @@ movies["company"] = movies["company"].apply(lambda x: company_map[x] if x in com
 # Remove movies with missing gross or budget
 movies = movies.dropna(subset=["gross", "budget"])
 
+# Compute profit field
 movies["profit"] = movies["gross"] - movies["budget"]
+
+# Adjust profit, gross and budget for inflation by diving by the cpi "adj" field
+movies["profit_adj"] = movies["profit"] // movies.index.map(lambda k: cpi.loc[k[1], "adj"])
+movies["gross_adj"] = movies["gross"] // movies.index.map(lambda k: cpi.loc[k[1], "adj"])
+movies["budget_adj"] = movies["budget"] // movies.index.map(lambda k: cpi.loc[k[1], "adj"])
 
 # Save to csv
 OUT_PATH = "../public/movies.csv"

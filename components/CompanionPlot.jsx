@@ -515,7 +515,6 @@ export default function CCompanionPlot({ data }) {
     const titleRef = useRef();
     const titleSize = useSize(titleRef);
     const [useNominations, setUseNominations] = useState(!~!false);
-    const [adjustInflation, setAdjustInflation] = useState(false);
 
     let [setHoverItem,
         setHoverPos,
@@ -527,7 +526,9 @@ export default function CCompanionPlot({ data }) {
         setToggleOtherStudios,
         brushRange,
         brushFilter,
-        cpiData
+        cpiData,
+        adjustInflation,
+        setAdjustInflation
     ] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -539,7 +540,9 @@ export default function CCompanionPlot({ data }) {
         state.setCompanionPlotShowOtherStudios,
         state.brushRange,
         state.brushFilter,
-        state.cpiData
+        state.cpiData,
+        state.adjustInflation,
+        state.setAdjustInflation
     ]);
     let scales = null;
     var xAxisObj = null;
@@ -589,9 +592,6 @@ export default function CCompanionPlot({ data }) {
                 <>
                     <div className="absolute bottom-12 left-10 z-50 text-white">
                         <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={toggleOtherStudios}></CToggle>
-                    </div>
-                    <div className="absolute bottom-20 left-10 z-50 text-white">
-                        <CToggle handler={v => setAdjustInflation(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Adjust for Inflation" initValue={adjustInflation}></CToggle>
                     </div>
                 </>
             }

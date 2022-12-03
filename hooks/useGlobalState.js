@@ -28,6 +28,7 @@ const useGlobalState = create((set) => ({
 
     // Consumer price index data for inflation adjustment
     cpiData: [],
+    adjustInflation: false,
 
     setHoverPos: x => set({ hoverPos: x }),
     setHoverItem: x => set({ hoverItem: x }),
@@ -44,6 +45,7 @@ const useGlobalState = create((set) => ({
     setShowTrendLine: x => set({ showTrendLine: x }),
     setHoverDetailTimeout: x => set({ hoverDetailTimeout: x }),
     setCpiData: x => set({ cpiData: x }),
+    setAdjustInflation: x => set({ adjustInflation: x }),
 }));
 
 export default useGlobalState;

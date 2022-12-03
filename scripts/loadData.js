@@ -42,7 +42,7 @@ function loadScatterPlotData() {
 
 function loadInflationData() {
     return d3.csv("inflation_cpi.csv").then(data => {
-        return new Map(data.map(d => [parseInt(d.year), parseFloat(d.cpi) / 258.811]));
+        return new Map(data.map(d => [parseInt(d.year), parseFloat(d.adj)]));
     });
 }
 

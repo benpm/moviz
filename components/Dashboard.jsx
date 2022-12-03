@@ -26,6 +26,9 @@ const Dashboard = () => {
             budget: d3.scaleLog().domain(d3.extent(data, d => d.budget)),
             gross: d3.scaleLog().domain(d3.extent(data, d => d.gross)),
             profit: d3.scaleLinear().domain(d3.extent(data, d => d.profit)),
+            budget_adj: d3.scaleLog().domain(d3.extent(data, d => d.budget)),
+            gross_adj: d3.scaleLog().domain(d3.extent(data, d => d.gross)),
+            profit_adj: d3.scaleLinear().domain(d3.extent(data, d => d.profit)),
             score: d3.scaleLinear().domain([0, 10]),
             tomatometer_rating: d3.scaleLinear().domain([0, 100]),
             audience_rating: d3.scaleLinear().domain([0, 100]),
@@ -43,6 +46,12 @@ const Dashboard = () => {
             gross: axis => 
               axis.tickArguments([8, "$,.1s"]),
             profit: axis => 
+              axis.tickArguments([8, "$,.1s"]),
+            budget_adj: axis => 
+              axis.tickArguments([8, "$,.1s"]),
+            gross_adj: axis => 
+              axis.tickArguments([8, "$,.1s"]),
+            profit_adj: axis => 
               axis.tickArguments([8, "$,.1s"]),
             score: axis => 
               axis.tickArguments([10, "d"]),

@@ -40,7 +40,8 @@ export default function CCollapsedScatterplot({ movieData }) {
         hoveredExpandedGroup,
         showTrendLine,
         hoverDetailTimeout,
-        setHoverDetailTimeout
+        setHoverDetailTimeout,
+        adjustInflation
     ] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -57,6 +58,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         state.showTrendLine,
         state.hoverDetailTimeout,
         state.setHoverDetailTimeout,
+        state.adjustInflation
     ]);
     const [scales, setScales] = useState(null);
 
@@ -65,6 +67,9 @@ export default function CCollapsedScatterplot({ movieData }) {
         "budget": "Budget",
         "gross": "Revenue",
         "profit": "Profit",
+        "budget_adj": "Budget (Adjusted)",
+        "gross_adj": "Revenue (Adjusted)",
+        "profit_adj": "Profit (Adjusted)",
         "score": "IMDb Score",
         "audience_rating": "RT Audience Rating",
         "tomatometer_rating": "RT Tomatometer Rating",
@@ -235,6 +240,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         clearBrush();
     }, [viewMode, scales, plotTransform, xAxis, yAxis, intZoomLevel]);
 
+    // Set the axes based on current view mode and adjustment for inflation option
     useEffect(() => {
         switch (viewMode) {
             case "ratings_oscars":
@@ -246,17 +252,27 @@ export default function CCollapsedScatterplot({ movieData }) {
             case "movie_economy":
                 setXAxisList(null);
                 setXAxis("released");
-                setYAxisList(["budget", "gross", "profit"]);
-                setYAxis("budget");
+                if (adjustInflation) {
+                    setYAxisList(["budget_adj", "gross_adj", "profit_adj"]);
+                    setYAxis("budget_adj");
+                } else {
+                    setYAxisList(["budget", "gross", "profit"]);
+                    setYAxis("budget");
+                }
                 break;
             case "cost_quality":
-                setXAxisList(["budget", "gross", "profit"]);
-                setXAxis("budget");
+                if (adjustInflation) {
+                    setXAxisList(["budget_adj", "gross_adj", "profit_adj"]);
+                    setXAxis("budget_adj");
+                } else {
+                    setXAxisList(["budget", "gross", "profit"]);
+                    setXAxis("budget");
+                }
                 setYAxisList(["score", "audience_rating", "tomatometer_rating"]);
                 setYAxis("score");
                 break;
         }
-    }, [viewMode]);
+    }, [viewMode, adjustInflation]);
 
     // Brush behavior object
     const [brushObj, setBrushObj] = useState({ brush: null });
