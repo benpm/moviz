@@ -468,7 +468,10 @@ export default function CCollapsedScatterplot({ movieData }) {
             .x(d => yearScale(d[0]))
             .y(d => trendScale(d[1]));
         svg.select(".trend-line")
-            .attr("d", avgTrendLine(trendDataByYear));
+            .attr("d", avgTrendLine(trendDataByYear))
+            .attr("transform", `scale(0,1)`)
+            .transition().duration(1000)
+            .attr("transform", `scale(1,1)`);
 
 
         const profitColorScales = [

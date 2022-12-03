@@ -72,7 +72,7 @@ function ScatterplotGroupExpandedToolTip(
                             return <div
                                 onMouseEnter={(e) => {
                                     const r = e.target.getBoundingClientRect();
-                                    setHoverListItem({movie, pos: {x: r.x + r.width, y: r.y}});
+                                    setHoverListItem({ movie, pos: { x: r.x + r.width, y: r.y } });
                                 }}
                                 onMouseLeave={(e) => {
                                     setHoverListItem(null);
@@ -162,32 +162,34 @@ function HeatmapToolTip(d) {
     //find average audience
     const avgAudience = d3.mean(d, (d) => d.audience_rating);
     return (
-        <div className="pointer-events-none tooltip bg-navbar">
-            <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.length}</span></div>
-            <div className="tooltip-body">
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Years:</div>
-                    <div className="p-1">{dateFormat(minDate)}-{dateFormat(maxDate)}</div>
-                </div>
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Avg. Budget:</div>
-                    <div className="p-1">{dollarFormat(avgBudget)}</div>
-                </div>
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Avg. IMDB Score:</div>
-                    <div className="p-1">{imdbFormat(avgScore)}</div>
-                </div>
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Tomatometer:</div>
-                    <div className="p-1">{tomatometerFormat(avgTomatometer)}%</div>
-                </div>
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Audience:</div>
-                    <div className="p-1">{tomatometerFormat(avgAudience)}%</div>
-                </div>
-                <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
-                    <div className="p-1 bg-accent-dark rounded-sm">Avg. Run Time:</div>
-                    <div className="p-1">{runtimeFormat(avgRuntime)}</div>
+        <div className={`bg-dark rounded p-2 text-sm text-gray-800`}>
+            <div className="pointer-events-none tooltip bg-navbar rounded-sm">
+                <div className="font-bold text-light"># of movies: <span className="text-xl text-lightest">{d.length}</span></div>
+                <div className="tooltip-body">
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                        <div className="p-1 bg-accent-dark rounded-sm">Years:</div>
+                        <div className="p-1">{dateFormat(minDate)}-{dateFormat(maxDate)}</div>
+                    </div>
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                        <div className="p-1 bg-accent-dark rounded-sm">Avg. Budget:</div>
+                        <div className="p-1">{dollarFormat(avgBudget)}</div>
+                    </div>
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                        <div className="p-1 bg-accent-dark rounded-sm">Avg. IMDB Score:</div>
+                        <div className="p-1">{imdbFormat(avgScore)}</div>
+                    </div>
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                        <div className="p-1 bg-accent-dark rounded-sm">Tomatometer:</div>
+                        <div className="p-1">{tomatometerFormat(avgTomatometer)}%</div>
+                    </div>
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                        <div className="p-1 bg-accent-dark rounded-sm">Audience:</div>
+                        <div className="p-1">{tomatometerFormat(avgAudience)}%</div>
+                    </div>
+                    <div className="grid grid-cols-2 bg-mid rounded-sm m-1">
+                        <div className="p-1 bg-accent-dark rounded-sm">Avg. Run Time:</div>
+                        <div className="p-1">{runtimeFormat(avgRuntime)}</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -320,11 +322,11 @@ export default function CTooltip({ data }) {
                     setHoverListItem) : ""}
             </div>
             {hoverListItem &&
-            <div
-                className={`pointer-events-none absolute bg-dark rounded p-2 text-sm text-gray-800`}
-                style={positionTooltip(hoverListItem.pos, viewSize)} >
-                {ScatterplotToolTip(hoverListItem.movie)}
-            </div>}
+                <div
+                    className={`pointer-events-none absolute bg-dark rounded p-2 text-sm text-gray-800`}
+                    style={positionTooltip(hoverListItem.pos, viewSize)} >
+                    {ScatterplotToolTip(hoverListItem.movie)}
+                </div>}
         </>
     );
 }
