@@ -120,7 +120,7 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         .on("mousemove", (e, d) => {
             setHoverPos({ x: e.pageX, y: e.pageY });
         })
-        .on("mouseout", (e, d) => {
+        .on("mouseleave", (e, d) => {
             d3.select(e.target).transition().duration(100)
                 .attr("fill", colorScale(d[0]))
                 .attr("stroke", "black")
@@ -330,7 +330,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             d3.select(event.target).attr("fill", d3.color(colorScale(d.key)).brighter(1.5))
             d3.selectAll(".legend-item").filter((e) => e != d.key).attr("opacity", 0.2);
         })
-        .on("mouseout", function (event, d) {
+        .on("mouseleave", function (event, d) {
             //set area back to original color and set opacity of non-corresponding legend item to 1
             d3.select(event.target).attr("fill", colorScale(d.key))
             d3.selectAll(".legend-item").attr("opacity", 1);
@@ -390,7 +390,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
             .selectAll("line")
             .attr("stroke-opacity", 1);
     });
-    svg.on("mouseout", (e, d) => {
+    svg.on("mouseleave", (e, d) => {
         d3.select(".mouse-line-group")
             .selectAll("line")
             .attr("stroke-opacity", 0);
@@ -474,7 +474,7 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setHoverItem, setHoverPos,
                 .on("mousemove", (e, d) => {
                     setHoverPos({ x: e.pageX, y: e.pageY });
                 })
-                .on("mouseout", (e, d) => {
+                .on("mouseleave", (e, d) => {
                     d3.select(e.target).transition().duration(100)
                         .attr("fill", colorScale(d[1]))
                         .attr("stroke", "black")

@@ -3,9 +3,20 @@ import useGlobalState from "../hooks/useGlobalState";
 import { FaImdb } from 'react-icons/fa';
 import { SiRottentomatoes } from 'react-icons/si';
 import { GiPopcorn, GiSandsOfTime } from 'react-icons/gi';
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-function makeTooltip(d, caller, data, setHoveredExpandedGroup, hoverDetailTimeout, setHoverDetailTimeout, clearHoverDetail) {
+function makeTooltip(
+    d,
+    caller,
+    data,
+    setHoveredExpandedGroup,
+    hoverDetailTimeout,
+    setHoverDetailTimeout,
+    clearHoverDetail,
+    viewSize,
+    hoverListItem,
+    setHoverListItem)
+{
     switch (caller) {
         case "scatterplot":
             return ScatterplotToolTip(d);
@@ -18,7 +29,10 @@ function makeTooltip(d, caller, data, setHoveredExpandedGroup, hoverDetailTimeou
                 setHoveredExpandedGroup,
                 hoverDetailTimeout,
                 setHoverDetailTimeout,
-                clearHoverDetail);
+                clearHoverDetail,
+                viewSize,
+                hoverListItem,
+                setHoverListItem);
         case "heatmap":
             return HeatmapToolTip(d);
         case "companion-oscars":
@@ -42,29 +56,40 @@ function ScatterplotGroupExpandedToolTip(
     setHoveredExpandedGroup,
     hoverDetailTimeout,
     setHoverDetailTimeout,
-    clearHoverDetail)
+    clearHoverDetail,
+    viewSize,
+    hoverListItem,
+    setHoverListItem)
 {
     //fetch the movies with the idx from d.movies from the data and include them in the tooltip as a list.
     return (
-        <div className="tooltip bg-navbar"
-            onMouseEnter={() => {
-                setHoveredExpandedGroup(true);
-                clearTimeout(hoverDetailTimeout);
-                setHoverDetailTimeout(null);
-                console.log("clear hoverDetailTimeout");
-            }}
-            onMouseOut={() => {
+        <div className="tooltip bg-navbar pointer-events-all p-1 rounded"
+            onMouseLeave={() => {
+                // Set a new timeout for closing the group detail tooltip
                 setHoveredExpandedGroup(false);
                 setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
                 console.log("set hoverDetailTimeout");
             }}
-            >
-            <div className="pointer-events-none font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
-            <div className="pointer-events-none tooltip-body bg-navbar text-black">
-                <div className="grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
+            onMouseEnter={() => {
+                // Clear the timeout for closing the group detail tooltip
+                setHoveredExpandedGroup(true);
+                clearTimeout(hoverDetailTimeout);
+                setHoverDetailTimeout(null);
+                console.log("clear hoverDetailTimeout", hoverDetailTimeout);
+            }}>
+            <div className="pointer-events-auto font-bold text-lightest text-lg">Contains {d.movies.length} movies</div>
+            <div className="pointer-events-auto tooltip-body bg-navbar text-black">
+                <div className="pointer-events-auto grid grid-cols-2 bg-mid2 p-1 rounded-sm m-1">
                     {data.map((movie, idx) => {
                         if (d.movies.includes(idx)) {
-                            return <div className="bg-mid rounded-sm p-1 m-1 text-xs font-bold" key={idx}>{movie.name} </div>;
+                            return <div
+                                onMouseEnter={(e) => {
+                                    setHoverListItem({movie, pos: {x: e.pageX, y: e.pageY}});
+                                }}
+                                onMouseLeave={(e) => {
+                                    setHoverListItem(null);
+                                }}
+                                className="pointer-events-auto bg-mid rounded-sm p-1 m-1 text-xs font-bold hover:bg-accent" key={idx}>{movie.name} </div>;
                         }
                     })}
                 </div>
@@ -256,19 +281,38 @@ export default function CTooltip({ data }) {
         state.setHoverDetailTimeout
     ]);
 
+    const [hoverListItem, setHoverListItem] = useState(null);
+
+    useEffect(() => {
+        if (hoverItem.datum == null) {
+            setHoverListItem(null);
+        }
+    }, [hoverItem]);
+
     return (
-        <div
-            className={`absolute bg-dark rounded p-2 text-sm text-gray-800
-                ${hoverItem.datum ? "" : "hidden"}`}
-            style={positionTooltip(hoverPos, viewSize)} >
-            {hoverItem.datum ? makeTooltip(
-                hoverItem.datum,
-                hoverItem.caller,
-                data,
-                setHoveredExpandedGroup,
-                hoverDetailTimeout,
-                setHoverDetailTimeout,
-                hoverItem.clearHoverDetail) : ""}
-        </div>
+        <>
+            <div
+                className={`absolute text-sm text-gray-800 pointer-events-none
+                    ${hoverItem.datum ? "" : "hidden"}`}
+                style={positionTooltip(hoverPos, viewSize)} >
+                {hoverItem.datum ? makeTooltip(
+                    hoverItem.datum,
+                    hoverItem.caller,
+                    data,
+                    setHoveredExpandedGroup,
+                    hoverDetailTimeout,
+                    setHoverDetailTimeout,
+                    hoverItem.clearHoverDetail,
+                    viewSize,
+                    hoverListItem,
+                    setHoverListItem) : ""}
+            </div>
+            {hoverListItem &&
+            <div
+                className={`pointer-events-none absolute bg-dark rounded p-2 text-sm text-gray-800`}
+                style={positionTooltip(hoverListItem.pos, viewSize)} >
+                {ScatterplotToolTip(hoverListItem.movie)}
+            </div>}
+        </>
     );
 }

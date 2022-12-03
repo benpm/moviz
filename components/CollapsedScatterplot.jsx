@@ -105,6 +105,7 @@ export default function CCollapsedScatterplot({ movieData }) {
     const initTransform = d3.zoomIdentity.scale(0.98).translate(50, 50);
     const [plotTransform, setPlotTransform] = useState(initTransform);
     const [intZoomLevel, setIntZoomLevel] = useState(maxZoomLevel);
+    const [brushDirty, setBrushDirty] = useState(false);
     const zoomScale = d3.scaleLinear()
         .domain([0.5, zoomBounds[1] * 0.5])
         .rangeRound([maxZoomLevel, 0])
@@ -148,6 +149,11 @@ export default function CCollapsedScatterplot({ movieData }) {
     // Handler for mode switch buttons (ViewSelector.jsx)
     useEffect(() => {
         const onXBrush = (e) => {
+            if (e.type == "start") {
+                setBrushDirty(true);
+            } else if (e.type == "end") {
+                setBrushDirty(false);
+            }
             if (scales) {
                 if (e.selection && e.selection[0] != e.selection[1]) {
                     const t = new d3.ZoomTransform(
@@ -177,6 +183,11 @@ export default function CCollapsedScatterplot({ movieData }) {
             }
         };
         const onXYBrush = (e) => {
+            if (e.type == "start") {
+                setBrushDirty(true);
+            } else if (e.type == "end") {
+                setBrushDirty(false);
+            }
             if (scales) {
                 if (e.selection) {
                     // local plot coords -> transformed plot coords -> data coords
@@ -305,6 +316,88 @@ export default function CCollapsedScatterplot({ movieData }) {
         }
     }, [brushMode, brushHandler, scales]);
 
+    useEffect(() => {
+        const svg = d3.select(ref.current);
+        var timeoutEnterId = null;
+        var inGroupDetail = null;
+        const clearHoverDetail = () => {
+            if (timeoutEnterId != null) {
+                clearTimeout(timeoutEnterId);
+                setHoverItem({ datum: null, x: 0, y: 0, caller: null });
+                inGroupDetail = null;
+                svg.select(".hover-emph").remove();
+                if (hoverDetailTimeout != null) {
+                    clearTimeout(hoverDetailTimeout);
+                    setHoverDetailTimeout(null);
+                }
+            }
+        };
+        svg.selectAll(".dot")
+            .on("mouseenter", (e, d) => {
+                if (brushDirty)
+                    return;
+                if (d.movies.length > 1) {
+                    if (inGroupDetail == null) {
+                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
+
+                        // Clear previous group hover detail
+                        clearHoverDetail(); console.log("420")
+                        // Set timeout to show group hover detail
+                        timeoutEnterId = setTimeout(() => {
+                            setHoverItem({
+                                datum: d,
+                                x: e.pageX,
+                                y: e.pageY,
+                                caller: "scatterplot_group_expanded",
+                                clearHoverDetail
+                            });
+                            inGroupDetail = d;
+                            console.log("show group detail");
+                        }, 1000);
+                        // Create larger circle in the same position and radius
+                        svg.select(".dots")
+                            .append("circle")
+                            .attr("cx", scales.iXScale(d.x))
+                            .attr("cy", scales.iYScale(d.y))
+                            .attr("r", d.r * 1.3)
+                            .classed("hover-emph", true)
+                            .attr("fill", "none")
+                            .attr("stroke", tailwindConfig.theme.extend.colors.mid)
+                            .attr("stroke-width", 3)
+                            .transition().duration(1000)
+                            .attr("r", d.r * 0.9)
+                            .attr("stroke", tailwindConfig.theme.extend.colors.accent);
+                    } else if (inGroupDetail === d) {
+                        // Hovering same group we are detailing
+                        clearTimeout(hoverDetailTimeout);
+                        setHoverDetailTimeout(null);
+                    }
+                } else if (inGroupDetail == null) {
+                    setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
+                }
+            })
+            .on("mousemove", (e, d) => {
+                if(brushDirty)
+                    return;
+                if (inGroupDetail == null)
+                    setHoverPos({ x: e.pageX, y: e.pageY });
+            })
+            .on("mouseleave", (e, d) => {
+                if(brushDirty)
+                    return;
+                if (inGroupDetail != null) {
+                    if (inGroupDetail === d) {
+                        const id = setTimeout(clearHoverDetail, 800);
+                        setHoverDetailTimeout(id);
+                        console.log("setHoverDetailTimeout", id);
+                    }
+                } else {
+                    clearHoverDetail(); console.log("462")
+                    setHoverItem({ datum: null });
+                }
+            });
+    }, [brushDirty, scales]);
+
     // Render chart function
     const ref = useD3(svg => {
         if (!gScales || !data || movieData.length == 0 || !trendDataByYear) {
@@ -364,21 +457,6 @@ export default function CCollapsedScatterplot({ movieData }) {
         setLegendImage(ramp(profitColorScales[0], true).toDataURL());
         setLegendImage2(ramp(profitColorScales[1]).toDataURL());
 
-        var timeoutEnterId = null;
-        var inGroupDetail = null;
-        const clearHoverDetail = () => {
-            if (timeoutEnterId != null) {
-                clearTimeout(timeoutEnterId);
-                setHoverItem({ datum: null, x: 0, y: 0, caller: null });
-                inGroupDetail = null;
-                svg.select(".hover-emph").remove();
-                if (hoverDetailTimeout != null) {
-                    clearTimeout(hoverDetailTimeout);
-                    setHoverDetailTimeout(null);
-                }
-            }
-        };
-
         // Draw points
         svg.select(".dots")
             .selectAll("circle")
@@ -410,62 +488,6 @@ export default function CCollapsedScatterplot({ movieData }) {
                 } else {
                     return profitColorScales[1](Math.log10(Math.abs(v)));
                 }
-            })
-            .on("mouseenter", (e, d) => {
-                //these end here
-                if (d.movies.length > 1) {
-                    if (inGroupDetail == null) {
-                        setHoverItem({ datum: d, x: e.pageX, y: e.pageY, caller: "scatterplot_group" });
-
-                        // Clear previous group hover detail
-                        clearHoverDetail(); console.log("420")
-                        // Set timeout to show group hover detail
-                        timeoutEnterId = setTimeout(() => {
-                            setHoverItem({
-                                datum: d,
-                                x: e.pageX,
-                                y: e.pageY,
-                                caller: "scatterplot_group_expanded",
-                                clearHoverDetail
-                            });
-                            inGroupDetail = d;
-                            console.log("show group detail");
-                        }, 1000);
-                        // Create larger circle in the same position and radius
-                        svg.select(".dots")
-                            .append("circle")
-                            .attr("cx", _scales.iXScale(d.x))
-                            .attr("cy", _scales.iYScale(d.y))
-                            .attr("r", d.r * 1.3)
-                            .classed("hover-emph", true)
-                            .attr("fill", "none")
-                            .attr("stroke", tailwindConfig.theme.extend.colors.mid)
-                            .attr("stroke-width", 3)
-                            .transition().duration(1000)
-                            .attr("r", d.r * 0.9)
-                            .attr("stroke", tailwindConfig.theme.extend.colors.accent);
-                    } else if (inGroupDetail === d) {
-                        // Hovering same group we are detailing
-                        clearTimeout(hoverDetailTimeout);
-                        setHoverDetailTimeout(null);
-                    }
-                } else if (inGroupDetail == null) {
-                    setHoverItem({ datum: movieData[d.movies[0]], x: e.pageX, y: e.pageY, caller: "scatterplot" });
-                }
-            })
-            .on("mousemove", (e, d) => {
-                if (inGroupDetail == null)
-                    setHoverPos({ x: e.pageX, y: e.pageY });
-            })
-            .on("mouseout", (e, d) => {
-                if (inGroupDetail != null) {
-                    if (inGroupDetail === d) {
-                        setHoverDetailTimeout(setTimeout(clearHoverDetail, 800));
-                    }
-                } else {
-                    clearHoverDetail(); console.log("462")
-                    setHoverItem({ datum: null });
-                }
             });
 
         if (!quadtrees) {
@@ -492,7 +514,7 @@ export default function CCollapsedScatterplot({ movieData }) {
 
         svg.select(".legend-s")
             .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                ${bounds.innerHeight - 100 + margin.bottom / 2 - 
+                ${bounds.innerHeight - 100 + margin.bottom / 2 -
                 (viewMode === "cost_quality" ? 25 : 0)}) scale(1)`)
             .selectAll("rect")
             .attr("width", 160)
@@ -526,7 +548,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 + 150}, 
-                    ${bounds.innerHeight + margin.bottom / 2 - (viewMode==="cost_quality" ? 25 : 0)}) scale(0)`);
+                    ${bounds.innerHeight + margin.bottom / 2 - (viewMode === "cost_quality" ? 25 : 0)}) scale(0)`);
             svg.select(".title")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth / 2 + 60}, ${margin.top}) scale(0)`);
@@ -537,7 +559,7 @@ export default function CCollapsedScatterplot({ movieData }) {
             svg.select(".legend-s")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth - margin.left * 2 - 10}, 
-                    ${bounds.innerHeight - 100 + margin.bottom / 2 - (viewMode==="cost_quality" ? 25 : 0)}) scale(1)`);
+                    ${bounds.innerHeight - 100 + margin.bottom / 2 - (viewMode === "cost_quality" ? 25 : 0)}) scale(1)`);
             svg.select(".title")
                 .transition().duration(200)
                 .attr("transform", `translate(${bounds.innerWidth / 2 + 60}, ${margin.top}) scale(1)`);

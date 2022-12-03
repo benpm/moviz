@@ -120,7 +120,7 @@ export default function CHeatMap({ data }) {
                     .attr("stroke", d3.color(colorScale(d.length)).brighter(1))
                     .attr("stroke-width", 2.5);
             })
-            .on("mouseout", (event, d) => {
+            .on("mouseleave", (event, d) => {
                 //make it darker
                 d3.select(event.target).transition().duration(1000)
                     .attr("fill", colorScale(d.length))
