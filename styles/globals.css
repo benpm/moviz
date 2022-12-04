@@ -26,7 +26,7 @@ svg {
 
 @layer components {
     select.drop-down {
-        @apply bg-light rounded p-1 text-sm border-none;
+        @apply bg-darkest border-mid2 border-1 rounded p-1 text-sm text-white;
     }
 
     div.tooltip-row {
@@ -39,5 +39,17 @@ svg {
 
     div.tooltip-row-value {
         @apply p-1 ml-1;
+    }
+
+    g.legend-s rect.background {
+        @apply fill-dark stroke-light stroke-1 rounded;
+    }
+
+    g.legend rect.background {
+        @apply fill-dark stroke-light stroke-1 rounded;
+    }
+
+    g.plot-axis path.domain {
+        @apply stroke-mid2;
     }
 }

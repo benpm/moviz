@@ -103,6 +103,8 @@ movies["profit_adj"] = movies["profit"] // movies.index.map(lambda k: cpi.loc[k[
 movies["gross_adj"] = movies["gross"] // movies.index.map(lambda k: cpi.loc[k[1], "adj"])
 movies["budget_adj"] = movies["budget"] // movies.index.map(lambda k: cpi.loc[k[1], "adj"])
 
+print(movies["nominations"].min(), movies["nominations"].max())
+
 # Save to csv
 OUT_PATH = "../public/movies.csv"
 movies.to_csv(OUT_PATH, index=True)

@@ -1,0 +1,14 @@
+- [x] fix coloring for profit
+- [x] more legible view mode labels
+- [ ] blue
+- [x] center titles
+- [x] group detail ring
+- [x] trendline not showing up
+- [x] try accent color for ring and trendline
+- [x] dropdowns light outline dark bg
+- [x] adjust background for heatmap
+- [x] put show others button in area chart in dark box
+- [x] add outlines and opacity back to stacked area chart
+- [x] try making axis marks darker
+- [x] heatmap title
+- [ ] more subtle color use in bar chart tooltip

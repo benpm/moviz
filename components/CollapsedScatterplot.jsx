@@ -17,7 +17,7 @@ const OSCAR_COLORS = {
     "nominee": "#947b1b",
     "best_picture_winner": "#214ED3",
     "best_picture_nominee": "#90A8EE",
-    "none": "#C09B9B",
+    "none": "#c0c0c0",
 };
 
 export default function CCollapsedScatterplot({ movieData }) {
@@ -389,14 +389,14 @@ export default function CCollapsedScatterplot({ movieData }) {
                             .append("circle")
                             .attr("cx", scales.iXScale(d.x))
                             .attr("cy", scales.iYScale(d.y))
-                            .attr("r", (d.r * 1.5) / plotTransform.k)
+                            .attr("r", d.r * 2)
                             .classed("hover-emph", true)
                             .attr("fill", "none")
-                            .attr("stroke", "white")
+                            .classed("stroke-accent", true)
                             .attr("stroke-width", 0)
                             .transition().duration(1000)
-                            .attr("stroke-width", 2 / plotTransform.k)
-                            .attr("r", (d.r * 0.9) / plotTransform.k);
+                            .attr("stroke-width", 4 / plotTransform.k)
+                            .attr("r", d.r * 0.9);
                     } else if (inGroupDetail === d) {
                         // Hovering same group we are detailing
                         clearTimeout(hoverDetailTimeout);
@@ -478,7 +478,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         // Compute (if needed) and draw trend line
         let trendDataByYear = trendDataByYear || new Map();
         if (trendDataByYear.size == 0) {
-            for (const axis of ["budget", "gross", "profit"]) {
+            for (const axis of ["budget", "gross", "profit", "budget_adj", "gross_adj", "profit_adj"]) {
                 trendDataByYear.set(axis,
                     d3.rollups(movieData, d => d3.mean(d, x => x[axis]), d => d.year));
             }
@@ -492,10 +492,12 @@ export default function CCollapsedScatterplot({ movieData }) {
                 .attr("d", avgTrendLine(trendDataByYear.get(yAxis)));
         }
 
-
+        // Color scale for profit-colored dots
         const profitColorScales = [
-            d3.scaleSequential(d3.interpolateRdYlBu).domain([_scales.f["profit"].domain()[0] / 2, 0]),
-            d3.scaleSequential(d3.interpolateRdYlBu).domain([0, Math.log10(_scales.f["profit"].domain()[1])])
+            d3.scaleSequential(v => d3.interpolateRdYlBu((1-v) / 2))
+                .domain([0, _scales.f["profit"].domain()[0] / 2]),
+            d3.scaleSequential(v => d3.interpolateRdYlBu(0.5 + v / 2))
+                .domain([0, Math.log10(_scales.f["profit"].domain()[1])])
         ];
 
         setLegendImage(ramp(profitColorScales[0], true).toDataURL());
@@ -598,7 +600,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     ${bounds.innerHeight + margin.bottom / 2 - (viewMode === "cost_quality" ? 25 : 0)}) scale(0)`);
             svg.select(".title")
                 .transition().duration(200)
-                .attr("transform", `translate(${bounds.width - 10}, 0) scale(0)`);
+                .attr("transform", `translate(${bounds.width / 2}, 0) scale(0)`);
         });
 
         //set legend opacity to 1 when mouse leaves svg
@@ -609,7 +611,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     ${bounds.innerHeight - 100 + margin.bottom / 2 - (viewMode === "cost_quality" ? 25 : 0)}) scale(1)`);
             svg.select(".title")
                 .transition().duration(200)
-                .attr("transform", `translate(${bounds.width - 10}, ${margin.top}) scale(1)`);
+                .attr("transform", `translate(${bounds.width / 2}, ${margin.top}) scale(1)`);
         });
     }, [bounds, gScales, yAxis, xAxis, data, movieData, intZoomLevel, showTrendLine]);
 
@@ -661,15 +663,15 @@ export default function CCollapsedScatterplot({ movieData }) {
                     transform={`translate(${margin.left},${margin.top})`}>
                     <g className="plot-area">
                         <g className="dots"></g>
-                        {viewMode === "movie_economy" && showTrendLine &&
+                        {(viewMode === "movie_economy" && showTrendLine) &&
                             <>
-                                <path className="trend-line stroke-black fill-none" style={{strokeWidth: 4/plotTransform.k}}></path>
-                                <path className="trend-line stroke-white fill-none" style={{strokeWidth: 2/plotTransform.k}}></path>
+                                <path className="trend-line stroke-black fill-none" style={{strokeWidth: 6/plotTransform.k}}></path>
+                                <path className="trend-line stroke-accent fill-none" style={{strokeWidth: 2/plotTransform.k}}></path>
                             </>}
                     </g>
                 </g>
                 <g className="legend-s">
-                    <rect className="background fill-dark stroke-mid rounded-xl"></rect>
+                    <rect className="background"></rect>
                     {viewMode === "ratings_oscars" ?
                         <g>
                             <g><circle r='8' fill={OSCAR_COLORS['none']} cx="6" cy="6" strokeWidth={1}></circle>
@@ -707,7 +709,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                 </g>
                 <g className="x-axis" ></g>
                 <g className="y-axis" ></g>
-                <text className="title fill-light text-2xl" textAnchor="end" transform={`translate(${bounds.width - 10}, ${margin.top})`}>
+                <text className="title fill-light text-2xl" textAnchor="middle" transform={`translate(${bounds.width/2}, ${margin.top})`}>
                     {viewMode === "ratings_oscars" ? "Movie Ratings Over Time featuring Oscars" :
                         viewMode === "movie_economy" ? `Movie 
                             ${axisTitles[yAxis]} Over Time` :

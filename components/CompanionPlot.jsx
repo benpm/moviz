@@ -257,12 +257,12 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         )
         .attr("d", areaGen)
         .attr("fill", (d) => colorScale(d.key))
-        // .attr("fill-opacity", '0.7')
-        // .attr("stroke", (d) => colorScale(d.key))
-        // .attr("stroke-opacity", 1)
-        // .attr("stroke-width", 2)
-        // .attr("stroke-linejoin", "round")
-        // .attr("stroke-linecap", "round");
+        .attr("fill-opacity", '0.7')
+        .attr("stroke", (d) => colorScale(d.key))
+        .attr("stroke-opacity", 1)
+        .attr("stroke-width", 2)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round");
     //Map that maps studio names to their corresponding title string
     const axisTitles = {
         "budget": "Budget",
@@ -582,7 +582,7 @@ export default function CCompanionPlot({ data }) {
         <div id="companion-plot" className="relative w-full h-full" ref={target}>
             {viewMode == "movie_economy" &&
                 <>
-                    <div className="absolute bottom-[45%] left-12 z-50 text-white">
+                    <div className="absolute bottom-[45%] left-14 z-50 pl-1 text-white bg-dark rounded">
                         <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={toggleOtherStudios}></CToggle>
                     </div>
                 </>
@@ -598,7 +598,7 @@ export default function CCompanionPlot({ data }) {
                     {viewMode == "movie_economy" && <><g className="lines" style={{ clipPath: "url(#plot-clip)" }}></g>
                         <g className="mouse-line-group pointer-events-none"></g>
                         <g className="legend pointer-events-none">
-                            <rect className="background fill-dark stroke-mid2" x={-margin.left / 10} y={-margin.top / 3}
+                            <rect className="background" x={-margin.left / 10} y={-margin.top / 3}
                                 width="170" height="130" fillOpacity={0.7}
                                 strokeWidth="1" strokeOpacity="0.5"
                                 rx={5}></rect>
@@ -607,7 +607,7 @@ export default function CCompanionPlot({ data }) {
                     {viewMode == "cost_quality" &&
                         <>
                             <g className="rects"></g>
-                            <g className=".legend" transform={`translate(${bounds.width - margin.right / 3},${bounds.height - margin.bottom}) rotate(-90 0,0)`}>
+                            <g className="legend" transform={`translate(${bounds.width - margin.right / 3},${bounds.height - margin.bottom}) rotate(-90 0,0)`}>
                                 <image width={bounds.innerHeight} height={margin.right / 3} preserveAspectRatio="none" xlinkHref={legendImage}></image>
                                 <g className="legend-ticks">
                                     <text x={margin.bottom - margin.top} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
@@ -628,10 +628,10 @@ export default function CCompanionPlot({ data }) {
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
             </svg>
-            {viewMode == "ratings_oscars" && (<div className="absolute left-10 top-4 text-white">
-                <CToggle icon={["check_box_outline_blank", "select_check_box"]} label="Nominations" handler={setUseNominations} initValue={useNominations} />
+            {viewMode == "ratings_oscars" && (<div className="absolute left-12 top-4 text-white">
+                <CToggle icon={["check_box_outline_blank", "select_check_box"]} label="Include Nominations" handler={setUseNominations} initValue={useNominations} />
             </div>)}
-            <p ref={titleRef} className="text-light text-xl text-right px-1 w-full">{titleText}</p>
+            <p ref={titleRef} className="text-light text-xl text-center px-1 w-full">{titleText}</p>
         </div>
     );
 }

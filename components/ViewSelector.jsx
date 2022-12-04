@@ -3,9 +3,9 @@ import { useState } from "react";
 import useGlobalState from "../hooks/useGlobalState";
 
 export default function CViewSelector({ }) {
-  const commonStyle = " leading-4 h-full py-1 px-1 text-sm font-medium ";
+  const commonStyle = " border-l-1 border-dark leading-4 h-full py-1 px-1 text-sm font-medium ";
   const pressedStyle = commonStyle + " bg-accent text-dark ";
-  const unpressedStyle = commonStyle + " bg-mid2 z-4 hover:bg-accent-dark ";
+  const unpressedStyle = commonStyle + " bg-light text-dark z-4 hover:bg-accent-dark ";
   const exButtonStyles = [
     " rounded-tl ",
     " ",

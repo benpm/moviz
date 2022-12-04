@@ -36,7 +36,7 @@ const Main = () => {
             score: d3.scaleLinear().domain([0, 10]),
             tomatometer_rating: d3.scaleLinear().domain([0, 100]),
             audience_rating: d3.scaleLinear().domain([0, 100]),
-            nominations: d3.scaleLinear(),
+            nominations: d3.scaleLinear().domain(d3.extent(data, d => d.nominations)),
             runtime: d3.scaleLinear().domain(d3.extent(data, d => d.runtime)),
           },
           // Functions for configuring axes for each scale

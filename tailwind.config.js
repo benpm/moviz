@@ -24,6 +24,9 @@ module.exports = {
         "accent-dark" : "#AD8334",
         "accent-darker" : "#665028",
         "spaceCadet" : "#2E294E",
+      },
+      borderWidth: {
+        "1": "1px",
       }
     },
   },

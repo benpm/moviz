@@ -9,7 +9,7 @@ import CDropdown from "./Dropdown";
 import {ramp, generateArrayMinMax} from "../scripts/createLegendImage";
 
 export default function CHeatMap({ data }) {
-    const margin = { top: 20, right: 35, bottom: 20, left: 50 };
+    const [margin, setMargin] = useState({ top: 20, right: 35, bottom: 20, left: 50 });
     const [bounds, setBounds] = useState({ width: 800, height: 800, innerWidth: 800, innerHeight: 800 });
     const target = useRef(null);
     const size = useSize(target);
@@ -28,7 +28,9 @@ export default function CHeatMap({ data }) {
     const axisList = Object.keys(axisTitles);
     const [xAxis, setXAxis] = useState(axisList[0]);
     const [yAxis, setYAxis] = useState(axisList[1]);
-
+    const titleRef = useRef();
+    const titleSize = useSize(titleRef);
+    const [titleText, setTitleText] = useState("");
 
 
     let [setHoverItem, setHoverPos, gScales, viewMode] = useGlobalState(state => [
@@ -50,7 +52,10 @@ export default function CHeatMap({ data }) {
             innerWidth: w - margin.left - margin.right,
             innerHeight: h - margin.top - margin.bottom
         });
-    }, [size]);
+    }, [size, margin]);
+    useEffect(() => {
+        setMargin({ top: titleRef.current.getBoundingClientRect().height, right: 35, bottom: 20, left: 45 });
+    }, [titleSize]);
 
     useEffect(() => {
         switch (viewMode) {
@@ -77,6 +82,8 @@ export default function CHeatMap({ data }) {
             scales = copyScales(gScales);
         }
 
+        setTitleText(`${axisTitles[xAxis]} / ${axisTitles[yAxis]} Heatmap`);
+
         // Initialize zoom and scales
         const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
         const yScale = scales.f[yAxis].rangeRound([bounds.innerHeight, 0]).nice();
@@ -85,12 +92,12 @@ export default function CHeatMap({ data }) {
         svg.select(".x-axis").classed("plot-axis", true)
             .call(xAxisObj)
             .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-            .transition().duration(1000)
+            .transition().duration(650)
             .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
         svg.select(".y-axis").classed("plot-axis", true)
             .call(yAxisObj)
-            .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
-            .transition().duration(1000)
+            .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top + bounds.innerHeight})`)
+            .transition().duration(650)
             .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
         //draw a hexagonal heatmap of the data draw empty hexagons
@@ -99,10 +106,10 @@ export default function CHeatMap({ data }) {
             .x(d => xScale(d[xAxis]))
             .y(d => yScale(d[yAxis]))
             .radius(RADIUS)
-            .extent([[0, 0], [bounds.innerWidth + margin.right, bounds.innerHeight + margin.bottom]]);
+            .extent([[0, 0], [bounds.innerWidth, bounds.innerHeight]]);
         const bins = hexbin(data);
         const binMax = d3.max(bins, d => d.length);
-        const colorScale = d3.scaleSequential(d3.interpolateInferno)
+        const colorScale = d3.scaleSequential(v => d3.interpolateInferno(v * 0.9 + 0.1))
             .domain([0, binMax]);
         svg.select(".hexagons")
             .selectAll(".hexagon")
@@ -150,7 +157,8 @@ export default function CHeatMap({ data }) {
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d[0] + margin.left}, ${d[1] + margin.top})`)
             .attr("fill", "none")
-            .attr("stroke", "black")
+            .classed("stroke-dark", true)
+            .classed("pointer-events-none", true)
             .attr("stroke-width", 1);
 
         setLegendImage(ramp(colorScale).toDataURL());
@@ -167,24 +175,19 @@ export default function CHeatMap({ data }) {
 
     return (
         <div id="heatmap" className="relative w-full h-full" ref={target}>
-            <div className="absolute bottom-6 right-8 text-sm">
-                <CDropdown label="" options={axisList} optionTitles={axisTitles} value={xAxis} onChange={setXAxis} />
-            </div>
-            <div className="absolute top-4 left-12 text-sm">
-                <CDropdown label="" options={axisList} optionTitles={axisTitles} value={yAxis} onChange={setYAxis} />
-            </div>
-            <svg ref={ref} className="w-full h-full">
+            <svg ref={ref} className="w-full h-full absolute left-0 top-0">
                 <defs>
                     <clipPath id="plot-clip">
                         <rect fill="white" x={margin.left} y={margin.top} width={bounds.innerWidth} height={bounds.innerHeight} />
                     </clipPath>
                 </defs>
+                <rect width={bounds.innerWidth} height={bounds.innerHeight} x={margin.left} y={margin.top}></rect>
                 <g style={{ clipPath: "url(#plot-clip)" }}>
                     <g className="hexagons"></g>
                 </g>
                 <g className="legend-h" transform={`translate(${bounds.width - margin.right / 3},${bounds.height - margin.bottom}) rotate(-90 0,0)`}>
                     <image width={bounds.height - margin.bottom - margin.top} height={margin.right / 3} preserveAspectRatio="none" xlinkHref={legendImage}></image>
-                    <g className="legend-ticks">
+                    <g className="legend-ticks text-sm">
                         <text x={margin.bottom - margin.top} y={-margin.right / 2} textAnchor="middle" dominantBaseline="hanging" fill="white">0</text>
                         <line x1={0} y1={0} x2={0} y2={margin.right / 3} stroke="white" strokeWidth={2} />
 
@@ -201,6 +204,13 @@ export default function CHeatMap({ data }) {
                 <g className="x-axis"></g>
                 <g className="y-axis"></g>
             </svg>
+            <div className="absolute bottom-6 right-8 text-sm">
+                <CDropdown label="" options={axisList} optionTitles={axisTitles} value={xAxis} onChange={setXAxis} />
+            </div>
+            <div className="absolute top-6 left-10 text-sm">
+                <CDropdown label="" options={axisList} optionTitles={axisTitles} value={yAxis} onChange={setYAxis} />
+            </div>
+            <p ref={titleRef} className="text-light text-xl text-center px-1 w-full">{titleText}</p>
         </div>
     );
 }
