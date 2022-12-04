@@ -47,8 +47,8 @@ function makeTooltip(
 function ScatterplotGroupToolTip(d) {
     console.log(d)
     return (
-        <div className="pointer-events-none tooltip p-1 bg-navbar">
-            <div className="font-bold text-lightest">{d.movies.length} movies</div>
+        <div className="pointer-events-none tooltip p-1">
+            <div className="font-bold text-lightest">{d.movies.length} movies...</div>
         </div>
     );
 }
@@ -75,12 +75,26 @@ function ScatterplotGroupExpandedToolTip(
                             return <div
                                 onMouseEnter={(e) => {
                                     const r = e.target.getBoundingClientRect();
-                                    setHoverListItem({ movie, pos: { x: r.x + r.width, y: r.y } });
+                                    let pos = {};
+                                    if (r.y < viewSize.h / 2) {
+                                        pos.top = r.y + r.height;
+                                    } else {
+                                        pos.bottom = viewSize.h - r.y;
+                                    }
+                                    if (r.x < viewSize.w / 2) {
+                                        pos.left = r.x;
+                                    } else {
+                                        pos.right = viewSize.w - r.x;
+                                    }
+                                    console.log(pos)
+                                    setHoverListItem({ movie, pos });
                                 }}
                                 onMouseLeave={(e) => {
                                     setHoverListItem(null);
                                 }}
-                                className={`select-none rounded-sm p-0.5 m-px text-xs font-bold hover:bg-accent ${searchFilter.has(movie.idx) ? "bg-white" : "bg-mid2"}`} key={idx}>{movie.name} </div>;
+                                className={`select-none rounded-sm p-0.5 m-px
+                                    text-xs font-bold hover:bg-accent hover:text-dark
+                                    ${searchFilter.has(movie.idx) ? "bg-white text-dark" : "bg-mid2 text-light"}`} key={idx}>{movie.name} </div>;
                         }
                     })}
                 </div>
@@ -302,6 +316,7 @@ export default function CTooltip({ data }) {
         if (hoverItem.datum == null) {
             setHoverListItem(null);
         }
+        console.log(hoverItem.datum)
     }, [hoverItem]);
 
     return (
@@ -350,7 +365,7 @@ export default function CTooltip({ data }) {
             {hoverListItem &&
                 <div
                     className={`pointer-events-none absolute bg-dark rounded p-2 text-sm text-gray-800`}
-                    style={positionTooltip(hoverListItem.pos, viewSize)} >
+                    style={hoverListItem.pos} >
                     {ScatterplotToolTip(hoverListItem.movie)}
                 </div>}
         </>

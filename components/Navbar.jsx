@@ -8,8 +8,8 @@ export default function CNavBar({data}) {
             <div className="basis-28 mr-2">
                 <img src="logo-white.svg" alt="logo" className="h-full ml-4" />
             </div>
-            <div className="flex-grow text-center basis-3/12"><CLeftPanel data={data}/></div>
-            <div className="basis-4/12 flex place-items-end h-full">
+            <div className="flex-grow text-center basis-2/12"><CLeftPanel data={data}/></div>
+            <div className="basis-3/12 flex place-items-end h-full">
                 <CViewSelector/>
             </div>
             <div className ="flex flex-row-reverse flex-grow text-center basis-2/12"><CRightPanel/></div>

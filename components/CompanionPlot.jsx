@@ -236,13 +236,9 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     yAxisObj = d3.axisLeft(yScale).tickFormat(d3.format("$.0s"));
     svg.select(".x-axis").classed("plot-axis", true)
         .call(xAxisObj)
-        // .attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
     svg.select(".y-axis").classed("plot-axis", true)
         .call(yAxisObj)
-        // .attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
-        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
     var areaGen = d3.area()
@@ -251,25 +247,22 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .y1((d) => yScale(d[1]));
 
     d3.select(".lines")
-        //.attr("transform", `translate(${margin.left}, ${margin.top})`)
         .selectAll("path")
         .data(stackedStudioBudgetByYear)
         .join(
             enter => enter.append("path")
-                // .attr("transform", `translate(${margin.left} ${margin.top + bounds.innerHeight}) scale(1,0)`)
-                // .transition().duration(1000)
                 .attr("transform", `translate(${margin.left} ${margin.top}) scale(1,1)`),
             update => update,
             exit => exit.remove()
         )
         .attr("d", areaGen)
         .attr("fill", (d) => colorScale(d.key))
-        .attr("fill-opacity", '0.7')
-        .attr("stroke", (d) => colorScale(d.key))
-        .attr("stroke-opacity", 1)
-        .attr("stroke-width", 2)
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round");
+        // .attr("fill-opacity", '0.7')
+        // .attr("stroke", (d) => colorScale(d.key))
+        // .attr("stroke-opacity", 1)
+        // .attr("stroke-width", 2)
+        // .attr("stroke-linejoin", "round")
+        // .attr("stroke-linecap", "round");
     //Map that maps studio names to their corresponding title string
     const axisTitles = {
         "budget": "Budget",
@@ -281,8 +274,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
 
     };
     setTitleText(toggleOtherStudios ?
-        `Stacked ${axisTitles[yAxis]} of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
-        `Stacked ${axisTitles[yAxis]} of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
+        `Total ${axisTitles[yAxis]} of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
+        `Total ${axisTitles[yAxis]} of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
 
     console.log(yAxis);
 
@@ -330,7 +323,7 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
     svg.select(".lines").selectAll("path")
         .on("mouseover", function (event, d) {
             //make are more bright and set opacity of non-corresponding legend item to 0.2
-            d3.select(event.target).attr("fill", d3.color(colorScale(d.key)).brighter(1.5))
+            d3.select(event.target).attr("fill", "white")
             d3.selectAll(".legend-item").filter((e) => e != d.key).attr("opacity", 0.2);
         })
         .on("mouseleave", function (event, d) {
@@ -589,7 +582,7 @@ export default function CCompanionPlot({ data }) {
         <div id="companion-plot" className="relative w-full h-full" ref={target}>
             {viewMode == "movie_economy" &&
                 <>
-                    <div className="absolute bottom-12 left-10 z-50 text-white">
+                    <div className="absolute bottom-[45%] left-12 z-50 text-white">
                         <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={toggleOtherStudios}></CToggle>
                     </div>
                 </>
@@ -605,9 +598,9 @@ export default function CCompanionPlot({ data }) {
                     {viewMode == "movie_economy" && <><g className="lines" style={{ clipPath: "url(#plot-clip)" }}></g>
                         <g className="mouse-line-group pointer-events-none"></g>
                         <g className="legend pointer-events-none">
-                            <rect className="background" x={-margin.left / 10} y={-margin.top / 3}
-                                width="170" height="130" fill="#505050" fillOpacity={0.7}
-                                stroke="white" strokeWidth="1" strokeOpacity="0.5"
+                            <rect className="background fill-dark stroke-mid2" x={-margin.left / 10} y={-margin.top / 3}
+                                width="170" height="130" fillOpacity={0.7}
+                                strokeWidth="1" strokeOpacity="0.5"
                                 rx={5}></rect>
                         </g>
                     </>}
@@ -638,7 +631,7 @@ export default function CCompanionPlot({ data }) {
             {viewMode == "ratings_oscars" && (<div className="absolute left-10 top-4 text-white">
                 <CToggle icon={["check_box_outline_blank", "select_check_box"]} label="Nominations" handler={setUseNominations} initValue={useNominations} />
             </div>)}
-            <h3 ref={titleRef} className="text-white font-bold text-xl text-center w-full">{titleText}</h3>
+            <p ref={titleRef} className="text-light text-xl text-right px-1 w-full">{titleText}</p>
         </div>
     );
 }

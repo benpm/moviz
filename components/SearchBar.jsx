@@ -28,11 +28,11 @@ export default function CSearchBar ({data}) {
         <>
             <div className="flex h-full place-items-center text-white relative mr-2">
                 <input type="text"
-                    className="bg-white text-dark p-1 rounded w-full"
+                    className="bg-dark text-light p-1 rounded w-full focus:bg-darkest focus:text-white"
                     placeholder="Search..."
                     onChange={e => handleSearch(e.target.value)}></input>
                 
-                <p className="p-1 w-8 absolute right-0 text-mid font-bold">{searchFilter.size > 0 ? `${searchFilter.size}` : ""}</p>
+                <p className="p-1 w-12 absolute text-right right-0 text-light font-bold">{searchFilter.size > 0 ? `${searchFilter.size}` : ""}</p>
             </div>
         </>
     );
