@@ -138,15 +138,8 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         (brushRange === null || (d[0] >= brushRange[0] && d[0] <= brushRange[1]))
     );
     studioBudgetByYear = studioBudgetByYear.map((r) => {
-        let m = new Map();
+        let m = new Map(r[1]);
         m.set("year", r[0]);
-        r[1].forEach(([key, value]) => {
-            if (adjustInflation) {
-                m.set(key, value / cpiData.get(r[0]));
-            } else {
-                m.set(key, value);
-            }
-        });
         return m;
     });
 

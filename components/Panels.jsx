@@ -13,7 +13,7 @@ const CLeftPanel = function ({ }) {
     return (
         <div>
             <CToggle handler={v => setBrushMode(v)} icon={["pan_tool", "brush"]}
-                label={["Pan Mode", "Brush Mode"]} initValue={false}></CToggle>
+                label={["Toggle Mode (Pan)", "Toggle Mode (Brush)"]} initValue={false}></CToggle>
         </div>
     );
 }
@@ -28,7 +28,7 @@ const CRightPanel = function ({ }) {
     //TODO:story telling mode buttons we can higligth the some interesting points in the data
 
     return (
-        <div className="flex">
+        <div className="flex h-full">
             {viewMode == "movie_economy" && <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={false}></CToggle>}
             {(viewMode == "movie_economy" || viewMode == "cost_quality")
                 ? <CToggle handler={v => setAdjustInflation(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Adjust for Inflation" initValue={adjustInflation}></CToggle> : null}
