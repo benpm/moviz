@@ -46,7 +46,6 @@ function makeTooltip(
 }
 
 function ScatterplotGroupToolTip(d) {
-    console.log(d)
     return (
         <div className="pointer-events-none tooltip p-1">
             <div className="font-bold text-lightest">{d.movies.length} movies...</div>
@@ -88,7 +87,6 @@ function ScatterplotGroupExpandedToolTip(
                                     } else {
                                         pos.right = viewSize.w - r.x;
                                     }
-                                    console.log(pos)
                                     setHoverListItem({ movie, pos });
                                 }}
                                 onMouseLeave={(e) => {
@@ -317,7 +315,6 @@ export default function CTooltip({ data }) {
         if (hoverItem.datum == null) {
             setHoverListItem(null);
         }
-        console.log(hoverItem.datum)
     }, [hoverItem]);
 
     return (
@@ -333,11 +330,8 @@ export default function CTooltip({ data }) {
                             clearTimeout(hoverDetailTimeout);
                         }
                         setHoverDetailTimeout(setTimeout(() => {
-                            console.log(hoverDetailTimeout, "timeout");
                             hoverItem.clearHoverDetail();
                         }, 800));
-                        console.log("set hoverDetailTimeout");
-                        console.log(e.relatedTarget)
                     }
                 }}
                 onMouseEnter={(e) => {
@@ -346,8 +340,6 @@ export default function CTooltip({ data }) {
                         setHoveredExpandedGroup(true);
                         clearTimeout(hoverDetailTimeout);
                         setHoverDetailTimeout(null);
-                        console.log("clear hoverDetailTimeout", hoverDetailTimeout);
-                        console.log(e.relatedTarget)
                     }
                 }}>
                 {hoverItem.datum ? makeTooltip(

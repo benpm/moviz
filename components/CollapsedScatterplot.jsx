@@ -382,7 +382,6 @@ export default function CCollapsedScatterplot({ movieData }) {
                                 clearHoverDetail
                             });
                             inGroupDetail = d;
-                            console.log("show group detail");
                         }, 1000);
                         // Create larger circle in the same position and radius
                         svg.select(".dots")
@@ -422,11 +421,8 @@ export default function CCollapsedScatterplot({ movieData }) {
                         && !e.relatedTarget.classList.contains("tooltip")) {
                         const id = setTimeout(() => {
                             clearHoverDetail();
-                            console.log("timeout in sp");
                         }, 800);
                         setHoverDetailTimeout(id);
-                        console.log(e.relatedTarget);
-                        console.log("setHoverDetailTimeout", id);
                     }
                 } else {
                     clearHoverDetail();

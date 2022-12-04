@@ -278,8 +278,6 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         `Total ${axisTitles[yAxis]} of Top Studios ${yearsExtent[0]} - ${yearsExtent[1]}` :
         `Total ${axisTitles[yAxis]} of Top ${TOP_N} Studios ${yearsExtent[0]} - ${yearsExtent[1]}`);
 
-    console.log(yAxis);
-
     //create legend to show which color corresponds to which studio place it top left
     let legend = svg.select(".legend")
         .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
