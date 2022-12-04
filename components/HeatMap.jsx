@@ -82,7 +82,7 @@ export default function CHeatMap({ data }) {
             scales = copyScales(gScales);
         }
 
-        setTitleText(`${axisTitles[xAxis]} / ${axisTitles[yAxis]} Heatmap`);
+        setTitleText(`Explore Distribution: ${axisTitles[xAxis]} / ${axisTitles[yAxis]}`);
 
         // Initialize zoom and scales
         const xScale = scales.f[xAxis].rangeRound([0, bounds.innerWidth]);
@@ -109,7 +109,7 @@ export default function CHeatMap({ data }) {
             .extent([[0, 0], [bounds.innerWidth, bounds.innerHeight]]);
         const bins = hexbin(data);
         const binMax = d3.max(bins, d => d.length);
-        const colorScale = d3.scaleSequential(v => d3.interpolateInferno(v * 0.9 + 0.1))
+        const colorScale = d3.scaleSequential(v => d3.interpolateInferno(v * 0.90 + 0.1))
             .domain([0, binMax]);
         svg.select(".hexagons")
             .selectAll(".hexagon")
@@ -157,7 +157,7 @@ export default function CHeatMap({ data }) {
             .attr("d", hexbin.hexagon())
             .attr("transform", d => `translate(${d[0] + margin.left}, ${d[1] + margin.top})`)
             .attr("fill", "none")
-            .classed("stroke-dark", true)
+            .classed("stroke-mid", true)
             .classed("pointer-events-none", true)
             .attr("stroke-width", 1);
 

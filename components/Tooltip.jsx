@@ -16,7 +16,8 @@ function makeTooltip(
     viewSize,
     hoverListItem,
     setHoverListItem,
-    searchFilter)
+    searchFilter,
+    accent)
 {
     switch (caller) {
         case "scatterplot":
@@ -38,7 +39,7 @@ function makeTooltip(
         case "heatmap":
             return HeatmapToolTip(d);
         case "companion-oscars":
-            return CompanionOscarsToolTip(d);
+            return CompanionOscarsToolTip(d, accent);
         case "companion-heatmap":
             return CompanionHeatmapToolTip(d);
     }
@@ -49,6 +50,7 @@ function ScatterplotGroupToolTip(d) {
     return (
         <div className="pointer-events-none tooltip p-1">
             <div className="font-bold text-lightest">{d.movies.length} movies...</div>
+            <div className="font-bold text-light">Hover to view all</div>
         </div>
     );
 }
@@ -111,7 +113,7 @@ function ScatterplotToolTip(d) {
 
     return (
         <div className="pointer-events-none tooltip p-1 text-light">
-            <div className="font-bold text-white mb-1">{d.name}</div>
+            <div className="font-bold text-white mb-1 text-lg">{d.name}</div>
             <div className="tooltip-body">
                 <div className="tooltip-row">
                     <div className="tooltip-row-label">Released</div>
@@ -241,18 +243,17 @@ const OSCAR_INFO = {
     "none": "#606060",
 };
 
-function CompanionOscarsToolTip(d) {
-    const dateFormat = d3.timeFormat("%Y");
-    const dollarFormat = d3.format("$,.0f");
-    const runtimeFormat = m => `${m / 60 | 0}h ${m % 60}m`;
+function CompanionOscarsToolTip(d, accent) {
 
     return (
         <div className="pointer-events-none tooltip">
-            <div className="font-bold text-light"> <span className="text-xl text-lightest">{d.movies.length} {d.genre}
-            </span> movies were nominated for <span className="text-xl text-lightest">{d.date}</span> Oscars</div>
+            <div className="font-bold text-light">
+                <span className="text-lg text-lightest">{d.movies.length} <span className="px-1 rounded text-dark" style={{backgroundColor: accent}}>{d.genre}</span>
+                </span> movies were nominated for <span className="text-lg text-lightest">{d.date}</span> Oscars
+            </div>
             <div className="tooltip-body">
                 {d.movies.map((m, i) => (
-                    <div className="tooltip-row rounded" style={{
+                    <div className="tooltip-row rounded grid-col" style={{
                         backgroundColor: OSCAR_INFO[m.oscar][0]
                     }}>
                         <div className="tooltip-row-label">{OSCAR_INFO[m.oscar][1]} <span className="font-bold">({m.wins}/{m.nominations})</span></div>
@@ -360,11 +361,12 @@ export default function CTooltip({ data }) {
                     viewSize,
                     hoverListItem,
                     setHoverListItem,
-                    searchFilter) : ""}
+                    searchFilter,
+                    hoverItem.accent) : ""}
             </div>
             {hoverListItem &&
                 <div
-                    className={`pointer-events-none absolute bg-dark rounded p-2 text-sm text-gray-800`}
+                    className={`pointer-events-none absolute bg-mid rounded p-1 text-sm`}
                     style={hoverListItem.pos} >
                     {ScatterplotToolTip(hoverListItem.movie)}
                 </div>}

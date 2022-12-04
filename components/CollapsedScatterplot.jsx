@@ -392,9 +392,10 @@ export default function CCollapsedScatterplot({ movieData }) {
                             .attr("r", d.r * 2)
                             .classed("hover-emph", true)
                             .attr("fill", "none")
-                            .classed("stroke-accent", true)
+                            .attr("stroke", "white")
                             .attr("stroke-width", 0)
                             .transition().duration(1000)
+                            .attr("stroke", tailwindConfig.theme.extend.colors.accent)
                             .attr("stroke-width", 4 / plotTransform.k)
                             .attr("r", d.r * 0.9);
                     } else if (inGroupDetail === d) {
@@ -666,7 +667,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                         {(viewMode === "movie_economy" && showTrendLine) &&
                             <>
                                 <path className="trend-line stroke-black fill-none" style={{strokeWidth: 6/plotTransform.k}}></path>
-                                <path className="trend-line stroke-accent fill-none" style={{strokeWidth: 2/plotTransform.k}}></path>
+                                <path className="trend-line stroke-white fill-none" style={{strokeWidth: 2/plotTransform.k}}></path>
                             </>}
                     </g>
                 </g>

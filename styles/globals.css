@@ -30,7 +30,8 @@ svg {
     }
 
     div.tooltip-row {
-        @apply grid grid-cols-2 bg-dark rounded-sm mb-1;
+        @apply grid bg-dark rounded-sm mb-1;
+        grid-template-columns: 10em minmax(0, 1fr);
     }
 
     div.tooltip-row-label {

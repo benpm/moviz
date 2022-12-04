@@ -68,11 +68,9 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
     yAxisObj = d3.axisLeft(yScale);
     svg.select(".x-axis").classed("plot-axis", true)
         .call(xAxisObj).attr("transform", `scale(0,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`)
-        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${bounds.innerHeight + margin.top})`);
     svg.select(".y-axis").classed("plot-axis", true)
         .call(yAxisObj).attr("transform", `scale(1,0) translate(${margin.left}, ${margin.top})`)
-        // .transition().duration(1000)
         .attr("transform", `scale(1,1) translate(${margin.left}, ${margin.top})`);
 
     //create a categorical color scale for every genre from oscarData
@@ -95,9 +93,6 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
             exit => exit.remove()
         )
         .classed("stacked-bar", true)
-        // .transition()
-        // .on("end", () => svg.selectAll(".stacked-bar").style("pointer-events", "auto"))
-        // .duration(1000)
         .attr("x", 0)
         .attr("y", d => yScale(d[1].sum))
         .attr("width", xScale.bandwidth())
@@ -106,17 +101,23 @@ function drawStackedBarChart(svg, data, bounds, margin, xAxisObj, yAxisObj, setH
         .attr("stroke-width", 0.5)
         .attr("rx", "2")
         .attr("ry", "2")
-    svg.selectAll(".stacked-bar").on("mouseover", (e, d) => {
-        //get year of the bar
-        setHoverItem({ datum: { genre: d[0], movies: d[1].v, date: d3.select(e.target.parentNode).datum()[0] }, caller: "companion-oscars" });
-        setHoverPos({ x: e.pageX, y: e.pageY });
-        d3.select(e.target)
-            .transition()
-            .duration(10)
-            .attr("fill", d3.color(colorScale(d[0])).brighter(1.5))
-            .attr("stroke", d3.color(colorScale(d[0])).brighter(1))
-            .attr("stroke-width", 2.5);
-    })
+    
+    // Stacked bar chart mouse handlers
+    svg.selectAll(".stacked-bar")
+        .on("mouseenter", (e, d) => {
+            // Set tooltip hover item for genre group
+            setHoverItem({
+                datum: { genre: d[0], movies: d[1].v, date: d3.select(e.target.parentNode).datum()[0] },
+                caller: "companion-oscars",
+                accent: d3.color(colorScale(d[0])) });
+            setHoverPos({ x: e.pageX, y: e.pageY });
+            d3.select(e.target)
+                .transition()
+                .duration(10)
+                .attr("fill", d3.color(colorScale(d[0])).brighter(1.5))
+                .attr("stroke", d3.color(colorScale(d[0])).brighter(1))
+                .attr("stroke-width", 2.5);
+        })
         .on("mousemove", (e, d) => {
             setHoverPos({ x: e.pageX, y: e.pageY });
         })
@@ -284,8 +285,6 @@ function drawStackedLineChart(svg, data, bounds, margin, xAxisObj, yAxisObj, set
         .attr("transform", `translate(${margin.left + margin.left / 3}, ${margin.top + 10})`);
     legend.select(".background")
         .attr('height', 12*TOP_N + 2)
-
-    //legend.selectAll(".legend-item").remove() IMPORTANT CRUTCH ENABLE IF SOMETHING BREAKS
 
     //create legend items
     let legendItems = legend.selectAll(".legend-item")
@@ -491,6 +490,9 @@ function drawDecadeHeatmap(svg, data, bounds, margin, setHoverItem, setHoverPos,
         .join("text")
         .text((d) => d)
 
+    svg.on("mousemove", null);
+    svg.on("mouseenter", null);
+    svg.on("mouseleave", null);
 
     //Set the title text
     setTitleText(`Distribution of ${brushFilter.length > 0 ? "Selected" : ""} Movies for every ${CLUSTER_SIZE} Years`);
