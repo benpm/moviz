@@ -586,7 +586,7 @@ export default function CCompanionPlot({ data }) {
     }, [bounds, scales, yAxis, xAxis, data, viewMode, toggleOtherStudios, brushRange, brushFilter, useNominations, adjustInflation]);
 
     return (
-        <div id="companion-plot" className="relative w-full h-full bg-slate-900" ref={target}>
+        <div id="companion-plot" className="relative w-full h-full" ref={target}>
             {viewMode == "movie_economy" &&
                 <>
                     <div className="absolute bottom-12 left-10 z-50 text-white">

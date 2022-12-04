@@ -10,13 +10,14 @@ import { loadScatterPlotData } from "../scripts/loadData";
 import { ramp } from "../scripts/createLegendImage";
 import tailwindConfig from "../tailwind.config";
 import { schemeGnBu } from "d3";
+import { GiConsoleController } from "react-icons/gi";
 
 const OSCAR_COLORS = {
     "winner": "#fce603",
     "nominee": "#947b1b",
     "best_picture_winner": "#214ED3",
     "best_picture_nominee": "#90A8EE",
-    "none": "#606060",
+    "none": "#805050",
 };
 
 export default function CCollapsedScatterplot({ movieData }) {
@@ -37,11 +38,14 @@ export default function CCollapsedScatterplot({ movieData }) {
         brushMode,
         setBrushRange,
         setBrushFilter,
+        brushFilter,
         hoveredExpandedGroup,
         showTrendLine,
         hoverDetailTimeout,
         setHoverDetailTimeout,
-        adjustInflation
+        adjustInflation,
+        searchFilter,
+        setSearchFilter,
     ] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -54,11 +58,14 @@ export default function CCollapsedScatterplot({ movieData }) {
         state.brushMode,
         state.setBrushRange,
         state.setBrushFilter,
+        state.brushFilter,
         state.hoveredExpandedGroup,
         state.showTrendLine,
         state.hoverDetailTimeout,
         state.setHoverDetailTimeout,
-        state.adjustInflation
+        state.adjustInflation,
+        state.searchFilter,
+        state.setSearchFilter,
     ]);
     const [scales, setScales] = useState(null);
 
@@ -88,6 +95,8 @@ export default function CCollapsedScatterplot({ movieData }) {
     const [trendDataByYear, setTrendDataByYear] = useState(null);
     const [legendImage, setLegendImage] = useState("");
     const [legendImage2, setLegendImage2] = useState("");
+
+    const [nodeMap, setNodeMap] = useState(new Map());
 
     // Load data on first render 
     useEffect(() => {
@@ -150,6 +159,15 @@ export default function CCollapsedScatterplot({ movieData }) {
                 .call(zoomObj.zoom.transform, plotTransform);
         }
     }, [axes, scales, brushMode, zoomObj, bounds]);
+
+    useEffect(() => {
+        d3.select(ref.current).select(".plot-area").classed("searching", (searchFilter.size > 0));
+        d3.select(ref.current).selectAll("circle.dot").classed("searched", false);
+        searchFilter.forEach(idx => {
+            console.assert(nodeMap.has(idx), idx)
+            nodeMap.get(idx).classList.add("searched");
+        });
+    }, [searchFilter, intZoomLevel, xAxis, yAxis]);
 
     // Handler for mode switch buttons (ViewSelector.jsx)
     useEffect(() => {
@@ -332,10 +350,12 @@ export default function CCollapsedScatterplot({ movieData }) {
         }
     }, [brushMode, brushHandler, scales]);
 
+    // Set mouse handlers for scatterplot dots
     useEffect(() => {
         const svg = d3.select(ref.current);
         var timeoutEnterId = null;
         var inGroupDetail = null;
+        // Clear the timeout for showing group detail and reset
         const clearHoverDetail = () => {
             if (timeoutEnterId != null) {
                 clearTimeout(timeoutEnterId);
@@ -348,6 +368,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                 }
             }
         };
+        // Set the handlers
         svg.selectAll(".dot")
             .on("mouseenter", (e, d) => {
                 if (brushDirty)
@@ -378,11 +399,11 @@ export default function CCollapsedScatterplot({ movieData }) {
                             .attr("r", d.r * 1.3)
                             .classed("hover-emph", true)
                             .attr("fill", "none")
-                            .attr("stroke", tailwindConfig.theme.extend.colors.mid)
-                            .attr("stroke-width", 3)
+                            .attr("stroke", "white")
+                            .attr("stroke-width", 0)
                             .transition().duration(1000)
-                            .attr("r", d.r * 0.9)
-                            .attr("stroke", tailwindConfig.theme.extend.colors.accent);
+                            .attr("stroke-width", 2)
+                            .attr("r", d.r * 0.9);
                     } else if (inGroupDetail === d) {
                         // Hovering same group we are detailing
                         clearTimeout(hoverDetailTimeout);
@@ -403,7 +424,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     return;
                 if (inGroupDetail != null) {
                     const t = e.relatedTarget;
-                    if (inGroupDetail === d && t.id != "tooltip-container"
+                    if (inGroupDetail === d && (!t || t.id != "tooltip-container")
                         && !e.relatedTarget.classList.contains("tooltip")) {
                         const id = setTimeout(() => {
                             clearHoverDetail();
@@ -487,6 +508,10 @@ export default function CCollapsedScatterplot({ movieData }) {
             .selectAll("circle")
             .data(dataSubset)
             .join("circle")
+            .datum((d,i,n) => {
+                d.movies.forEach(m => nodeMap.set(m, n[i]));
+                return d;
+            })
             .attr("cx", d => _scales.iXScale(d.x))
             .attr("cy", d => _scales.iYScale(d.y))
             .attr("r", d => Math.max(2, d.r * 0.85))
@@ -514,6 +539,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     return profitColorScales[1](Math.log10(Math.abs(v)));
                 }
             });
+        setNodeMap(nodeMap);
 
         if (!quadtrees) {
             // Initialize quadtree for every zoom level and every pair of axes
@@ -608,14 +634,23 @@ export default function CCollapsedScatterplot({ movieData }) {
             <svg ref={ref} className="w-full h-full">
                 <style>
                     circle.dot {'{'}
-                    stroke-width: {dotStroke};
-                    stroke: #202020;
+                        stroke-width: {dotStroke};
+                        stroke: #202020;
                     {'}'}
                     circle.dot:hover {'{'}
-                    fill: white;
+                        fill: white;
                     {'}'}
                     circle.dot.excluded {'{'}
-                    opacity: 0.35;
+                        opacity: 0.35;
+                    {'}'}
+                    g.searching circle {'{'}
+                        opacity: 0.35;
+                    {'}'}
+                    g.searching circle.searched {'{'}
+                        opacity: 1;
+                        stroke: white;
+                        stroke-width: 2;
+                        fill: white;
                     {'}'}
                 </style>
                 <defs>
@@ -638,7 +673,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                     </g>
                 </g>
                 <g className="legend-s">
-                    <rect className="background fill-white stroke-white rounded-xl"></rect>
+                    <rect className="background fill-dark stroke-mid rounded-xl"></rect>
                     {viewMode === "ratings_oscars" ?
                         <g>
                             <g><circle r='8' fill="#606060" cx="6" cy="6" strokeWidth={1}></circle>
@@ -674,8 +709,8 @@ export default function CCollapsedScatterplot({ movieData }) {
                         </g> : null
                     }
                 </g>
-                <g className="x-axis" style={{ clipPath: "url(#x-axis-clip)" }}></g>
-                <g className="y-axis" style={{ clipPath: "url(#y-axis-clip)" }}></g>
+                <g className="x-axis" ></g>
+                <g className="y-axis" ></g>
                 <text className="title fill-white text-2xl" textAnchor="middle" transform={`translate(${bounds.innerWidth / 2 + 60}, ${margin.top})`}>
                     {viewMode === "ratings_oscars" ? "Movie Ratings Over Time featuring Oscars" :
                         viewMode === "movie_economy" ? `Movie 

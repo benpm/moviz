@@ -166,7 +166,7 @@ export default function CHeatMap({ data }) {
     }, [bounds, scales, yAxis, xAxis, data, viewMode]);
 
     return (
-        <div id="heatmap" className="relative w-full h-full bg-slate-900" ref={target}>
+        <div id="heatmap" className="relative w-full h-full" ref={target}>
             <div className="absolute bottom-6 right-8 text-sm">
                 <CDropdown label="" options={axisList} optionTitles={axisTitles} value={xAxis} onChange={setXAxis} />
             </div>

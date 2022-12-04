@@ -3,13 +3,13 @@ import { useState } from "react";
 import useGlobalState from "../hooks/useGlobalState";
 
 export default function CViewSelector({ }) {
-  const commonStyle = " h-9 py-1 px-1 text-sm font-medium border-black/50 text-black hover:border-gray-500 ";
-  const pressedStyle = commonStyle + " hover:text-white bg-mid2 shadow-inner shadow-black ";
-  const unpressedStyle = commonStyle + " bg-mid z-4 hover:bg-accent ";
+  const commonStyle = " h-full py-1 px-1 text-sm font-medium ";
+  const pressedStyle = commonStyle + " hover:text-white bg-darkest text-light ";
+  const unpressedStyle = commonStyle + " bg-mid2 z-4 hover:bg-accent ";
   const exButtonStyles = [
-    " rounded-l-3xl border-l-2 border-t ",
-    " border-t ",
-    " rounded-r-3xl border-r-2 border-t "
+    " rounded-tl ",
+    " ",
+    " rounded-tr "
   ];
 
   const [buttonStyle, setButtonStyle] = useState([pressedStyle, unpressedStyle, unpressedStyle].map((s,i) => exButtonStyles[i] + s));
@@ -30,8 +30,7 @@ export default function CViewSelector({ }) {
   //Create a rounded rectange with a border
   return (
     <>
-      <div className="text-center text-l w-full">Select View</div>
-      <div className="grid grid-cols-3 w-full rounded-md shadow-sm" role="group">
+      <div className="grid grid-cols-3 w-full rounded-md shadow-sm text-black" role="group">
         <button type="button" className={buttonStyle[0]} onClick={()=>setViewMode("ratings_oscars")}>
           Ratings & Oscars
         </button>

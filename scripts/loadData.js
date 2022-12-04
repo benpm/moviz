@@ -7,7 +7,7 @@ import * as d3 from "d3";
  */
 function loadMovieData() {
     return d3.csv("movies.csv").then(data => {
-        data.forEach(d => {
+        data.forEach((d, i) => {
             d.year = parseInt(d.year);
             d.budget = parseInt(d.budget);
             d.gross = parseInt(d.gross);
@@ -20,6 +20,7 @@ function loadMovieData() {
             d.audience_rating = parseInt(d.audience_rating);
             d.nominations = parseInt(d.nominations);
             d.wins = parseInt(d.wins);
+            d.idx = i;
         });
         return data;
     });

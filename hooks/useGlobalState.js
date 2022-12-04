@@ -13,6 +13,7 @@ const useGlobalState = create((set) => ({
     brushMode: false,
     brushFilter: [],
     brushRange: null,
+    searchFilter: new Set(),
 
     //State of the scatterplot
     scatterXAxis: "released",
@@ -46,6 +47,7 @@ const useGlobalState = create((set) => ({
     setHoverDetailTimeout: x => set({ hoverDetailTimeout: x }),
     setCpiData: x => set({ cpiData: x }),
     setAdjustInflation: x => set({ adjustInflation: x }),
+    setSearchFilter: x => set({ searchFilter: x }),
 }));
 
 export default useGlobalState;
