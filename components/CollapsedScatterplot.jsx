@@ -438,7 +438,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                         && !e.relatedTarget.classList.contains("tooltip")) {
                         const id = setTimeout(() => {
                             clearHoverDetail();
-                        }, 800);
+                        }, 650);
                         setHoverDetailTimeout(id);
                     }
                 } else {

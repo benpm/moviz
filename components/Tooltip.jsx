@@ -331,7 +331,7 @@ export default function CTooltip({ data }) {
                         }
                         setHoverDetailTimeout(setTimeout(() => {
                             hoverItem.clearHoverDetail();
-                        }, 800));
+                        }, 650));
                     }
                 }}
                 onMouseEnter={(e) => {
