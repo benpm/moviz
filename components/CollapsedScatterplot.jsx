@@ -263,8 +263,7 @@ export default function CCollapsedScatterplot({ movieData }) {
                 setBrushHandler({ handler: onXYBrush, gen: d3.brush });
                 break;
         }
-        clearBrush();
-    }, [viewMode, scales, plotTransform, xAxis, yAxis, intZoomLevel]);
+    }, [viewMode, scales, brushMode, xAxis, yAxis, intZoomLevel]);
 
     // Set the axes based on current view mode and adjustment for inflation option
     useEffect(() => {
@@ -308,7 +307,9 @@ export default function CCollapsedScatterplot({ movieData }) {
     // Clear brushing
     const clearBrush = () => {
         if (brushObj.brush) {
-            d3.select(brushContainerRef.current).call(brushObj.brush.clear);
+            if (brushContainerRef.current) {
+                d3.select(brushContainerRef.current).call(brushObj.brush.clear);
+            }
             d3.select(ref.current).selectAll(".dot").classed("excluded", false);
         }
         setBrushRange(null);
@@ -316,7 +317,7 @@ export default function CCollapsedScatterplot({ movieData }) {
     };
 
     // Re-brush on change in int zoom level
-    useEffect(clearBrush, [plotTransform]);
+    useEffect(() => {if (!brushMode) clearBrush()}, [brushMode]);
 
     // Set bounds on resize
     useEffect(() => {

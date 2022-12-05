@@ -73,7 +73,7 @@ function ScatterplotGroupExpandedToolTip(
                 <div className="grid grid-cols-2 rounded-sm">
                     {data.map((movie, idx) => {
                         if (d.movies.includes(idx)) {
-                            return <div
+                            return <div key={`ScatterplotGroupExpandedToolTip-${idx}`}
                                 onMouseEnter={(e) => {
                                     const r = e.target.getBoundingClientRect();
                                     let pos = {};
@@ -251,7 +251,7 @@ function CompanionOscarsToolTip(d, accent) {
             </div>
             <div className="tooltip-body">
                 {d.movies.map((m, i) => (
-                    <div className="tooltip-row rounded grid-col" style={{
+                    <div className="tooltip-row rounded grid-col" key={`CompanionOscarsToolTip-${i}`} style={{
                         backgroundColor: OSCAR_INFO[m.oscar][0]
                     }}>
                         <div className="tooltip-row-label">{OSCAR_INFO[m.oscar][1]} <span className="font-bold">({m.wins}/{m.nominations})</span></div>
