@@ -1,4 +1,7 @@
 # [moviz (CS6630)](https://benpm.github.io/moviz/)
+
+![](banner.png)
+
 Visualization of your favorite movies :) project for Visualization for Data Science Fall 2022. Benjamin Mastripolito and Alper Sahistan
 
 - [**Process book**](https://github.com/benpm/moviz/wiki/Process-Book)

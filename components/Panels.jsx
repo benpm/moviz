@@ -12,7 +12,7 @@ const CLeftPanel = function ({data}) {
     return (
         <div className="flex h-full place-items-center">
             <CToggle handler={v => setBrushMode(v)} icon={["pan_tool", "brush"]}
-                label={["Toggle Mode (Pan)", "Toggle Mode (Brush)"]} initValue={false}></CToggle>
+                label={["Toggle Mode (Pan)", "Toggle Mode (Brush)"]} initValue={brushMode}></CToggle>
             <CSearchBar data={data} />
         </div>
     );

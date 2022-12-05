@@ -47,6 +47,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         searchFilter,
         setSearchFilter,
         setBrushMode,
+        brushRange,
     ] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -68,6 +69,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         state.searchFilter,
         state.setSearchFilter,
         state.setBrushMode,
+        state.brushRange,
     ]);
     const [scales, setScales] = useState(null);
 
@@ -165,12 +167,8 @@ export default function CCollapsedScatterplot({ movieData }) {
 
     // Handler for mode switch buttons (ViewSelector.jsx)
     useEffect(() => {
+        var initBrushed = false;
         const onXBrush = (e) => {
-            if (e.type == "start") {
-                setBrushDirty(true);
-            } else if (e.type == "end") {
-                setBrushDirty(false);
-            }
             if (scales) {
                 if (e.selection && e.selection[0] != e.selection[1]) {
                     const t = new d3.ZoomTransform(
@@ -194,17 +192,25 @@ export default function CCollapsedScatterplot({ movieData }) {
                         return x0 >= selx1 || x1 < selx0;
                     });
                     d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
+                    if (e.type == "end") {
+                        initBrushed = true;
+                    }
                 } else {
                     d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                    if (e.type == "end") {
+                        if (initBrushed) {
+                            setBrushMode(false);
+                        }
+                    }
                 }
             }
-        };
-        const onXYBrush = (e) => {
             if (e.type == "start") {
                 setBrushDirty(true);
             } else if (e.type == "end") {
                 setBrushDirty(false);
             }
+        };
+        const onXYBrush = (e) => {
             if (scales) {
                 if (e.selection) {
                     // local plot coords -> transformed plot coords -> data coords
@@ -235,7 +241,15 @@ export default function CCollapsedScatterplot({ movieData }) {
                     d3.select(ref.current).selectAll(".dot").classed("excluded", d => !included.has(d.idx));
                 } else {
                     d3.select(ref.current).selectAll(".dot").classed("excluded", false);
+                    if (e.type == "end" && brushDirty) {
+                        setBrushMode(false);
+                    }
                 }
+            }
+            if (e.type == "start") {
+                setBrushDirty(true);
+            } else if (e.type == "end") {
+                setBrushDirty(false);
             }
         };
         switch (viewMode) {
