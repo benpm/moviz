@@ -28,6 +28,11 @@ const CRightPanel = function ({ }) {
 
     return (
         <>
+            {viewMode == "ratings_oscars" &&
+                <div className="h-full flex flex-col text-right mr-1 leading-4 underline font-bold">
+                    <a className="block hover:text-accent" href="https://benpm.github.io">Benjamin Mastripolito</a>    
+                    <a className="block hover:text-accent" href="https://stlkrv1.github.io/personal-website/#about">Alper Sahistan</a>    
+                </div>}
             {viewMode == "movie_economy" && <CToggle handler={v => setShowTrendLine(v)} icon="timeline" label="Show Trend" initValue={showTrendLine}></CToggle>}
             {(viewMode == "movie_economy" || viewMode == "cost_quality")
                 ? <CToggle handler={v => setAdjustInflation(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Adjust for Inflation" initValue={adjustInflation}></CToggle> : null}

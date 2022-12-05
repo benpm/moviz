@@ -12,3 +12,8 @@
 - [x] try making axis marks darker
 - [x] heatmap title
 - [ ] more subtle color use in bar chart tooltip
+
+- [x] fix nom button position
+- [x] heatmap stroke
+- [ ] brush deselect should set back to pan mode
+- [x] add names to navbar initial view

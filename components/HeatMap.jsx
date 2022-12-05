@@ -7,6 +7,7 @@ import useGlobalState from "../hooks/useGlobalState";
 import copyScales from "../scripts/copyScales";
 import CDropdown from "./Dropdown";
 import {ramp, generateArrayMinMax} from "../scripts/createLegendImage";
+import tailwindConfig from "../tailwind.config";
 
 export default function CHeatMap({ data }) {
     const [margin, setMargin] = useState({ top: 20, right: 35, bottom: 20, left: 50 });
@@ -111,42 +112,6 @@ export default function CHeatMap({ data }) {
         const binMax = d3.max(bins, d => d.length);
         const colorScale = d3.scaleSequential(v => d3.interpolateInferno(v * 0.90 + 0.1))
             .domain([0, binMax]);
-        svg.select(".hexagons")
-            .selectAll(".hexagon")
-            .data(bins)
-            .join("path")
-            .on("mousemove", (event, d) => {
-                setHoverPos({ x: event.pageX - 5, y: event.pageY - 5 });
-            })
-            .on("mouseover", (event, d) => {
-                setHoverItem({ datum: d, caller: "heatmap" });
-                //highlight the hexagon by making it brighter
-                d3.select(event.target)
-                    .transition().duration(10)
-                    .attr("fill", d3.color(colorScale(d.length)).brighter(1.5))
-                    .attr("stroke", d3.color(colorScale(d.length)).brighter(1))
-                    .attr("stroke-width", 2.5);
-            })
-            .on("mouseleave", (event, d) => {
-                //make it darker
-                d3.select(event.target).transition().duration(1000)
-                    .attr("fill", colorScale(d.length))
-                    .attr("stroke", "black")
-                    .attr("stroke-width", 1);
-                setHoverItem({ datum: null, caller: null });
-            })
-            .attr("class", "hexagon").transition(
-                //disable pointer events until the transition is complete
-                d3.select(".hexagons").style("pointer-events", "none")
-                //enable pointer events after the transition is complete
-            ).on("end", () => d3.select(".hexagons").style("pointer-events", "auto"))
-            .duration(1000)
-            .attr("d", hexbin.hexagon())
-            .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
-            .attr("fill", d => colorScale(d.length))
-            .attr("stroke", "black")
-            .attr("stroke-width", 1)
-            .attr("bin-value", d => d.length)
 
         //draw empty hexagons from hb.hexbin().centers()
         svg.select(".hexagons")
@@ -160,6 +125,41 @@ export default function CHeatMap({ data }) {
             .classed("stroke-mid", true)
             .classed("pointer-events-none", true)
             .attr("stroke-width", 1);
+            
+        svg.select(".hexagons")
+            .selectAll(".hexagon")
+            .data(bins)
+            .join("path")
+            .classed("stroke-black", true)
+            .classed("stroke-1", true)
+            .on("mousemove", (event, d) => {
+                setHoverPos({ x: event.pageX - 5, y: event.pageY - 5 });
+            })
+            .on("mouseover", (event, d) => {
+                setHoverItem({ datum: d, caller: "heatmap" });
+                //highlight the hexagon by making it brighter
+                d3.select(event.target)
+                    .transition().duration(10)
+                    .attr("fill", d3.color(colorScale(d.length)).brighter(1.5));
+            })
+            .on("mouseleave", (event, d) => {
+                //make it darker
+                d3.select(event.target).transition().duration(1000)
+                    .attr("fill", colorScale(d.length));
+                setHoverItem({ datum: null, caller: null });
+            })
+            .classed("hexagon", true)
+            .transition(
+                //disable pointer events until the transition is complete
+                d3.select(".hexagons").style("pointer-events", "none")
+                //enable pointer events after the transition is complete
+            )
+            .on("end", () => d3.select(".hexagons").style("pointer-events", "auto"))
+            .duration(1000)
+            .attr("d", hexbin.hexagon())
+            .attr("transform", d => `translate(${d.x + margin.left}, ${d.y + margin.top})`)
+            .attr("fill", d => colorScale(d.length))
+            .attr("bin-value", d => d.length)
 
         setLegendImage(ramp(colorScale).toDataURL());
 

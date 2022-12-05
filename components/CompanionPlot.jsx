@@ -582,7 +582,8 @@ export default function CCompanionPlot({ data }) {
         <div id="companion-plot" className="relative w-full h-full" ref={target}>
             {viewMode == "movie_economy" &&
                 <>
-                    <div className="absolute bottom-[45%] left-14 z-50 pl-1 text-white bg-dark rounded">
+                    <div className="absolute left-14 z-50 pl-1 text-white bg-dark rounded"
+                        style={{top: margin.top + 190}}>
                         <CToggle handler={v => setToggleOtherStudios(v)} icon={["check_box_outline_blank", "select_check_box"]} label="Show Others" initValue={toggleOtherStudios}></CToggle>
                     </div>
                 </>

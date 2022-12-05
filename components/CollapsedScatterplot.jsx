@@ -46,6 +46,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         adjustInflation,
         searchFilter,
         setSearchFilter,
+        setBrushMode,
     ] = useGlobalState(state => [
         state.setHoverItem,
         state.setHoverPos,
@@ -66,6 +67,7 @@ export default function CCollapsedScatterplot({ movieData }) {
         state.adjustInflation,
         state.searchFilter,
         state.setSearchFilter,
+        state.setBrushMode,
     ]);
     const [scales, setScales] = useState(null);
 
