@@ -19,7 +19,7 @@ module.exports = {
         "mid2": "#484848",
         "light": "#B3B6B7",
         "lightest": "#F7F3E3",
-        "navbar" : "#202020",
+        "navbar" : "#202028",
         "accent" : "#D69E36",
         "accent-dark" : "#AD8334",
         "accent-darker" : "#665028",
